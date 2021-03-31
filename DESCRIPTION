@@ -1,0 +1,24 @@
+Package: ibdplexus
+Type: Package
+Title: IBD Plexus
+Version: 0.1.0
+Author: Tara Fehlmann
+Maintainer: Tara Fehlmann <tfehlmann@crohnscolitisfoundation.org>
+Description: This package has scripts to load and manipulate IBD Plexus data for cohorts QORUS, SPARC & RISK. 
+License: CC0
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    dplyr,
+    reshape2,
+    openxlsx,
+    lubridate,
+    reshape2,
+    data.table,
+    tidyverse,
+    readxl,
+    lubridate,
+    DT,
+    tidyverse,
+    R (>= 2.10)
+RoxygenNote: 7.1.1
