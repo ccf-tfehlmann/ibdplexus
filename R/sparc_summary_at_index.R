@@ -656,7 +656,7 @@ sparc_summary <- function(datadir,
       mutate(diff =  dmy(VISIT_ENCOUNTER_START_DATE)- index_date) %>%
       filter(diff <= t) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME,desc(VISIT_ENCOUNTER_START_DATE)) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,DIAG_CONCEPT_NAME) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,DIAG_CONCEPT_NAME,index_date) %>%
       slice(which.min(abs(diff))) %>%
       mutate(NEW_VALUE = ifelse(DIAG_STATUS_CONCEPT_NAME=="Yes", "Yes",
                                 ifelse(DIAG_STATUS_CONCEPT_NAME=="Unknown", "Unknown",
