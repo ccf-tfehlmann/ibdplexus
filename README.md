@@ -27,6 +27,8 @@ Functions include:
     SPARC
   - `sparc_medication()` predicts the medication a SPARC participant is
     on at a specific time
+  - `sparc_emr()` subsets the plexus extract based on specified ICD10,
+    LONIC or CPT codes
 
 ## Installation
 
@@ -42,7 +44,7 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
   - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/Calculating%20Disease%20Activity%20Scores%20for%20SPARC.pdf">`calculate_disease_scores()`</a>
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide.pdf">`sparc_summarry()`</a>
+  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide.pdf">`sparc_summary()`</a>
 
   - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_medication_userguide.pdf">`sparc_medication()`</a>
 
