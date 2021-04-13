@@ -88,23 +88,20 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
                 filter(HISTORY_TYPE != "FAMILY") %>%
                 mutate(VAR = ifelse(is.na(DIAGNOSIS_HISTORY_CONCEPT_NAME), paste0("PATIENT_HISTORY_", MED_HISTORY_CONCEPT_NAME), paste0("PATIENT_HISTORY_", DIAGNOSIS_HISTORY_CONCEPT_NAME))) %>%
                 mutate(RESPONSE = "Patient History") %>%
-                mutate(diff = dmy(EFFECTIVE_DATE) - index_date) %>%
-                filter(diff <= t) %>%
                 arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VAR, RESPONSE) %>%
-                group_by(DEIDENTIFIED_MASTER_PATIENT_ID,VAR, index_date) %>%
-                slice(which.min(abs(diff))) %>%
+                group_by(DEIDENTIFIED_MASTER_PATIENT_ID,VAR) %>%
                 ungroup() %>%
-                pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = VAR, values_from = HIST_ID)
+                pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID), names_from = VAR, values_from = HIST_ID)
 
 
             } else if("prescriptions" %in% names(f[m])){
 
               keep = f[[m]] %>%
                 #mutate(diff = dmy(MED_START_DATE) - index_date) %>%
-                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,MEDICATION_NAME,VISIT_ENCOUNTER_ID, MED_START_DATE, MED_END_DATE) %>%
+                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,VISIT_ENCOUNTER_ID, MED_START_DATE, MED_END_DATE) %>%
                 ungroup() %>%
                 mutate(VAR = paste0("Prescriptions_", MEDICATION_NAME)) %>%
-                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date ~ VAR ,
+                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID  ~ VAR ,
                       value.var = "VISIT_ENCOUNTER_ID",  fun.aggregate = function(x) paste(x, collapse = "; "))
 
 
@@ -112,35 +109,35 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
             } else if("diagnosis" %in% names(f[m])){
 
               keep = f[[m]] %>%
-                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,DIAG_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
+                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
                 ungroup() %>%
                 mutate(VAR = paste0("DIAGNOSIS_", DIAG_CONCEPT_NAME)) %>%
-                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date ~ VAR ,
+                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID  ~ VAR ,
                       value.var = "VISIT_ENCOUNTER_ID",  fun.aggregate = function(x) paste(x, collapse = "; "))
 
             }else if("patient_problem" %in% names(f[m])){
 
               keep = f[[m]] %>%
-                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,PROB_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
+                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, PROB_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
                 ungroup() %>%
                 mutate(VAR = paste0("Patient_Problem_", PROB_CONCEPT_NAME)) %>%
-                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date ~ VAR ,
+                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID ~ VAR ,
                       value.var = "VISIT_ENCOUNTER_ID",  fun.aggregate = function(x) paste(x, collapse = "; "))
               }else if("labs" %in% names(f[m])){
 
               keep = f[[m]] %>%
-                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,LAB_TEST_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
+                distinct(DEIDENTIFIED_MASTER_PATIENT_ID, LAB_TEST_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
                 ungroup() %>%
                 mutate(VAR = paste0("Labs_LOINC_", code)) %>%
-                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date ~ VAR ,
+                reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID  ~ VAR ,
                       value.var = "VISIT_ENCOUNTER_ID",  fun.aggregate = function(x) paste(x, collapse = "; "))
               }else if("procedures" %in% names(f[m])){
 
                         keep = f[[m]] %>%
-                          distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,PROC_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
+                          distinct(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME,VISIT_ENCOUNTER_ID) %>%
                           ungroup() %>%
                           mutate(VAR = paste0("Procedures_CPT_", code)) %>%
-                          reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date ~ VAR ,
+                          reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID  ~ VAR ,
                                           value.var = "VISIT_ENCOUNTER_ID",  fun.aggregate = function(x) paste(x, collapse = "; "))}
 
             g[[m]] = keep
