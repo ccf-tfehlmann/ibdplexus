@@ -2081,7 +2081,7 @@ sparc_summary <- function(datadir,
 
         names(emr) = names(data)
 
-        emr$patient_history_old = NULL
+       # emr$patient_history_old = NULL
 
         emr = Filter(length, emr)
         emr = emr[sapply(emr, nrow)>0]
@@ -2125,9 +2125,9 @@ sparc_summary <- function(datadir,
 
               keep = f[[m]] %>%
                 filter(HISTORY_TYPE != "FAMILY") %>%
-                mutate(VAR = ifelse(is.na(DIAGNOSIS_HISTORY_CONCEPT_NAME), paste0("PATIENT_HISTORY_", MED_HISTORY_CONCEPT_NAME), paste0("PATIENT_HISTORY_", DIAGNOSIS_HISTORY_CONCEPT_NAME))) %>%
+                mutate(VAR =  paste0("PATIENT_HISTORY_", HISTORY_CONCEPT_NAME)) %>%
                 mutate(RESPONSE = "Patient History") %>%
-                mutate(diff = dmy(EFFECTIVE_DATE) - index_date) %>%
+                mutate(diff = dmy(EVENT_ONSET_DATE) - index_date) %>%
                 filter(diff <= t) %>%
                 arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VAR, RESPONSE) %>%
                 group_by(DEIDENTIFIED_MASTER_PATIENT_ID,VAR, index_date) %>%
@@ -2223,7 +2223,7 @@ sparc_summary <- function(datadir,
 
         names(emr_subset) = names(data)
 
-        emr_subset$patient_history_old = NULL
+        #emr_subset$patient_history_old = NULL
 
         emr_subset = Filter(length, emr_subset)
         emr_subset = emr_subset[sapply(emr_subset, nrow)>0]
