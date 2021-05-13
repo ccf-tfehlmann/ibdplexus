@@ -63,7 +63,10 @@ files = folderinfo %>%
   ungroup() %>%
   select(rowname)
 
-files = files$rowname
+#remove patient history old
+
+files = files$rowname[grep("Old", files$rowname, ignore.case = T, invert = T)]
+
 
 
 
@@ -72,7 +75,7 @@ if("ALL" %in% domains){files = files} else {
   files = grep(filestring, files, value = T, ignore.case = T)}
 
 
-if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE")
+if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
   files = grep(filestring, files, value = T, ignore.case=T)} else {files = grep(data_type, files, value = T, ignore.case=T)}
 
 
@@ -187,7 +190,8 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     ungroup() %>%
     select(files)
 
-  files = files$files
+ # files = files$files
+  files = files$files[grep("Old", files$files, ignore.case = T, invert = T)]
 
 
   if("ALL" %in% domains){files = files} else {
@@ -195,7 +199,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     files = grep(filestring, files, value = T, ignore.case = T)}
 
 
-  if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER")
+  if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains| "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
   files = grep(filestring, files, value = T, ignore.case=T)} else {files = grep(data_type, files, value = T, ignore.case=T)}
 
 
