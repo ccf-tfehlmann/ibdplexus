@@ -17,6 +17,10 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
   data = load_data(datadir = datadir, cohort = "SPARC", domains = "ALL", data_type = "BOTH")
 
 
+  #REMOVE STUDY ELIGIBILITY AND FAMILY HISTORY
+
+  data = data[grep("family|study", names(data), invert = T)]
+
 # DEMOGRAPHIC INFORMATION ----
 
   demo = data$demographics %>%
@@ -42,7 +46,7 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
 
         names(emr) = names(data)
 
-        emr$patient_history_old = NULL
+        #emr$patient_history_old = NULL
 
         emr = Filter(length, emr)
         emr = emr[sapply(emr, nrow)>0]
@@ -86,7 +90,7 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
 
               keep = f[[m]] %>%
                 filter(HISTORY_TYPE != "FAMILY") %>%
-                mutate(VAR = ifelse(is.na(DIAGNOSIS_HISTORY_CONCEPT_NAME), paste0("PATIENT_HISTORY_", MED_HISTORY_CONCEPT_NAME), paste0("PATIENT_HISTORY_", DIAGNOSIS_HISTORY_CONCEPT_NAME))) %>%
+                mutate(VAR =  paste0("PATIENT_HISTORY_", HISTORY_CONCEPT_NAME)) %>%
                 mutate(RESPONSE = "Patient History") %>%
                 arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VAR, RESPONSE) %>%
                 group_by(DEIDENTIFIED_MASTER_PATIENT_ID,VAR) %>%
@@ -175,7 +179,7 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
 
         names(emr_subset) = names(data)
 
-        emr_subset$patient_history_old = NULL
+        #emr_subset$patient_history_old = NULL
 
         emr_subset = Filter(length, emr_subset)
         emr_subset = emr_subset[sapply(emr_subset, nrow)>0]
@@ -228,7 +232,7 @@ sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL){
 
   wb <- createWorkbook()
   addWorksheet(wb, "sparc_emr")
-  writeData(wb, "sparc_emr", x=cohort, startCol=1, startRow=1, colNames=TRUE, rowNames=FALSE)
+  writeData(wb, "sparc_emr", x=demo, startCol=1, startRow=1, colNames=TRUE, rowNames=FALSE)
 
 
 
