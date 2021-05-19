@@ -52,6 +52,8 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 * <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>  
 
+* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/RISK%20Extract%20Clinical%20Data%20User%20Guide%20v1.1.pdf">`risk_extract_clinical_data()`</a>  
+
 ## Example
 
 ```{r example, eval = FALSE}
