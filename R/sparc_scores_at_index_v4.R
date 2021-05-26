@@ -18,7 +18,10 @@ sparc_scores <- function(datadir,
 #===============================
 #GET FILES OF MOST RECENT DATA
 #===============================
-  data = load_data(datadir = datadir, cohort = "SPARC", domains = "ALL", data_type = "BOTH")
+  data = load_data(datadir = datadir,
+                   cohort = "SPARC",
+                   domains = c("Demographics", "Diagnosis", "Observations", "Prescriptions", "Procedures", "Encounter"),
+                   data_type = "CRF")
 
 #===============================
 #DEMOGRAPHIC INFORMATION
