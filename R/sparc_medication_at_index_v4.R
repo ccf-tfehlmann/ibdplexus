@@ -18,7 +18,7 @@ sparc_medication <- function(datadir,
                              index_range = "30"){
 
 
-data = load_data(datadir = datadir, cohort = "SPARC", domains = "ALL", data_type = "BOTH")
+data = load_data(datadir = datadir, cohort = "SPARC", domains = c("Demographics", "Prescriptions", "Diagnosis", "Encounter", "Observations"), data_type = "BOTH")
 
 #===============================
 #DEMOGRAPHIC INFORMATION
