@@ -441,7 +441,7 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
     mutate(A = ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`),
            B = ifelse(is.na(`Current Average Number of Daily Bowel Movements`), `Current Maximum Number of Daily Bowel Movements`, `Current Average Number of Daily Bowel Movements`),
-           G = ifelse(is.na(`Constitutional - General Well-Being`), `Constitutional- General Well-Being`, `Constitutional - General Well-Being`),
+           G = ifelse(is.na(`Constitutional - General Well-Being`), `Constitutional - General Well-Being`, `Constitutional - General Well-Being`),
            G = ifelse(is.na(G), `General Well Being Score`, G)) %>%
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
