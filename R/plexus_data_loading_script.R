@@ -167,6 +167,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   cohorts = lapply(list_names, function(x) {read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 1)})
 
   names(cohorts) = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
+  names(cohorts) = gsub("^([^__]*__[^_]*).*", '\\1',  names(cohorts))
 
   cohorts = bind_rows(cohorts, .id = "df")
 
