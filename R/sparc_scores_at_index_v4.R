@@ -413,6 +413,9 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
 #===============================
 
 
+  data$observations = data$observations %>%
+    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME))
+
   #===============================
   #sCDAI
   #===============================
@@ -446,8 +449,8 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE)) %>%
-    mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
+     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+    #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
     mutate(Daily.BM.Question = case_when(B == `Current Maximum Number of Daily Bowel Movements` ~ "Current Maximum Number of Daily Bowel Movements",
                                          B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
@@ -458,11 +461,11 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     fill(B2, .direction="downup") %>%
     fill(G2, .direction="downup") %>%
     fill(DBQ2, .direction = "downup") %>%
-    mutate(A = ifelse(is.na(A) & diff <= 7,A2, A),
-           G = ifelse(is.na(G) & diff <= 7, G2, G),
-           B = ifelse(is.na(B) & diff <= 7, B2, B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & diff <= 7, DBQ2, Daily.BM.Question)) %>%
-    select(-A2, -B2, -G2,-diff,-DBQ2) %>%
+    mutate(A = ifelse(is.na(A) & (diff  <= 7| diff2 <= 7),A2, A),
+           G = ifelse(is.na(G) & (diff  <= 7| diff2 <= 7), G2, G),
+           B = ifelse(is.na(B) & (diff  <= 7| diff2 <= 7), B2, B),
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7| diff2 <= 7), DBQ2, Daily.BM.Question)) %>%
+    select(-A2, -B2, -G2,-diff, -diff2,-DBQ2) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "SF") %>%
     dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -503,8 +506,8 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
                                          TRUE ~ as.character(NA))) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE)) %>%
-    mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
+     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+    #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
       mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -512,11 +515,11 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
       fill(B2, .direction="downup") %>%
       fill(G2, .direction="downup") %>%
       fill(DBQ2, .direction = "downup") %>%
-      mutate(A = ifelse(is.na(A) & diff <= 7,A2, A),
-             G = ifelse(is.na(G) & diff <= 7, G2, G),
-             B = ifelse(is.na(B) & diff <= 7, B2, B),
-             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & diff <= 7, DBQ2, Daily.BM.Question)) %>%
-      select(-A2, -B2, -G2,-diff,-DBQ2) %>%
+      mutate(A = ifelse(is.na(A) & (diff  <= 7| diff2 <= 7),A2, A),
+             G = ifelse(is.na(G) & (diff  <= 7| diff2 <= 7), G2, G),
+             B = ifelse(is.na(B) & (diff  <= 7| diff2 <= 7), B2, B),
+             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7| diff2 <= 7), DBQ2, Daily.BM.Question)) %>%
+      select(-A2, -B2, -G2,-diff, -diff2,-DBQ2) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "ECRF") %>%
     dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -582,18 +585,18 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE)) %>%
-    mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
+     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+    #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
     mutate(T2 = T, R2 = R, S2 = S) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     fill(T2, .direction="downup") %>%
     fill(S2, .direction="downup") %>%
     fill(R2, .direction="downup") %>%
-    mutate(T = ifelse(is.na(T) & diff <= 7,T2, T),
-           S = ifelse(is.na(S) & diff <= 7, S2, S),
-           R = ifelse(is.na(R) & diff <= 7, R2, R)) %>%
-    select(-T2, -S2, -R2,-diff) %>%
+    mutate(T = ifelse(is.na(T) & (diff  <= 7| diff2 <= 7),T2, T),
+           S = ifelse(is.na(S) & (diff  <= 7| diff2 <= 7), S2, S),
+           R = ifelse(is.na(R) & (diff  <= 7| diff2 <= 7), R2, R)) %>%
+    select(-T2, -S2, -R2,-diff, -diff2) %>%
     dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R, Global.Assessment.Score = T) %>%
     mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,
            UCDAI.9.score = Stool.Freq.Score + Rectal.Bleeding.Score + Global.Assessment.Score, Source = "SF") %>%
@@ -628,17 +631,17 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE)) %>%
-    mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
+     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+    #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
     mutate( R2 = R, S2 = S) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     fill(S2, .direction="downup") %>%
     fill(R2, .direction="downup") %>%
     mutate(
-           S = ifelse(is.na(S) & diff <= 7, S2, S),
-           R = ifelse(is.na(R) & diff <= 7, R2, R)) %>%
-    select(-S2, -R2,-diff) %>%
+           S = ifelse(is.na(S) & (diff  <= 7| diff2 <= 7), S2, S),
+           R = ifelse(is.na(R) & (diff  <= 7| diff2 <= 7), R2, R)) %>%
+    select(-S2, -R2,-diff, -diff2) %>%
     dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R) %>%
     mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,  Source = "ECRF") %>%
     mutate(UCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -760,18 +763,18 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE)) %>%
-    mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
+     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+    #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
     mutate(T2 = T, R2 = R, S2 = S) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     fill(T2, .direction="downup") %>%
     fill(S2, .direction="downup") %>%
     fill(R2, .direction="downup") %>%
-    mutate(T = ifelse(is.na(T) & diff <= 7,T2, T),
-           S = ifelse(is.na(S) & diff <= 7, S2, S),
-           R = ifelse(is.na(R) & diff <= 7, R2, R)) %>%
-    select(-T2, -S2, -R2,-diff) %>%
+    mutate(T = ifelse(is.na(T) & (diff  <= 7| diff2 <= 7),T2, T),
+           S = ifelse(is.na(S) & (diff  <= 7| diff2 <= 7), S2, S),
+           R = ifelse(is.na(R) & (diff  <= 7| diff2 <= 7), R2, R)) %>%
+    select(-T2, -S2, -R2,-diff, -diff2) %>%
     dplyr::rename(PGA = T) %>%
     drop_na(PGA) %>%
     mutate(PGA.date = OBS_TEST_RESULT_DATE) %>%
