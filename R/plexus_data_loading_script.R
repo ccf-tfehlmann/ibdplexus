@@ -121,6 +121,9 @@ remove(list = dslist)
 #Standardize variable names
 if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
+#Clean Lab Data
+data$labs = data.frame(apply(data$labs, 2, function(x) {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's", "", x, ignore.case = T) }))
+
 
 rm(list = c("files", "folderinfo"))
 
@@ -246,6 +249,9 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   #Standardize variable names
   if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
+
+  #Clean Lab Data
+  data$labs = data.frame(apply(data$labs, 2, function(x) {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's", "", x, ignore.case = T) }))
 
 
 
