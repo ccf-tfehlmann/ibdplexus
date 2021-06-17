@@ -88,10 +88,56 @@ data <- lapply(files, function(x)
 
 
 #Assign Names
-
-names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|CRF|EMR|.csv"), "", (files))
-
+names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
 names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
+
+
+#Combine Data with the Same Name (Collapses EMR and CRF data)
+data = data[order(names(data))]
+
+data = data %>% lapply(., mutate_if, is.integer, as.character) %>% lapply(., mutate_if, is.numeric, as.character)  %>% lapply(., mutate_if, is.factor, as.character)
+
+
+dslist = unique(names(data))
+
+for (i in 1:length(dslist)){
+
+  ii = (dslist[i])
+
+  nums=grep(paste0(ii), names(data))
+
+  assign(paste0(ii), (bind_rows(data[nums])) %>% distinct())
+}
+
+data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
+
+names(data) = tolower(names(data))
+
+remove(list = dslist)
+
+
+#Clean Lab Data
+if("labs_emr" %in% names(data)){data$labs_emr = data.frame(apply(data$labs_emr, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+#Clean Encounter Data
+if("encounter_emr" %in% names(data)){data$encounter_emr = data.frame(apply(data$encounter_emr, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+#Clean Procedures Data
+if("procedures_emr" %in% names(data)){data$procedures_emr = data.frame(apply(data$procedures_emr, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+
+#Clean Observation Data
+if("observations_emr" %in% names(data)){data$observations_emr = data.frame(apply(data$observations_emr, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+
+#Assign Names
+
+names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+
 
 
 #Combine Data with the Same Name (Collapses EMR and CRF data together)
@@ -120,9 +166,6 @@ remove(list = dslist)
 
 #Standardize variable names
 if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
-
-#Clean Lab Data
-if("labs" %in% names(data)){data$labs = data.frame(apply(data$labs, 2, function(x) {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's", "", x, ignore.case = T) }))}
 
 
 rm(list = c("files", "folderinfo"))
@@ -216,10 +259,56 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
 
   #Assign Names
-
-  names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|CRF|EMR|.csv"), "", (files))
-
+  names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
   names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
+
+
+  #Combine Data with the Same Name (Collapses EMR and CRF data)
+  data = data[order(names(data))]
+
+  data = data %>% lapply(., mutate_if, is.integer, as.character) %>% lapply(., mutate_if, is.numeric, as.character)  %>% lapply(., mutate_if, is.factor, as.character)
+
+
+  dslist = unique(names(data))
+
+  for (i in 1:length(dslist)){
+
+    ii = (dslist[i])
+
+    nums=grep(paste0(ii), names(data))
+
+    assign(paste0(ii), (bind_rows(data[nums])) %>% distinct())
+  }
+
+  data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
+
+  names(data) = tolower(names(data))
+
+  remove(list = dslist)
+
+
+  #Clean Lab Data
+  if("labs_emr" %in% names(data)){data$labs_emr = data.frame(apply(data$labs_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+  #Clean Encounter Data
+  if("encounter_emr" %in% names(data)){data$encounter_emr = data.frame(apply(data$encounter_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+  #Clean Procedures Data
+  if("procedures_emr" %in% names(data)){data$procedures_emr = data.frame(apply(data$procedures_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+
+  #Clean Observation Data
+  if("observations_emr" %in% names(data)){data$observations_emr = data.frame(apply(data$observations_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+
+  #Assign Names
+
+  names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+
 
 
   #Combine Data with the Same Name (Collapses EMR and CRF data together)
@@ -250,11 +339,6 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
 
-  #Clean Lab Data
-  if("labs" %in% names(data)){data$labs = data.frame(apply(data$labs, 2, function(x) {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's", "", x, ignore.case = T) }))}
-
-
 
   return(data)
-
 }
