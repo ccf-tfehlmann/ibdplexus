@@ -167,6 +167,26 @@ remove(list = dslist)
 #Standardize variable names
 if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
+<<<<<<< HEAD
+=======
+
+#Clean Lab Data
+if("labs" %in% names(data)){data$labs = data.frame(apply(data$labs, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+#Clean Encounter Data
+if("encounter" %in% names(data)){data$encounter = data.frame(apply(data$encounter, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+#Clean Procedures Data
+if("procedures" %in% names(data)){data$procedures = data.frame(apply(data$procedures, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+>>>>>>> d4c21f4d5bac1e4fea3cc0886e161c1f749fdc3f
+
+#Clean Observation Data
+if("observations" %in% names(data)){data$observations = data.frame(apply(data$observations, 2, function(x)
+{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
 
 rm(list = c("files", "folderinfo"))
 
@@ -339,6 +359,28 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
 
+<<<<<<< HEAD
+=======
+  #Clean Lab Data
+  if("labs" %in% names(data)){data$labs = data.frame(apply(data$labs, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+  #Clean Encounter Data
+  if("encounter" %in% names(data)){data$encounter = data.frame(apply(data$encounter, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+  #Clean Procedures Data
+  if("procedures" %in% names(data)){data$procedures = data.frame(apply(data$procedures, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+
+  #Clean Observation Data
+  if("observations" %in% names(data)){data$observations = data.frame(apply(data$observations, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|um|cmmc|Ucmc|Ucm", "", x, ignore.case = T) }))}
+
+
+
+>>>>>>> d4c21f4d5bac1e4fea3cc0886e161c1f749fdc3f
 
   return(data)
 }
