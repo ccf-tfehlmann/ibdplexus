@@ -24,7 +24,7 @@ sparc_summary <- function(datadir,
 # LOAD FILES ----
 
   # GET FILES OF MOST RECENT DATA ----
-  data = load_data(datadir = datadir, cohort = "SPARC", domains = "ALL", data_type = "BOTH")
+  data = load_data(datadir = datadir, cohort = "SPARC", domains = c("Demographics", "Diagnosis", "Encounter", "Observation", "Prescriptions", "Procedures"), data_type = "BOTH")
 
 
 # DEMOGRAPHIC INFORMATION ----
