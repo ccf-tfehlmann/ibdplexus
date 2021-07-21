@@ -78,17 +78,25 @@ calculate_disease_scores <- function(datadir = "."){
       mutate(Daily.BM.Question = case_when(B == `Current Maximum Number of Daily Bowel Movements` ~ "Current Maximum Number of Daily Bowel Movements",
                                            B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
                                            TRUE ~ as.character(NA))) %>%
-      mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question) %>%
+      mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question,A3 = A, B3 = B, G3 = G, DBQ3 = Daily.BM.Question) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      fill(A2, .direction="downup") %>%
-      fill(B2, .direction="downup") %>%
-      fill(G2, .direction="downup") %>%
-      fill(DBQ2, .direction = "downup") %>%
-      mutate(A = ifelse(is.na(A) & (diff  <= 7| diff2 <= 7),A2, A),
-             G = ifelse(is.na(G) & (diff  <= 7| diff2 <= 7), G2, G),
-             B = ifelse(is.na(B) & (diff  <= 7| diff2 <= 7), B2, B),
-             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7| diff2 <= 7), DBQ2, Daily.BM.Question)) %>%
-      select(-A2, -B2, -G2,-diff,-DBQ2, -diff2) %>%
+      fill(A2, .direction="down") %>%
+      fill(B2, .direction="down") %>%
+      fill(G2, .direction="down") %>%
+      fill(DBQ2, .direction = "down") %>%
+      fill(A3, .direction="up") %>%
+      fill(B3, .direction="up") %>%
+      fill(G3, .direction="up") %>%
+      fill(DBQ3, .direction = "up") %>%
+      mutate(A = ifelse(is.na(A) & diff  <= 7,A2, A),
+             G = ifelse(is.na(G) & diff  <= 7, G2, G),
+             B = ifelse(is.na(B) & diff  <= 7, B2, B),
+             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), DBQ2, Daily.BM.Question)) %>%
+      mutate(A = ifelse(is.na(A) & (diff2 <= 7),A3, A),
+             G = ifelse(is.na(G) & ( diff2 <= 7), G3, G),
+             B = ifelse(is.na(B) & (diff2 <= 7), B3, B),
+             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), DBQ3, Daily.BM.Question)) %>%
+      select(-A2, -B2, -G2,-diff,-DBQ2, -diff2, - A3, -B3, -G3, -DBQ3) %>%
       dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
       mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "SF") %>%
       dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -133,17 +141,25 @@ calculate_disease_scores <- function(datadir = "."){
              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE) %>%
      # mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
       ungroup() %>%
-      mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question) %>%
+      mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question,A3 = A, B3 = B, G3 = G, DBQ3 = Daily.BM.Question) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      fill(A2, .direction="downup") %>%
-      fill(B2, .direction="downup") %>%
-      fill(G2, .direction="downup") %>%
-      fill(DBQ2, .direction = "downup") %>%
-      mutate(A = ifelse(is.na(A) & (diff  <= 7| diff2 <= 7),A2, A),
-             G = ifelse(is.na(G) & (diff  <= 7| diff2 <= 7), G2, G),
-             B = ifelse(is.na(B) & (diff  <= 7| diff2 <= 7), B2, B),
-             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7| diff2 <= 7), DBQ2, Daily.BM.Question)) %>%
-      select(-A2, -B2, -G2,-diff,-DBQ2, -diff2) %>%
+      fill(A2, .direction="down") %>%
+      fill(B2, .direction="down") %>%
+      fill(G2, .direction="down") %>%
+      fill(DBQ2, .direction = "down") %>%
+      fill(A3, .direction="up") %>%
+      fill(B3, .direction="up") %>%
+      fill(G3, .direction="up") %>%
+      fill(DBQ3, .direction = "up") %>%
+      mutate(A = ifelse(is.na(A) & diff  <= 7,A2, A),
+             G = ifelse(is.na(G) & diff  <= 7, G2, G),
+             B = ifelse(is.na(B) & diff  <= 7, B2, B),
+             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), DBQ2, Daily.BM.Question)) %>%
+      mutate(A = ifelse(is.na(A) & (diff2 <= 7),A3, A),
+             G = ifelse(is.na(G) & ( diff2 <= 7), G3, G),
+             B = ifelse(is.na(B) & (diff2 <= 7), B3, B),
+             Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), DBQ3, Daily.BM.Question)) %>%
+      select(-A2, -B2, -G2,-diff,-DBQ2, -diff2, - A3, -B3, -G3, -DBQ3) %>%
       dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
       mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "ECRF") %>%
       dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -207,15 +223,21 @@ calculate_disease_scores <- function(datadir = "."){
              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE) %>%
       #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
       ungroup() %>%
-      mutate(T2 = T, R2 = R, S2 = S) %>%
+      mutate(T2 = T, R2 = R, S2 = S, T3 = T, R3 = R, S3 = S) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      fill(T2, .direction="downup") %>%
-      fill(S2, .direction="downup") %>%
-      fill(R2, .direction="downup") %>%
-      mutate(T = ifelse(is.na(T) & (diff <= 7 | diff2 <= 7),T2, T),
-             S = ifelse(is.na(S) & (diff <= 7 | diff2 <= 7), S2, S),
-             R = ifelse(is.na(R) & (diff <= 7 | diff2 <= 7), R2, R)) %>%
-      select(-T2, -S2, -R2,-diff, -diff2) %>%
+      fill(T2, .direction="down") %>%
+      fill(S2, .direction="down") %>%
+      fill(R2, .direction="down") %>%
+      fill(T3, .direction="up") %>%
+      fill(S3, .direction="up") %>%
+      fill(R3, .direction="up") %>%
+      mutate(T = ifelse(is.na(T) & (diff <= 7),T2, T),
+             S = ifelse(is.na(S) & (diff <= 7), S2, S),
+             R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
+      mutate(T = ifelse(is.na(T) & (diff <= 7),T3, T),
+             S = ifelse(is.na(S) & (diff <= 7), S3, S),
+             R = ifelse(is.na(R) & (diff <= 7), R3, R)) %>%
+      select(-T2, -S2, -R2,-diff, -diff2, -T3, -R3, -S3) %>%
       dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R, Global.Assessment.Score = T) %>%
       mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,
              UCDAI.9.score = Stool.Freq.Score + Rectal.Bleeding.Score + Global.Assessment.Score, Source = "SF") %>%
@@ -256,12 +278,19 @@ calculate_disease_scores <- function(datadir = "."){
       ungroup() %>%
       mutate( R2 = R, S2 = S) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      fill(S2, .direction="downup") %>%
-      fill(R2, .direction="downup") %>%
+      mutate(R2 = R, S2 = S, T3 = T, R3 = R, S3 = S) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      fill(S2, .direction="down") %>%
+      fill(R2, .direction="down") %>%
+      fill(S3, .direction="up") %>%
+      fill(R3, .direction="up") %>%
       mutate(
-             S = ifelse(is.na(S) & (diff <= 7 | diff2 <= 7), S2, S),
-             R = ifelse(is.na(R) & (diff <= 7 | diff2 <= 7), R2, R)) %>%
-      select(-S2, -R2,-diff, -diff2) %>%
+             S = ifelse(is.na(S) & (diff <= 7), S2, S),
+             R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
+      mutate(
+             S = ifelse(is.na(S) & (diff <= 7), S3, S),
+             R = ifelse(is.na(R) & (diff <= 7), R3, R)) %>%
+      select( -S2, -R2,-diff, -diff2, -R3, -S3) %>%
       dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R) %>%
       mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,  Source = "ECRF") %>%
       mutate(UCDAI.date = OBS_TEST_RESULT_DATE) %>%
