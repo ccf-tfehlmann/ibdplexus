@@ -236,9 +236,9 @@ calculate_disease_scores <- function(datadir = "."){
       mutate(T = ifelse(is.na(T) & (diff <= 7),T2, T),
              S = ifelse(is.na(S) & (diff <= 7), S2, S),
              R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
-      mutate(T = ifelse(is.na(T) & (diff <= 7),T3, T),
-             S = ifelse(is.na(S) & (diff <= 7), S3, S),
-             R = ifelse(is.na(R) & (diff <= 7), R3, R)) %>%
+      mutate(T = ifelse(is.na(T) & (diff2 <= 7),T3, T),
+             S = ifelse(is.na(S) & (diff2 <= 7), S3, S),
+             R = ifelse(is.na(R) & (diff2 <= 7), R3, R)) %>%
       select(-T2, -S2, -R2,-diff, -diff2, -T3, -R3, -S3) %>%
       dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R, Global.Assessment.Score = T) %>%
       mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,
@@ -290,8 +290,8 @@ calculate_disease_scores <- function(datadir = "."){
              S = ifelse(is.na(S) & (diff <= 7), S2, S),
              R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
       mutate(
-             S = ifelse(is.na(S) & (diff <= 7), S3, S),
-             R = ifelse(is.na(R) & (diff <= 7), R3, R)) %>%
+             S = ifelse(is.na(S) & (diff2 <= 7), S3, S),
+             R = ifelse(is.na(R) & (diff2 <= 7), R3, R)) %>%
       select( -S2, -R2,-diff, -diff2, -R3, -S3) %>%
       dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R) %>%
       mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,  Source = "ECRF") %>%
