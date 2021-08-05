@@ -26,6 +26,8 @@ calculate_disease_scores <- function(datadir = "."){
     left_join(data$encounter) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(Diagnosis = DIAG_CONCEPT_NAME) %>%
+    dplyr::mutate(keep = ifelse(DATA_SOURCE == "SF_SPARC" & is.na(DIAG_STATUS_CONCEPT_NAME), 0, 1)) %>% #Smartform Data should have a DIAG_STATUS_CONCEPT_NAME equal to yes
+    filter(keep ==1) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(DATA_SOURCE, c("SF_SPARC","ECRF_SPARC")), desc(dmy(VISIT_ENCOUNTER_START_DATE))) %>%
     slice(1) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, Diagnosis)
