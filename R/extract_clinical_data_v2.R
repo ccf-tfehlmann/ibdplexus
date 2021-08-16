@@ -44,7 +44,7 @@ risk_extract_clinical_data <- function(dir,
   #list_df
 
   #Load Data
-data = load_data(datadir = dir, cohort = "RISK", domains = c("ALL"), data_type = "BOTH")
+ data = load_data(datadir = dir, cohort = "RISK", domains = c("ALL"), data_type = "BOTH")
 
   #rename list elements of data
 

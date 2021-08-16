@@ -449,7 +449,8 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),
+            diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
     #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
     mutate(Daily.BM.Question = case_when(B == `Current Maximum Number of Daily Bowel Movements` ~ "Current Maximum Number of Daily Bowel Movements",
@@ -465,14 +466,14 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     fill(B3, .direction="up") %>%
     fill(G3, .direction="up") %>%
     fill(DBQ3, .direction = "up") %>%
-    mutate(A = ifelse(is.na(A) & diff  <= 7,A2, A),
-           G = ifelse(is.na(G) & diff  <= 7, G2, G),
-           B = ifelse(is.na(B) & diff  <= 7, B2, B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), DBQ2, Daily.BM.Question)) %>%
-    mutate(A = ifelse(is.na(A) & (diff2 <= 7),A3, A),
-           G = ifelse(is.na(G) & ( diff2 <= 7), G3, G),
-           B = ifelse(is.na(B) & (diff2 <= 7), B3, B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), DBQ3, Daily.BM.Question)) %>%
+    mutate(A = ifelse(is.na(A) & diff  <= 7,lag(A), A),
+           G = ifelse(is.na(G) & diff  <= 7, lag(G), G),
+           B = ifelse(is.na(B) & diff  <= 7, lag(B), B),
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), lag(DBQ), Daily.BM.Question)) %>%
+    mutate(A = ifelse(is.na(A) & (diff2 <= 7),lead(A), A),
+           G = ifelse(is.na(G) & ( diff2 <= 7), lead(G), G),
+           B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), lead(DBQ), Daily.BM.Question)) %>%
     select(-A2, -B2, -G2,-diff,-DBQ2, -diff2, - A3, -B3, -G3, -DBQ3) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "SF") %>%
@@ -527,14 +528,14 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     fill(B3, .direction="up") %>%
     fill(G3, .direction="up") %>%
     fill(DBQ3, .direction = "up") %>%
-    mutate(A = ifelse(is.na(A) & diff  <= 7,A2, A),
-           G = ifelse(is.na(G) & diff  <= 7, G2, G),
-           B = ifelse(is.na(B) & diff  <= 7, B2, B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), DBQ2, Daily.BM.Question)) %>%
-    mutate(A = ifelse(is.na(A) & (diff2 <= 7),A3, A),
-           G = ifelse(is.na(G) & ( diff2 <= 7), G3, G),
-           B = ifelse(is.na(B) & (diff2 <= 7), B3, B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), DBQ3, Daily.BM.Question)) %>%
+    mutate(A = ifelse(is.na(A) & diff  <= 7,lag(A), A),
+           G = ifelse(is.na(G) & diff  <= 7, lag(G), G),
+           B = ifelse(is.na(B) & diff  <= 7, lag(B), B),
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), lag(DBQ), Daily.BM.Question)) %>%
+    mutate(A = ifelse(is.na(A) & (diff2 <= 7),lead(A), A),
+           G = ifelse(is.na(G) & ( diff2 <= 7), lead(G), G),
+           B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), lead(DBQ), Daily.BM.Question)) %>%
     select(-A2, -B2, -G2,-diff,-DBQ2, -diff2, - A3, -B3, -G3, -DBQ3) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "ECRF") %>%
@@ -612,12 +613,12 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     fill(T3, .direction="up") %>%
     fill(S3, .direction="up") %>%
     fill(R3, .direction="up") %>%
-    mutate(T = ifelse(is.na(T) & (diff <= 7),T2, T),
-           S = ifelse(is.na(S) & (diff <= 7), S2, S),
-           R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
-    mutate(T = ifelse(is.na(T) & (diff2 <= 7),T3, T),
-           S = ifelse(is.na(S) & (diff2 <= 7), S3, S),
-           R = ifelse(is.na(R) & (diff2 <= 7), R3, R)) %>%
+    mutate(T = ifelse(is.na(T) & (diff <= 7),lag(T), T),
+           S = ifelse(is.na(S) & (diff <= 7), lag(S), S),
+           R = ifelse(is.na(R) & (diff <= 7 ), lag(R), R)) %>%
+    mutate(T = ifelse(is.na(T) & (diff2 <= 7),lead(T), T),
+           S = ifelse(is.na(S) & (diff2 <= 7), lead(S), S),
+           R = ifelse(is.na(R) & (diff2 <= 7), lead(R), R)) %>%
     select(-T2, -S2, -R2,-diff, -diff2, -T3, -R3, -S3) %>%
     dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R, Global.Assessment.Score = T) %>%
     mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,
@@ -663,11 +664,11 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     fill(S3, .direction="up") %>%
     fill(R3, .direction="up") %>%
     mutate(
-      S = ifelse(is.na(S) & (diff <= 7), S2, S),
-      R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
+      S = ifelse(is.na(S) & (diff <= 7), lag(S), S),
+      R = ifelse(is.na(R) & (diff <= 7 ), lag(R), R)) %>%
     mutate(
-      S = ifelse(is.na(S) & (diff2 <= 7), S3, S),
-      R = ifelse(is.na(R) & (diff2 <= 7), R3, R)) %>%
+      S = ifelse(is.na(S) & (diff2 <= 7), lead(S), S),
+      R = ifelse(is.na(R) & (diff2 <= 7), lead(R), R)) %>%
     select( -S2, -R2,-diff, -diff2, -R3, -S3) %>%
     dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R) %>%
     mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,  Source = "ECRF") %>%
