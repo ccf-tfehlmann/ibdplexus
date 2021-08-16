@@ -469,11 +469,11 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     mutate(A = ifelse(is.na(A) & diff  <= 7,lag(A), A),
            G = ifelse(is.na(G) & diff  <= 7, lag(G), G),
            B = ifelse(is.na(B) & diff  <= 7, lag(B), B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), lag(DBQ), Daily.BM.Question)) %>%
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), lag(Daily.BM.Question), Daily.BM.Question)) %>%
     mutate(A = ifelse(is.na(A) & (diff2 <= 7),lead(A), A),
            G = ifelse(is.na(G) & ( diff2 <= 7), lead(G), G),
            B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), lead(DBQ), Daily.BM.Question)) %>%
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), lead(Daily.BM.Question), Daily.BM.Question)) %>%
     select(-A2, -B2, -G2,-diff,-DBQ2, -diff2, - A3, -B3, -G3, -DBQ3) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "SF") %>%
@@ -531,11 +531,11 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     mutate(A = ifelse(is.na(A) & diff  <= 7,lag(A), A),
            G = ifelse(is.na(G) & diff  <= 7, lag(G), G),
            B = ifelse(is.na(B) & diff  <= 7, lag(B), B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), lag(DBQ), Daily.BM.Question)) %>%
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff  <= 7), lag(Daily.BM.Question), Daily.BM.Question)) %>%
     mutate(A = ifelse(is.na(A) & (diff2 <= 7),lead(A), A),
            G = ifelse(is.na(G) & ( diff2 <= 7), lead(G), G),
            B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
-           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), lead(DBQ), Daily.BM.Question)) %>%
+           Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & ( diff2 <= 7), lead(Daily.BM.Question), Daily.BM.Question)) %>%
     select(-A2, -B2, -G2,-diff,-DBQ2, -diff2, - A3, -B3, -G3, -DBQ3) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44+(2*7*Daily.BM)+(5*7*Abdominal.Pain.Score)+(7*7*General.well.being.score), Source = "ECRF") %>%
@@ -634,7 +634,7 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     filter(grepl("Stool|Blood", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
     mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
     mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
-    mutate(result = case_when(result %in% c("Normal","Normal (same as when I am well)") ~ 0,
+    mutate(result = case_when(result %in% c("Normal","Normal (same as when I am well)", "Less stool than normal") ~ 0,
                               result == "1-2 stools/day more than normal" ~ 1,
                               result == "3-4 stools/day more than normal" ~ 2,
                               result == "5 or more stools per day more than normal" ~ 3,
