@@ -902,6 +902,8 @@ sparc_summary <- function(datadir,
 
        #pick most recently prescribed for each medication group
 
+       if(!is.null(dim(med))){
+
        emr_med = bind_rows(med) %>%
         distinct() %>%
         left_join(med_grp, by = c("drug" = "MEDICATION_NAME")) %>%
@@ -975,7 +977,7 @@ sparc_summary <- function(datadir,
         # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
         select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-       cohort = left_join(cohort, emr_med)
+       cohort = left_join(cohort, emr_med)}
 
        rm(list = c("ecrf_med", "ecrf_med_encounters", "emr_med", "k", "med", "med_enroll", "med_enroll_2", "no_changes_med", "obs_med"))
 
@@ -1012,7 +1014,8 @@ sparc_summary <- function(datadir,
 
        med_list = unique(med_grp$med_grp)
 
-       ms = full_join(med_status_emr, med_status_ecrf)
+         if("med_status_emr" %in% ls()){
+       ms = full_join(med_status_emr, med_status_ecrf)} else {ms = med_status_ecrf}
 
        for (i in 1:length(med_list)){
          ii = (med_list[i])
@@ -1154,6 +1157,7 @@ sparc_summary <- function(datadir,
 
      #pick most recently prescribed for each medication group
 
+     if(!is.null(dim(bio))){
      emr_bio = bind_rows(bio) %>%
        distinct() %>%
        left_join(bio_grp, by = c("drug" = "MEDICATION_NAME")) %>%
@@ -1262,7 +1266,7 @@ sparc_summary <- function(datadir,
        # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
        select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-     cohort = left_join(cohort, emr_bio)
+     cohort = left_join(cohort, emr_bio)}
 
 
 
@@ -1271,7 +1275,8 @@ sparc_summary <- function(datadir,
      bio_list = bio_grp %>% mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE))
      bio_list =  unique(bio_list$med_grp)
 
-     bs = full_join(bio_status_emr, bio_status_ecrf)
+     if("bio_status_emr" %in% ls()){
+     bs = full_join(bio_status_emr, bio_status_ecrf)}  else {bs = bio_status_ecrf}
 
      for (i in 1:length(bio_list)){
        ii = (bio_list[i])
@@ -1388,6 +1393,12 @@ sparc_summary <- function(datadir,
 
      biologics = cohort[,grep(match, colnames(cohort))]
 
+     biologics = biologics %>% select(-ends_with("_SF"))
+
+     ed = grepl("EMR", names(biologics), ignore.case = T) %>% as.character()
+
+     if("TRUE" %in% ed){
+
      index_biologics = biologics %>%
        mutate_if(is.character, ~replace_na(., "")) %>%
           pivot_longer(cols = Adalimumab_status:Vedolizumab_status, names_to = "Biologic", values_to = "Biologic_Status" ) %>%
@@ -1430,7 +1441,40 @@ sparc_summary <- function(datadir,
        slice(which.min(Strength)) %>%
        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Biologic, Strength) %>%
        rename(Biologic_at_index = Biologic) %>%
-       rename(Biologic_at_index_confidence = Strength)
+       rename(Biologic_at_index_confidence = Strength)}   else{index_biologics = biologics %>%
+         mutate_if(is.character, ~replace_na(., "")) %>%
+         pivot_longer(cols = Adalimumab_status:Vedolizumab_status, names_to = "Biologic", values_to = "Biologic_Status" ) %>%
+         filter(Biologic_Status == "Yes") %>%
+         mutate(med_grp = gsub("_status", "", Biologic)) %>%
+         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, Biologic_Status) %>%
+         left_join(biologics) %>%
+         select(colnames(.)[1:4],(sort(colnames(.)[5:18]))) %>%
+         pivot_longer(cols = c(5:18), names_to = "column", values_to = "values") %>%
+         filter(values != "") %>%
+         filter(!grepl("status",column)) %>%
+         separate(column, c("Drug", "Source"), sep = "_") %>%
+         filter(med_grp == Drug) %>%
+         distinct() %>%
+         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Drug), names_from = Source, values_from = values)  %>%
+
+         mutate(ecrf_status = case_when(ECRF %in% c("On Medication at Time of Index") ~ "Yes",
+                                        ECRF %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)") ~ "More Possible",
+                                        ECRF %in% c("Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)","Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)", "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)") ~ "Less Possible",
+                                        ECRF %in% c("", " ") | is.na(ECRF) ~ "No ECRF Info",
+                                        TRUE ~ "No")) %>%
+         mutate(Biologic_at_index_1 = case_when(ecrf_status == "Yes" ~ paste0(Drug)),
+                Biologic_at_index_2 = case_when(ecrf_status %in% c("More Possible", "Less Possible") ~ paste0(Drug))) %>%
+         pivot_longer(cols = Biologic_at_index_1:Biologic_at_index_2, names_to = "Strength", values_to = "Biologic") %>%
+         drop_na(Biologic) %>%
+         mutate(Strength = as.numeric(gsub("Biologic_at_index_", "", Strength)))  %>%
+         arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Strength)  %>%
+         group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+         slice(which.min(Strength)) %>%
+         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Biologic, Strength) %>%
+         rename(Biologic_at_index = Biologic) %>%
+         rename(Biologic_at_index_confidence = Strength)}
+
+
 
      cohort = left_join(cohort, index_biologics)
 
@@ -1447,6 +1491,8 @@ sparc_summary <- function(datadir,
      loading = data$prescriptions %>%
       filter(DEIDENTIFIED_MASTER_PATIENT_ID %in% cohort$DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       filter(DATA_SOURCE == "EMR")
+
+     if(dim(loading)[1] > 0){
 
      m = bio_grp$MEDICATION_NAME
 
@@ -1542,7 +1588,7 @@ sparc_summary <- function(datadir,
       pivot_wider(id_cols = DEIDENTIFIED_MASTER_PATIENT_ID, names_from = med_grp, values_from = first_date)
 
 
-     rm(list = c("med", "m", "loading", "first_use"))
+     rm(list = c("med", "m", "loading", "first_use"))}
 
 
      #ECRF
@@ -1582,16 +1628,16 @@ sparc_summary <- function(datadir,
        drop_na(index_date) %>%
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, MED_START_DATE) %>%
        group_by(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp) %>%
-       select(DEIDENTIFIED_MASTER_PATIENT_ID,  VISIT_ENCOUNTER_START_DATE, med_grp, ROUTE_OF_MEDICATION ,MEDICATION_DOMAIN ,MED_START_DATE,
-              MED_END_DATE, DOSE_OF_MEDICATION,CURRENT_MEDICATION,OTHER_MEDICATION,UNIT_OF_MEASURE_FOR_MEDICATION,   MEDICATION_FREQUENCE   ,
-              MEDICATION_ADMINISTRATED_CODE  ,MEDICATION_ADMINISTRATED   ,FREQUENCY_IN_DAYS  ,    REASON_STOPPED   ,SUMMARY   ,
-              MED_DISCONT_START_DATE   ,MEDICATION_STRENGTH  ,  MED_STRENGTH_UNIT_OF_MEASURE  ,MEDICATION_QUANTITY,MED_QUANTITY_UOM,MED_FORM   ,
-              MEDICATION_TREATMENT_COURSE  ,FREQUENCE_UNIT_OF_MEASURE   ,MEDICATION_ADMIN_DURATION   ,MED_ADMIN_DURATION_UOM  ,
-              GENERIC_MEDICINE_FLAG   ,SUBSTITUTE_MED_INDICATION_FLAG ,PLACE_OF_SERVICE,MEDICATION_REFILLS) %>%
+       # select(DEIDENTIFIED_MASTER_PATIENT_ID,  VISIT_ENCOUNTER_START_DATE, med_grp, ROUTE_OF_MEDICATION ,MEDICATION_DOMAIN ,MED_START_DATE,
+       #        MED_END_DATE, DOSE_OF_MEDICATION,CURRENT_MEDICATION,OTHER_MEDICATION,UNIT_OF_MEASURE_FOR_MEDICATION,   MEDICATION_FREQUENCE   ,
+       #        MEDICATION_ADMINISTRATED_CODE  ,MEDICATION_ADMINISTRATED   ,FREQUENCY_IN_DAYS  ,    REASON_STOPPED   ,SUMMARY   ,
+       #        MED_DISCONT_START_DATE   ,MEDICATION_STRENGTH  ,  MED_STRENGTH_UNIT_OF_MEASURE  ,MEDICATION_QUANTITY,MED_QUANTITY_UOM,MED_FORM   ,
+       #        MEDICATION_TREATMENT_COURSE  ,FREQUENCE_UNIT_OF_MEASURE   ,MEDICATION_ADMIN_DURATION   ,MED_ADMIN_DURATION_UOM  ,
+       #        GENERIC_MEDICINE_FLAG   ,SUBSTITUTE_MED_INDICATION_FLAG ,PLACE_OF_SERVICE,MEDICATION_REFILLS) %>%
        distinct() %>%
        mutate(weeks_between_med = difftime(MED_START_DATE, lag(MED_START_DATE), units = "weeks")) %>%
-       mutate(dose = ifelse(is.na(DOSE_OF_MEDICATION), MEDICATION_STRENGTH, DOSE_OF_MEDICATION)) %>%
-       mutate(route = ifelse(is.na(ROUTE_OF_MEDICATION), MED_FORM, ROUTE_OF_MEDICATION)) %>%
+       #mutate(dose = ifelse(is.na(DOSE_OF_MEDICATION), MEDICATION_STRENGTH, DOSE_OF_MEDICATION)) %>%
+       #mutate(route = ifelse(is.na(ROUTE_OF_MEDICATION), MED_FORM, ROUTE_OF_MEDICATION)) %>%
        mutate(first_date = case_when(is.na(weeks_between_med) ~ MED_START_DATE)) %>%
        fill(first_date,.direction = c("down")) %>%
        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date)
@@ -1603,7 +1649,9 @@ sparc_summary <- function(datadir,
 
      #Combine ECRF with EMR and define if they agree
 
-     first_use = full_join(first_use_emr, first_use_ecrf)
+     if("first_use_emr" %in% ls()){
+
+     first_use = full_join(first_use_emr, first_use_ecrf)} else {first_use = first_use_ecrf}
 
 
      #COMPARE Loading Dates from EMR and ECRF
@@ -1679,10 +1727,10 @@ sparc_summary <- function(datadir,
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
        slice(1) %>%
        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
-       mutate(A = ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`),
-              B = ifelse(is.na(`Current Average Number of Daily Bowel Movements`), `Current Maximum Number of Daily Bowel Movements`, `Current Average Number of Daily Bowel Movements`),
+       mutate(A = if("Abdominal Pain Score" %in% names(.)){ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`)} else {`Abdominal Pain - Pain Scale`},
+              B = if("Current Maximum Number of Daily Bowel Movements" %in% names(.)){ifelse(is.na(`Current Average Number of Daily Bowel Movements`), `Current Maximum Number of Daily Bowel Movements`, `Current Average Number of Daily Bowel Movements`)} else {`Current Average Number of Daily Bowel Movements`},
               G = ifelse(is.na(`Constitutional - General Well-Being`), `Constitutional - General Well-Being`, `Constitutional - General Well-Being`),
-              G = ifelse(is.na(G), `General Well Being Score`, G)) %>%
+              G = if("General Well Being Score" %in% names(.)){ifelse(is.na(G), `General Well Being Score`, G)} else {G}) %>%
        ungroup() %>%
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
        group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -1690,7 +1738,7 @@ sparc_summary <- function(datadir,
               diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
        #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
        ungroup() %>%
-       mutate(Daily.BM.Question = case_when(B == `Current Maximum Number of Daily Bowel Movements` ~ "Current Maximum Number of Daily Bowel Movements",
+       mutate(Daily.BM.Question = case_when(if("Current Maximum Number of Daily Bowel Movements" %in% names(.)){B == `Current Maximum Number of Daily Bowel Movements` ~ "Current Maximum Number of Daily Bowel Movements"},
                                             B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
                                             TRUE ~ as.character(NA))) %>%
        mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question,A3 = A, B3 = B, G3 = G, DBQ3 = Daily.BM.Question) %>%
@@ -1833,9 +1881,9 @@ sparc_summary <- function(datadir,
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
        slice(1) %>%
        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
-       mutate(T = ifelse(is.na(`Physician's Global Assessment of Current Disease Status`), `Inflammatory Bowel Disease - Global Assessment Score`, `Physician's Global Assessment of Current Disease Status`),
+       mutate(T = if("Inflammatory Bowel Disease - Global Assessment Score" %in% names(.)){ifelse(is.na(`Physician's Global Assessment of Current Disease Status`), `Inflammatory Bowel Disease - Global Assessment Score`, `Physician's Global Assessment of Current Disease Status`)} else {`Physician's Global Assessment of Current Disease Status`},
               R = `Blood in Stool - Recent Change in Rectal Bleeding Amount`,
-              S = ifelse(is.na(`Recent Change in Daily Stool Frequency`), `Stool Frequency Score`, `Recent Change in Daily Stool Frequency`)) %>%
+              S = if("Stool Frequency Score" %in% names(.)) {ifelse(is.na(`Recent Change in Daily Stool Frequency`), `Stool Frequency Score`, `Recent Change in Daily Stool Frequency`)} else{`Recent Change in Daily Stool Frequency`}) %>%
        ungroup() %>%
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
        group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -2024,30 +2072,23 @@ sparc_summary <- function(datadir,
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
        slice(1) %>%
        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
-       mutate(T = ifelse(is.na(`Physician's Global Assessment of Current Disease Status`), `Inflammatory Bowel Disease - Global Assessment Score`, `Physician's Global Assessment of Current Disease Status`),
-              R = `Blood in Stool - Recent Change in Rectal Bleeding Amount`,
-              S = ifelse(is.na(`Recent Change in Daily Stool Frequency`), `Stool Frequency Score`, `Recent Change in Daily Stool Frequency`)) %>%
+       mutate(T = if("Inflammatory Bowel Disease - Global Assessment Score" %in% names(.)){ifelse(is.na(`Physician's Global Assessment of Current Disease Status`), `Inflammatory Bowel Disease - Global Assessment Score`, `Physician's Global Assessment of Current Disease Status`)} else {`Physician's Global Assessment of Current Disease Status`}) %>%
        ungroup() %>%
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
        group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-       mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+       mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),
+              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
        #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
        ungroup() %>%
-       mutate(T2 = T, R2 = R, S2 = S, T3 = T, R3 = R, S3 = S) %>%
+       mutate(T2 = T,T3 = T) %>%
        group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
        fill(T2, .direction="down") %>%
-       fill(S2, .direction="down") %>%
-       fill(R2, .direction="down") %>%
+
        fill(T3, .direction="up") %>%
-       fill(S3, .direction="up") %>%
-       fill(R3, .direction="up") %>%
-       mutate(T = ifelse(is.na(T) & (diff <= 7),lag(T), T),
-              S = ifelse(is.na(S) & (diff <= 7), lag(S), S),
-              R = ifelse(is.na(R) & (diff <= 7 ), lag(R), R)) %>%
-       mutate(T = ifelse(is.na(T) & (diff2 <= 7),lead(T), T),
-              S = ifelse(is.na(S) & (diff2 <= 7), lead(S), S),
-              R = ifelse(is.na(R) & (diff2 <= 7), lead(R), R)) %>%
-       select(-T2, -S2, -R2,-diff, -diff2, -T3, -R3, -S3) %>%
+
+       mutate(T = ifelse(is.na(T) & (diff <= 7),lag(T), T)) %>%
+       mutate(T = ifelse(is.na(T) & (diff2 <= 7),lead(T), T)) %>%
+       select(-T2, -diff, -diff2, -T3) %>%
        dplyr::rename(PGA = T) %>%
        drop_na(PGA) %>%
        mutate(PGA.date = OBS_TEST_RESULT_DATE) %>%
