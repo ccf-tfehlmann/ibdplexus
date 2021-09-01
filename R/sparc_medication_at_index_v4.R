@@ -24,16 +24,25 @@ data = load_data(datadir = datadir, cohort = "SPARC", domains = c("Demographics"
 #DEMOGRAPHIC INFORMATION
 #===============================
 #demographic information
-demo = data$demographics %>%
+
+consent = data$demographics %>%
   filter(DATA_SOURCE == "ECRF_SPARC") %>%
-  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, BIRTH_YEAR, GENDER) %>%
+  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN) %>%
   mutate(DATE_OF_CONSENT = dmy(DATE_OF_CONSENT)) %>%
   filter(year(DATE_OF_CONSENT) >= 2016) %>%
   group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
   slice(which.min(DATE_OF_CONSENT)) %>%
   ungroup()
 
+demo = data$demographics %>%
+  filter(DATA_SOURCE %in% c("EMR", "ECRF_SPARC")) %>%
+  arrange(DEIDENTIFIED_MASTER_PATIENT_ID,desc(DATA_SOURCE)) %>%
+  group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+  slice(1) %>%
+  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIRTH_YEAR, GENDER) %>%
+  ungroup()
 
+demo = full_join(consent, demo)
 #===============================
 #CONVERT DAYS AFTER INDEX  TO NUMERIC VALUE
 #===============================

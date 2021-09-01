@@ -27,14 +27,25 @@ sparc_scores <- function(datadir,
 #DEMOGRAPHIC INFORMATION
 #===============================
 #demographic information
-demo = data$demographics %>%
-  filter(DATA_SOURCE == "ECRF_SPARC") %>%
-  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, BIRTH_YEAR, GENDER) %>%
-  mutate(DATE_OF_CONSENT = dmy(DATE_OF_CONSENT)) %>%
-  filter(year(DATE_OF_CONSENT) >= 2016) %>%
-  group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-  slice(which.min(DATE_OF_CONSENT)) %>%
-  ungroup()
+
+  consent = data$demographics %>%
+    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN) %>%
+    mutate(DATE_OF_CONSENT = dmy(DATE_OF_CONSENT)) %>%
+    filter(year(DATE_OF_CONSENT) >= 2016) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    slice(which.min(DATE_OF_CONSENT)) %>%
+    ungroup()
+
+  demo = data$demographics %>%
+    filter(DATA_SOURCE %in% c("EMR", "ECRF_SPARC")) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID,desc(DATA_SOURCE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    slice(1) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIRTH_YEAR, GENDER) %>%
+    ungroup()
+
+  demo = full_join(consent, demo)
 
 
 #===============================
@@ -791,7 +802,7 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-     mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
+    mutate(diff = OBS_TEST_RESULT_DATE- lag(OBS_TEST_RESULT_DATE),              diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE)  %>%
     #mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
     mutate(T2 = T, R2 = R, S2 = S, T3 = T, R3 = R, S3 = S) %>%
@@ -802,12 +813,12 @@ if("DATE_OF_CONSENT" %in% index_info){cohort = demo %>% mutate(index_date = DATE
     fill(T3, .direction="up") %>%
     fill(S3, .direction="up") %>%
     fill(R3, .direction="up") %>%
-    mutate(T = ifelse(is.na(T) & (diff <= 7),T2, T),
-           S = ifelse(is.na(S) & (diff <= 7), S2, S),
-           R = ifelse(is.na(R) & (diff <= 7 ), R2, R)) %>%
-    mutate(T = ifelse(is.na(T) & (diff <= 7),T3, T),
-           S = ifelse(is.na(S) & (diff <= 7), S3, S),
-           R = ifelse(is.na(R) & (diff <= 7), R3, R)) %>%
+    mutate(T = ifelse(is.na(T) & (diff <= 7),lag(T), T),
+           S = ifelse(is.na(S) & (diff <= 7), lag(S), S),
+           R = ifelse(is.na(R) & (diff <= 7 ), lag(R), R)) %>%
+    mutate(T = ifelse(is.na(T) & (diff2 <= 7),lead(T), T),
+           S = ifelse(is.na(S) & (diff2 <= 7), lead(S), S),
+           R = ifelse(is.na(R) & (diff2 <= 7), lead(R), R)) %>%
     select(-T2, -S2, -R2,-diff, -diff2, -T3, -R3, -S3) %>%
     dplyr::rename(PGA = T) %>%
     drop_na(PGA) %>%
