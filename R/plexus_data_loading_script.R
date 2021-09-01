@@ -91,6 +91,7 @@ data <- lapply(files, function(x)
 
 #Assign Names
 names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
+names(data) = gsub("_SiteExtract", "", names(data))
 names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
 
 
@@ -266,7 +267,9 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
   #Assign Names
   names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
+  names(data) = gsub("_SiteExtract", "", names(data))
   names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
+
 
 
   #Combine Data with the Same Name (Collapses EMR and CRF data)
