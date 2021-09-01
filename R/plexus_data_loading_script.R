@@ -28,9 +28,11 @@ list_names = grep("demographic", folders, ignore.case = T, value = T)
 list_names = grep("family", list_names, ignore.case = T, value = T, invert = T)
 
 
-cohorts = lapply(paste0(datadir,list_names), function(x) {read.csv(x, header = T, nrows = 1)})
+cohorts = lapply(paste0(datadir,list_names), function(x) {read.csv(x, header = T, nrows = 2)})
 
 names(cohorts) = gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
+names(cohorts) = gsub("___", '__',  names(cohorts))
+
 names(cohorts) = gsub("^([^__]*__[^_]*).*", '\\1',  names(cohorts))
 
 
@@ -211,10 +213,13 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   list_names = grep("family", list_names, ignore.case = T, value = T, invert = T)
 
 
-  cohorts = lapply(list_names, function(x) {read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 1)})
+  cohorts = lapply(list_names, function(x) {read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 2)})
 
-  names(cohorts) = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
+  names(cohorts) = gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
+  names(cohorts) = gsub("___", '__',  names(cohorts))
+
   names(cohorts) = gsub("^([^__]*__[^_]*).*", '\\1',  names(cohorts))
+
 
   cohorts = bind_rows(cohorts, .id = "df")
 
