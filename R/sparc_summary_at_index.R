@@ -58,7 +58,7 @@ sparc_summary <- function(datadir,
 
 # DIAGNOSIS ----
 
-
+if(0){
     dx = data$diagnosis %>%
       filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC", "ECRF_QORUS")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
@@ -71,7 +71,21 @@ sparc_summary <- function(datadir,
       right_join(cohort) %>%
       mutate(diff = abs(dmy(VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
       slice(which.min(diff)) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID, Diagnosis)
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, Diagnosis)}
+
+
+  dx = data$diagnosis %>%
+    filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC", "ECRF_QORUS")) %>%
+    filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
+    left_join(data$encounter) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(Diagnosis = DIAG_CONCEPT_NAME) %>%
+    dplyr::mutate(keep = ifelse(DATA_SOURCE == "SF_SPARC" & is.na(DIAG_STATUS_CONCEPT_NAME), 0, 1)) %>% #Smartform Data should have a DIAG_STATUS_CONCEPT_NAME equal to yes
+    filter(keep ==1) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(DATA_SOURCE, c("SF_SPARC","ECRF_SPARC")), desc(dmy(VISIT_ENCOUNTER_START_DATE))) %>%
+    slice(1) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, Diagnosis)
+
 
     cohort = left_join(cohort, dx)
 
