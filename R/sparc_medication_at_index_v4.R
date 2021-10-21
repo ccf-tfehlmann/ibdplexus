@@ -11,7 +11,7 @@
 #' @param index_range the number of days to look out from index date.
 #'
 #' @return A dataframe with medication predictions and an excel file.
-#' @export
+#'
 sparc_medication <- function(datadir,
                              index_info = "DATE_OF_CONSENT",
                              filename = "SPARC_MEDICATION.xlsx",
