@@ -46,7 +46,7 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
   - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_medication_at_index_userguide_updated102121.pdf">`sparc_medication()`</a>
+  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_medication_at_index_userguide_updated_102721.pdf">`sparc_medication()`</a>
 
   - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
 

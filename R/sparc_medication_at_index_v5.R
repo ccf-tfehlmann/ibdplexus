@@ -246,7 +246,7 @@ dx = data$diagnosis %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp) %>%
       mutate(diff = index_date - start_date) %>%
       slice(which.min(as.numeric(diff))) %>%
-      mutate(onmed = 1,
+      mutate(onmed = "Yes",
              MED_END_DATE = dmy(MED_END_DATE),
              MED_START_DATE = dmy(MED_START_DATE)) %>%
       ungroup() %>%
@@ -256,7 +256,7 @@ dx = data$diagnosis %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, onmed) %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
             value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_STATUS_ECRF')) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
     ecrf_med_start = dates %>%
@@ -278,30 +278,54 @@ dx = data$diagnosis %>%
       mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
       mutate(across(c(contains("DATE")),~ymd(.)))
 
-    med_at_index =  dates %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, onmed) %>%
-      arrange(med_grp) %>%
+
+    med_status = med_status_ecrf %>%
+      mutate(across(ends_with(c("EMR", "ECRF")), ~ifelse(.=="", NA, as.character(.)))) %>%
+      pivot_longer(cols = ends_with(c("EMR", "ECRF")), names_to = "DRUG_SOURCE", values_to = "STATUS") %>%
+      separate(col = DRUG_SOURCE, into = c("DRUG", "SOURCE"), sep = "_") %>%
+      drop_na(STATUS) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ DRUG ,
+                      value.var = "SOURCE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      mutate(across(!(contains(c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))), ~ifelse(.=="", NA, as.character(.)))) %>%
+      mutate_all(funs(gsub("EMR; ECRF|ECRF; EMR", "Both", .))) %>%
+      rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, - index_date),function(x) paste0(x,"_source")) %>%
+      mutate(index_date = ymd(index_date))
+
+    med_status = med_status[grep("_source|DEIDENTIFIED_MASTER_PATIENT_ID|index_date", names(med_status))]
+
+
+
+    ecrf_med = full_join(ecrf_med_start,ecrf_med_end) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,   contains(c("Adalim", "Antibiotic", "Azathio", "Balsa","Cert",
+                                                                      "Cortico", "Cyclo", "Dip","Gol","Inflix", "Lopera",
+                                                                      "Merc", "Mesa", "Meth","Nata", "Olsa", "Other", "Oza", "Sulf", "Tacr",
+                                                                      "Thio", "Tofa", "Upad", "Uste", "Vedo")))%>%
+      ungroup()
+
+
+    cohort = cohort %>%
+      left_join(ecrf_med) %>%
+      left_join(med_status)
+
+    med_at_index = cohort %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, ends_with("_source", ignore.case = TRUE)) %>%
+      select(!contains("loading", ignore.case = T)) %>%
+      pivot_longer(ends_with("source", ignore.case = T), names_to = "med_grp", values_to = "onmed") %>%
+      drop_na(onmed) %>%
+      mutate(med_grp = gsub("_source", "", med_grp)) %>%
+      filter(med_grp != "Other IBD Medication") %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
       pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date),
                   names_from = c,
-                  values_from = med_grp,
-                  names_prefix = "MED_") %>%
-      unite("MEDICATION_AT_INDEX", starts_with("MED"), na.rm = T, sep = "; ") %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
+                  values_from = c(med_grp, onmed)) %>%
+      unite("MEDICATION_AT_INDEX", starts_with("med_grp"), na.rm = T, sep = "; ") %>%
+      unite("MEDICATION_AT_INDEX_SOURCE", starts_with("onmed"), na.rm = T, sep = ";") %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      select(-MEDICATION_AT_INDEX_SOURCE)
 
-
-
-    ecrf_med = med_at_index %>%
-      left_join(ecrf_med_start) %>%
-      left_join(ecrf_med_end) %>%
-      left_join(med_status_ecrf) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, MEDICATION_AT_INDEX, contains(c("Adalim", "Antibiotic", "Azathio", "Balsa","Cert",
-                                                                                         "Cortico", "Cyclo", "Dip","Gol","Inflix", "Lopera",
-                                                                    "Merc", "Mesa", "Meth","Nata", "Olsa", "Other", "Oza", "Sulf", "Tacr",
-                                                                    "Thio", "Tofa", "Upad", "Uste", "Vedo")))
-
-
+    cohort = cohort %>%
+      left_join(med_at_index)
 
     #FIND IF FIRST TIME ON BIOLOGIC (LOADING DATE) ----
 
@@ -501,13 +525,13 @@ dx = data$diagnosis %>%
 
     #create cohort ----
 
-cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
+cohort = cohort %>% left_join(first_use) %>%
       select(-No_IBD_Medication_At_Enrollment)
 
     #NO MEDICATION AT INDEX DATE ----
 
     no_med_index = cohort %>%
-      filter_at(vars(ends_with("_STATUS_ECRF")), all_vars(. %in% c("", NA))) %>%
+      filter_at(vars(ends_with("_source")), all_vars(. %in% c("", NA))) %>%
       mutate(No_IBD_Medication_At_Index = 1) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, No_IBD_Medication_At_Index)
 
@@ -539,6 +563,7 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
 
     cohort = cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
 
+    cohort = cohort %>% select(-ends_with("source"))
 
     names(cohort) = toupper(names(cohort))
 
@@ -584,9 +609,9 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
     conf = max(which(colnames(cohort) %in% toupper("MEDICATION_AT_INDEX")))
 
     #column headers
-    conditionalFormatting(wb, "med_at_enrollment", cols=1:democoln, rows=1, rule="!=0", style = style1)
+    conditionalFormatting(wb, "med_at_enrollment", cols=1:democoln, rows=1, rule="!=0", style = style2)
     conditionalFormatting(wb, "med_at_enrollment", cols=(democoln+1):conf, rows=1, rule="!=0", style = style2)
-    conditionalFormatting(wb, "med_at_enrollment", cols=(conf+1):coln, rows=1, rule="!=0", style = style3)
+    conditionalFormatting(wb, "med_at_enrollment", cols=(conf+1):coln, rows=1, rule="!=0", style = style2)
 
 
 
@@ -601,25 +626,23 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
     #DEFINE MEDICATION GROUPS ----
 
 
-    #upload medication mapping
+    #separate out biologics, immunomodulators and aminoacylates
 
-    med_grp2 = meds
+    grp1 = meds %>%
+      filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators"))
 
-    #separate out biologics
+    grp2 = meds %>%
+      filter(!(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")))
 
-    bio_grp = med_grp2 %>%
-      filter(med_type == "Biologic")
 
-    med_grp2 = med_grp2 %>%
-      filter(med_type != "Biologic")
-
+    #GRP2 - older, stricter logic
 
     #MEDICATIONS FROM ECRF ----
 
     ecrf_med = data$prescriptions %>%
       bind_rows(pull_forward_prescriptions) %>%
       filter(DATA_SOURCE == "ECRF_SPARC") %>%
-      left_join(med_grp2) %>%
+      left_join(grp2) %>%
       drop_na(med_grp) %>%
       group_by(VISIT_ENCOUNTER_ID, MEDICATION_NAME, MED_START_DATE) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(CURRENT_MEDICATION, c("YES", "NO"))) %>%
@@ -652,11 +675,13 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
                                       possible_datediff > 12 ~ "Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)")) %>%
       mutate(status = ifelse(is.na(status), possible_cat, status)) %>%
       left_join(med_grp) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, status) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, status, MED_START_DATE, MED_END_DATE) %>%
       mutate(onmed = case_when(grepl("Possibly", status) ~ "Possible",
                                status %in% c("On Medication at Time of Index") ~ "Yes",
                                TRUE ~ "No")) %>%
-      mutate(onmed = ifelse(status == "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)", "Yes", onmed))
+      mutate(onmed = ifelse(status == "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)", "Yes", onmed)) %>%
+      filter(onmed == "Yes") %>%
+      filter(med_grp != "Other IBD Medication")
 
     med_status_ecrf = ecrf_med %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
@@ -664,14 +689,31 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
       dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-    ecrf_med = ecrf_med %>%
+
+    ecrf_med_start = ecrf_med %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_START_DATE) %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "status",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
+                      value.var = "MED_START_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_START_DATE_ECRF')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
+
+
+    ecrf_med_end = ecrf_med %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_END_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "MED_END_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_END_DATE_ECRF')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
+
+    ecrf_med = full_join(ecrf_med_start,ecrf_med_end) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  contains(c("Antibiotic", "Cortico", "Diph", "Lopera"))) %>%
+      ungroup()
 
     cohort = left_join(cohort, ecrf_med)
-
 
     #MEDICATIONS FROM EMR ----
 
@@ -679,7 +721,7 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
       filter(DEIDENTIFIED_MASTER_PATIENT_ID %in% cohort$DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       filter(DATA_SOURCE == "EMR")
 
-    m = med_grp2$MEDICATION_NAME
+    m = grp2$MEDICATION_NAME
 
     med = NULL
     for( i in 1:length(m)){
@@ -697,7 +739,7 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
 
     emr_med = bind_rows(med) %>%
       distinct() %>%
-      left_join(med_grp2, by = c("drug" = "MEDICATION_NAME")) %>%
+      left_join(grp2, by = c("drug" = "MEDICATION_NAME")) %>%
       drop_na(med_grp) %>%
       mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE)) %>%
       ungroup() %>%
@@ -735,7 +777,7 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
       mutate(status = case_when(status == "Medication Stopped Prior to Index" ~ paste0("Medication Stopped ", round(index_to_end,0), " days Prior to Index"),
                                 status == "Medication Started After Index" ~ paste0("Medication Started ", round(index_to_start,0), " days After Index"),
                                 TRUE ~ status)) %>%
-      left_join(med_grp2) %>%
+      left_join(grp2) %>%
 
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, med_type, status, VISIT_ENCOUNTER_START_DATE,MED_START_DATE, MED_END_DATE,index_to_start, index_to_end) %>%
       mutate(indexdays = ifelse(index_to_start < 0, index_to_end, index_to_start )) %>%
@@ -753,7 +795,9 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
       mutate(onmed = case_when(grepl("Possibly", status) ~ "Possible",
                                status %in% c("On Medication at Time of Index") ~ "Yes",
                                TRUE ~ "No")) %>%
-      mutate(onmed = ifelse(status == "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)", "Yes", onmed))
+      mutate(onmed = ifelse(status == "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)", "Yes", onmed)) %>%
+      filter(onmed == "Yes") %>%
+      filter(med_grp != "Other IBD Medication")
 
     med_status_emr = emr_med %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
@@ -762,450 +806,227 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
       # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-    emr_med = emr_med %>%
+
+    emr_med_start = emr_med %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_START_DATE) %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "status",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_EMR')) %>%
-      # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
+                      value.var = "MED_START_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_START_DATE_EMR')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
+
+
+   emr_med_end = emr_med %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_END_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "MED_END_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_END_DATE_EMR')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
+
+
+   emr_med = full_join(emr_med_start, emr_med_end) %>%
+     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  contains(c("Antibiotic", "Cortico"))) %>%
+     ungroup()
+
 
     cohort = left_join(cohort, emr_med)
 
-    rm(list = c("ecrf_med", "ecrf_med_encounters", "emr_med", "k", "med", "med_enroll", "med_enroll_2", "no_changes_med", "obs_med"))
+   # rm(list = c("ecrf_med", "ecrf_med_encounters", "emr_med", "k", "med", "med_enroll", "med_enroll_2", "no_changes_med", "obs_med"))
+
+
+    cohort[cohort==""] <- NA
 
 
     #COMPARE SOURCES FOR MEDICATIONS ----
 
-    med_list = unique(med_grp2$med_grp)
+    med_list = unique(grp2$med_grp)
 
-    ms = full_join(med_status_emr, med_status_ecrf)
-
-    for (i in 1:length(med_list)){
-      ii = (med_list[i])
-      nums=grep(paste0(ii), names(ms))
-      if(length(nums) > 1){
-        ms = within(ms, assign(paste0(ii,"_status"), sapply(1:nrow(ms), function(x){paste0(ms[nums[1]][x,], ";", ms[nums[2]][x,])})))} else if(length(nums) == 1){
-          ms = within(ms, assign(paste0(ii,"_status"), sapply(1:nrow(ms), function(x){paste0(ms[nums[1]][x,])})))} else{
-            ms = within(ms, assign(paste0(ii,"_status"), sapply(1:nrow(ms), function(x){paste0(as.character(NA))}))) }
-    }
-
-    med_status = ms %>%
-      mutate_all(funs(gsub("NA", "", .))) %>%
-      mutate_all(funs(gsub("No;No", "No", .))) %>%
-      mutate_all(funs(gsub("Possible;Possible", "Possible", .))) %>%
-      mutate_all(funs(gsub("Possible;Yes|Yes;Yes|Yes;Possible", "Yes", .))) %>%
-      mutate_all(funs(gsub("No;Yes|Possible;No|Yes;No|No;Possible", "Contradicts", .))) %>%
-      mutate_all(funs(gsub(";", "", .)))  %>%
+    med_status = full_join(med_status_emr, med_status_ecrf) %>%
+      mutate(across(ends_with(c("EMR", "ECRF")), ~ifelse(.=="", NA, as.character(.)))) %>%
+      pivot_longer(cols = ends_with(c("EMR", "ECRF")), names_to = "DRUG_SOURCE", values_to = "STATUS") %>%
+      separate(col = DRUG_SOURCE, into = c("DRUG", "SOURCE"), sep = "_") %>%
+      drop_na(STATUS) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ DRUG ,
+                      value.var = "SOURCE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      mutate(across(!(contains(c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))), ~ifelse(.=="", NA, as.character(.)))) %>%
+      mutate_all(funs(gsub("EMR; ECRF|ECRF; EMR", "Both", .))) %>%
+      rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, - index_date),function(x) paste0(x,"_source")) %>%
       mutate(index_date = ymd(index_date))
 
-    med_status = med_status[grep("_status|DEIDENTIFIED_MASTER_PATIENT_ID|index_date", names(med_status))]
+    med_status = med_status[grep("_source|DEIDENTIFIED_MASTER_PATIENT_ID|index_date", names(med_status))]
 
     cohort = left_join(cohort, med_status)
 
-    #BIOLOGICS ----
+    rm(list = c("med_status", "emr_med", "ecrf_med", "emr_med_start", "emr_med_end", "ecrf_med_start", "ecrf_med_end", "med_status_ecrf", "med_status_emr"))
 
 
+    #BIOLOGICS, AMINOCYLATES AND IMMUNOMODULATORS ----
 
-    #BIOLOGICS FROM ECRF ----
+    m = grp1$MEDICATION_NAME
 
-    ecrf_bio = data$prescriptions %>%
-      bind_rows(pull_forward_prescriptions) %>%
-      filter(DATA_SOURCE == "ECRF_SPARC") %>%
-      left_join(bio_grp) %>%
-      drop_na(med_grp) %>%
-      group_by(VISIT_ENCOUNTER_ID, MEDICATION_NAME, MED_START_DATE) %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(CURRENT_MEDICATION, c("YES", "NO"))) %>%
-      slice(1) %>%
-      ungroup() %>%
-      left_join(data$encounter) %>%
-      mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE, MEDICATION_NAME, CURRENT_MEDICATION, MED_START_DATE, MED_END_DATE, med_type, new_med_name, med_grp) %>%
-      mutate(MED_START_DATE = dmy(MED_START_DATE),
-             MED_END_DATE = if_else(CURRENT_MEDICATION == "NO" & is.na(MED_END_DATE), (VISIT_ENCOUNTER_START_DATE), dmy(MED_END_DATE))) %>%
-      filter(year(MED_START_DATE) > 1900) %>%
-      left_join(cohort) %>%
-      drop_na(index_date) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,med_grp, index_date) %>%
-      mutate(diff = abs(index_date - VISIT_ENCOUNTER_START_DATE)) %>%
-      slice(which.min(diff)) %>%
-      ungroup() %>%
-      mutate(int = MED_START_DATE %--% MED_END_DATE,
-             int2 = if_else(is.na(MED_END_DATE), MED_START_DATE %--% VISIT_ENCOUNTER_START_DATE, as.interval(NA))) %>%
-      mutate(status = case_when( !is.na(MED_END_DATE) & MED_END_DATE < index_date ~ "Medication Stopped Prior to Index",
-                                 index_date == MED_START_DATE ~ "Medication Started on Same Date as Index",
-                                 index_date == MED_END_DATE ~ "Medication End Date on Same Date as Index",
-                                 index_date %within% int ~ "On Medication at Time of Index",
-                                 index_date %within% int2 ~ "On Medication at Time of Index",
-                                 index_date < MED_START_DATE ~ "Medication Started After Index")) %>%
-      mutate(possible_datediff = if_else(is.na(status), (as.numeric(index_date - VISIT_ENCOUNTER_START_DATE)/30.5), as.numeric(NA))) %>%
-      mutate(possible_cat = case_when(possible_datediff <= 3 ~ "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)",
-                                      possible_datediff > 3 & possible_datediff <= 6 ~ "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)",
-                                      possible_datediff > 6 & possible_datediff <= 12 ~ "Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)",
-                                      possible_datediff > 12 ~ "Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)")) %>%
-      mutate(status = ifelse(is.na(status), possible_cat, status)) %>%
-      left_join(bio_grp) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, status,MED_START_DATE, VISIT_ENCOUNTER_START_DATE, MED_END_DATE) %>%
-      mutate(onmed = case_when(grepl("Possibly", status) ~ "Possible",
-                               status %in% c("On Medication at Time of Index") ~ "Yes",
-                               TRUE ~ "No")) %>%
-      mutate(onmed = ifelse(status == "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)", "Yes", onmed))
-
-    #if on both pick most recently reported
-    mult_bio_ecrf = ecrf_bio %>%
-      dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
-      unite("status", Adalimumab_ECRF:Vedolizumab_ECRF, sep = ";", remove = F, na.rm = T) %>%
-      mutate(yescount = str_count(status, pattern = "Yes")) %>%
-      filter(yescount > 1)
-
-
-    if(dim(mult_bio_ecrf)[1] > 0){mult_bio_ecrf = mult_bio_ecrf %>%
-      pivot_longer(cols = Adalimumab_ECRF:Vedolizumab_ECRF, names_to = "Biologic", values_to = "Biologic_Status" ) %>%
-      filter(Biologic_Status == "Yes") %>%
-      mutate(med_grp = gsub("_ECRF", "", Biologic)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, Biologic_Status) %>%
-      left_join(ecrf_bio) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-      mutate(new_start_date = if_else(is.na(MED_START_DATE), VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
-      mutate(most_recent_date = max(new_start_date)) %>%
-      mutate(keep = case_when(new_start_date == most_recent_date ~ 1,
-                              med_grp %in% c("Ustekinumab", "Vedolizumab") ~ 2)) %>%
-      slice(which.min(keep)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp) %>%
-      rename(bio_to_keep = med_grp)
-
-    ecrf_bio = ecrf_bio %>%
-      left_join(mult_bio_ecrf) %>%
-      mutate(onmed = case_when(bio_to_keep == med_grp ~ "Yes",
-                               !is.na(bio_to_keep) & bio_to_keep != med_grp ~ "No",
-                               TRUE ~ onmed)) %>%
-      ungroup()} else {ecrf_bio = ecrf_bio}
-
-
-    bio_status_ecrf = ecrf_bio %>%
-      dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
-
-    ecrf_bio = ecrf_bio %>%
-      dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "status",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
-
-    cohort = left_join(cohort, ecrf_bio)
-
-
-    #BIOLOGICS FROM EMR ----
-
-    emr_bio = data$prescriptions %>%
-      filter(DEIDENTIFIED_MASTER_PATIENT_ID %in% cohort$DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      filter(DATA_SOURCE == "EMR")
-
-    b = bio_grp$MEDICATION_NAME
-
-    bio = NULL
-    for( i in 1:length(b)){
-      k = emr_bio %>%
-        filter(grepl(b[i], MEDICATION_NAME, ignore.case=T)) %>%
-        mutate(drug = paste0(b[i]))
-      bio[[i]] = k
+    med = NULL
+    for( i in 1:length(m)){
+      k = data$prescriptions %>%
+        bind_rows(pull_forward_prescriptions) %>%
+        filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF_QORUS", "EMR")) %>%
+        mutate(MEDICATION_NAME  = ifelse(MEDICATION_NAME == "Other (IBD Medication)", OTHER_MEDICATION, MEDICATION_NAME)) %>%
+        mutate(MEDICATION_NAME = ifelse(MEDICATION_NAME == "upacitinib", "Upadacitinib", MEDICATION_NAME)) %>%
+        filter(grepl(m[i], MEDICATION_NAME, ignore.case=T)) %>%
+        mutate(drug = paste0(m[i]))
+      med[[i]] = k
     }
 
-    names(bio) = b
+    names(med) = m
 
-    bio = bio[sapply(bio, nrow)>0]
+    med = med[sapply(med, nrow)>0]
 
-    #pick most recently prescribed for each medication group
 
-    emr_bio = bind_rows(bio) %>%
-      distinct() %>%
-      left_join(bio_grp, by = c("drug" = "MEDICATION_NAME")) %>%
-      drop_na(med_grp) %>%
-      mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE)) %>%
-      ungroup() %>%
-      filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
+    #if med end date missing and survey from enrollment then consider current
+    #if med end date missing and survey from after enrollment and current flag = yes then consider current
+    #if med end date missing and survey from after enrollment and current flag = no then use visit encounter start date as end date
+
+
+    dates = bind_rows(med) %>%
       left_join(data$encounter) %>%
-      mutate(MED_START_DATE = dmy(MED_START_DATE),
-             MED_END_DATE = dmy(MED_END_DATE),
-             VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
-      filter(year(MED_START_DATE) > 1900) %>%
+      left_join(consent) %>%
+      mutate(start_date =  dmy(MED_START_DATE),
+             end_date = dmy(MED_END_DATE)) %>%
+      filter(year(start_date) > 1900) %>%
+      mutate(t = abs(DATE_OF_CONSENT- dmy(VISIT_ENCOUNTER_START_DATE))) %>%
+      mutate(end_date = if_else(t <= 30  & is.na(MED_END_DATE) & DATA_SOURCE == "ECRF_SPARC", dmy(NA), dmy(MED_END_DATE))) %>%
+      mutate(end_date = if_else(t > 30 & DATA_SOURCE == "ECRF_SPARC" & CURRENT_MEDICATION == "NO" & is.na(MED_END_DATE) & is.na(end_date) ,  dmy(VISIT_ENCOUNTER_START_DATE), end_date)) %>%
+      mutate(current = if_else(is.na(end_date) & DATA_SOURCE == "ECRF_SPARC", 1, 0)) %>%
+      left_join(grp1, by = c("drug" = "MEDICATION_NAME")) %>%
       left_join(cohort) %>%
       drop_na(index_date) %>%
-      mutate(int = MED_START_DATE %--% MED_END_DATE,
-             int2 = if_else(is.na(MED_END_DATE), MED_START_DATE %--% VISIT_ENCOUNTER_START_DATE, as.interval(NA)),
-             int3 = if_else(is.na(MED_START_DATE), VISIT_ENCOUNTER_START_DATE %--% MED_END_DATE, as.interval(NA))) %>%
-      mutate(status = case_when( !is.na(MED_END_DATE) & MED_END_DATE < index_date ~ "Medication Stopped Prior to Index",
-                                 index_date == MED_START_DATE ~ "Medication Started on Same Date as Index",
-                                 index_date == MED_END_DATE ~ "Medication End Date on Same Date as Index",
-                                 index_date %within% int ~ "On Medication at Time of Index",
-                                 index_date %within% int2 ~ "On Medication at Time of Index",
-                                 index_date %within% int3 ~ "On Medication at Time of Index",
-                                 index_date < MED_START_DATE ~ "Medication Started After Index")) %>%
-      mutate(possible_datediff = if_else(is.na(status), (as.numeric(index_date - VISIT_ENCOUNTER_START_DATE)/30.5), as.numeric(NA))) %>%
-      mutate(possible_cat = case_when(possible_datediff <= 3 ~ "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)",
-                                      possible_datediff > 3 & possible_datediff <= 6 ~ "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)",
-                                      possible_datediff > 6 & possible_datediff <= 12 ~ "Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)",
-                                      possible_datediff > 12 ~ "Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)")) %>%
-      mutate(status = ifelse(is.na(status), possible_cat, status)) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, DATA_SOURCE, new_med_name, med_grp, start_date, end_date, MED_START_DATE, MED_END_DATE, current) %>%
+      mutate(int = start_date %--% end_date) %>%
+      mutate(keep1 = if_else((index_date %within% int) ,1,0),
+             keep2 = if_else(index_date >= start_date & current == 1 & is.na(end_date),1,0)) %>%
+      filter(keep1 == 1 | keep2 == 1) %>%
+      select(-keep1, -keep2) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, DATA_SOURCE) %>%
+      mutate(diff = index_date - start_date) %>%
+      slice(which.min(as.numeric(diff))) %>%
+      mutate(onmed = 1,
+             MED_END_DATE = dmy(MED_END_DATE),
+             MED_START_DATE = dmy(MED_START_DATE)) %>%
       ungroup() %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp,
-              match(status, c("On Medication at Time of Index","Medication End Date on Same Date as Index","Medication Started on Same Date as Index", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)",
-                              "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)","Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)",
-                              "Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)","Medication Started After Index","Medication Started After Index","Medication Stopped Prior to Index"))) %>%
-      mutate(index_to_start = MED_START_DATE - index_date,
-             index_to_end = index_date - MED_END_DATE) %>%
-      mutate(status = case_when(status == "Medication Stopped Prior to Index" ~ paste0("Medication Stopped ", round(index_to_end,0), " days Prior to Index"),
-                                status == "Medication Started After Index" ~ paste0("Medication Started ", round(index_to_start,0), " days After Index"),
-                                TRUE ~ status)) %>%
-      left_join(bio_grp) %>%
+      filter(med_grp != "Other IBD Medication")
 
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, med_type, status, VISIT_ENCOUNTER_START_DATE,MED_START_DATE, MED_END_DATE,index_to_start, index_to_end) %>%
-      mutate(indexdays = ifelse(index_to_start < 0, index_to_end, index_to_start )) %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, indexdays,
-              match(status, c("On Medication at Time of Index","Medication End Date on Same Date as Index","Medication Started on Same Date as Index", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)",
-                              "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)","Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)",
-                              "Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)"))) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, index_date) %>%
-      slice(1) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, med_type) %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, med_type, abs(index_to_start)) %>%
-      mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-      mutate(status = ifelse(med_type == "Biologic" & status %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "On Medication at Time of Index") & count > 1, "Medication Most Likely Stopped Prior to Index", status)) %>%
-      mutate(onmed = case_when(grepl("Possibly", status) ~ "Possible",
-                               status %in% c("On Medication at Time of Index") ~ "Yes",
-                               TRUE ~ "No")) %>%
-      mutate(onmed = ifelse(status == "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)", "Yes", onmed))
+    med_status_ecrf = dates %>%
+      filter(DATA_SOURCE == "ECRF_SPARC") %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, onmed) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_ECRF')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-    #if on both pick most recently prescribed
-    mult_bio_emr = emr_bio %>%
-      dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_EMR')) %>%
-      # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
+    ecrf_med_start = dates %>%
+      filter(DATA_SOURCE == "ECRF_SPARC") %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_START_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "MED_START_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_START_DATE_ECRF')) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
-      unite("status", Adalimumab_EMR:Vedolizumab_EMR, sep = ";", remove = F, na.rm = T) %>%
-      mutate(yescount = str_count(status, pattern = "Yes")) %>%
-      filter(yescount > 1)
-
-    if(dim(mult_bio_emr)[1] > 0){
-      mult_bio_emr = mult_bio_emr %>%
-        pivot_longer(cols = Adalimumab_EMR:Vedolizumab_EMR, names_to = "Biologic", values_to = "Biologic_Status" ) %>%
-        filter(Biologic_Status == "Yes") %>%
-        mutate(med_grp = gsub("_EMR", "", Biologic)) %>%
-        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, Biologic_Status) %>%
-        left_join(emr_bio) %>%
-        group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-        mutate(new_start_date = if_else(is.na(MED_START_DATE), VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
-        mutate(most_recent_date = max(new_start_date)) %>%
-        mutate(keep = case_when(new_start_date == MED_START_DATE ~ 1,
-                                (new_start_date != MED_START_DATE | is.na(MED_START_DATE)) & status == "On Medication at Time of Index" ~ 2,
-                                (new_start_date != MED_START_DATE | is.na(MED_START_DATE)) & status != "On Medication at Time of Index" & new_start_date == most_recent_date ~ 3)) %>%
-        slice(which.min(keep)) %>%
-        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp) %>%
-        rename(bio_to_keep = med_grp)
-
-      emr_bio = emr_bio %>%
-        left_join(mult_bio_emr) %>%
-        mutate(onmed = case_when(bio_to_keep == med_grp ~ "Yes",
-                                 !is.na(bio_to_keep) & bio_to_keep != med_grp ~ "No",
-                                 TRUE ~ onmed)) %>%
-        ungroup()} else {emr_bio = emr_bio}
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
 
 
-    bio_status_emr = emr_bio %>%
-      dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+    ecrf_med_end = dates %>%
+      filter(DATA_SOURCE == "ECRF_SPARC") %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_END_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "MED_END_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_END_DATE_ECRF')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
+
+
+    ecrf_med = full_join(ecrf_med_start,ecrf_med_end) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  contains(c("Adalim",  "Azathio", "Balsa","Cert",
+                                                                                          "Cyclo","Gol","Inflix",
+                                                                                         "Merc", "Mesa", "Meth","Nata", "Olsa", "Other", "Oza", "Sulf", "Tacr",
+                                                                                         "Thio", "Tofa", "Upad", "Uste", "Vedo"))) %>%
+
+      ungroup()
+
+    med_status_emr = dates %>%
+      filter(DATA_SOURCE == "EMR") %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "onmed",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
       dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_EMR')) %>%
       # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-    emr_bio = emr_bio %>%
-      dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
-            value.var = "status",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
-      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_EMR')) %>%
-      # filter(SAMPLE_COLLECTED_DATE == index_date) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
 
-    cohort = left_join(cohort, emr_bio)
+    emr_med_start = dates %>%
+      filter(DATA_SOURCE == "EMR") %>%
+
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_START_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "MED_START_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_START_DATE_EMR')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
 
 
+    emr_med_end = dates %>%
+      filter(DATA_SOURCE == "EMR") %>%
+
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, MED_END_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ med_grp ,
+                      value.var = "MED_END_DATE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      dplyr::rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, -index_date), ~ paste0(., '_END_DATE_EMR')) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything()) %>%
+      mutate(across(where(is.character) & !c(DEIDENTIFIED_MASTER_PATIENT_ID), ~ifelse(. %in% c("", "NA"), NA, as.character(.)))) %>%
+      mutate(across(c(contains("DATE")),~ymd(.)))
+
+
+    emr_med = full_join(emr_med_start, emr_med_end) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  contains(c("Adalim",  "Azathio", "Balsa","Cert",
+                                                                     "Cyclo","Gol","Inflix",
+                                                                     "Merc", "Mesa", "Meth","Nata", "Olsa", "Other", "Oza", "Sulf", "Tacr",
+                                                                     "Thio", "Tofa", "Upad", "Uste", "Vedo"))) %>%
+
+      ungroup()
+
+
+cohort = cohort %>%
+  left_join(ecrf_med) %>%
+  left_join(emr_med)
 
     #COMPARE SOURCES FOR BIOLOGICS ----
 
-    bio_list = bio_grp %>% mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE))
-    bio_list =  unique(bio_list$med_grp)
+    med_list = unique(grp1$med_grp)
 
-    bs = full_join(bio_status_emr, bio_status_ecrf)
-
-    for (i in 1:length(bio_list)){
-      ii = (bio_list[i])
-      nubs=grep(paste0(ii), names(bs))
-      if(length(nubs) > 1){
-        bs = within(bs, assign(paste0(ii,"_status"), sapply(1:nrow(bs), function(x){paste0(bs[nubs[1]][x,], ";", bs[nubs[2]][x,])})))} else if(length(nubs) == 1){
-          bs = within(bs, assign(paste0(ii,"_status"), sapply(1:nrow(bs), function(x){paste0(bs[nubs[1]][x,])})))} else{
-            bs = within(bs, assign(paste0(ii,"_status"), sapply(1:nrow(bs), function(x){paste0(as.character(NA))}))) }
-    }
-
-    bio_status = bs %>%
-      mutate_all(funs(gsub("NA", "", .))) %>%
-      mutate_all(funs(gsub("No;No", "No", .))) %>%
-      mutate_all(funs(gsub("Possible;Possible", "Possible", .))) %>%
-      mutate_all(funs(gsub("Possible;Yes|Yes;Yes|Yes;Possible", "Yes", .))) %>%
-      mutate_all(funs(gsub("No;Yes|Possible;No|Yes;No|No;Possible", "Contradicts", .))) %>%
-      mutate_all(funs(gsub(";", "", .)))  %>%
+    med_status = full_join(med_status_emr, med_status_ecrf) %>%
+      mutate(across(ends_with(c("EMR", "ECRF")), ~ifelse(.=="", NA, as.character(.)))) %>%
+      pivot_longer(cols = ends_with(c("EMR", "ECRF")), names_to = "DRUG_SOURCE", values_to = "STATUS") %>%
+      separate(col = DRUG_SOURCE, into = c("DRUG", "SOURCE"), sep = "_") %>%
+      drop_na(STATUS) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID + index_date  ~ DRUG ,
+                      value.var = "SOURCE",  fun.aggregate = function(x) paste(x, collapse = "; ")) %>%
+      mutate(across(!(contains(c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))), ~ifelse(.=="", NA, as.character(.)))) %>%
+      mutate_all(funs(gsub("EMR; ECRF|ECRF; EMR", "Both", .))) %>%
+      rename_at(vars(-DEIDENTIFIED_MASTER_PATIENT_ID, - index_date),function(x) paste0(x,"_source")) %>%
       mutate(index_date = ymd(index_date))
 
-    bio_status = bio_status[grep("_status|DEIDENTIFIED_MASTER_PATIENT_ID|index_date", names(bio_status))]
+    med_status = med_status[grep("_source|DEIDENTIFIED_MASTER_PATIENT_ID|index_date", names(med_status))]
 
-    #Pull all biologic columns from cohort
-    #get biologics list
-    bio_grp2 = bio_grp %>%
-      mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE)) %>%
-      select(med_grp) %>%
-      distinct()
-
-    match <- paste(bio_grp2$med_grp, collapse = "|")
-    match <- paste0("DEIDENTIFIED_MASTER_PATIENT_ID|index_date|", match)
-
-    cohort_bio = cohort[,grep(match, colnames(cohort))]
-
-    cohort_bio = cohort_bio %>%
-      mutate_if(is.character, ~replace_na(., ""))
+    cohort = left_join(cohort, med_status)
 
 
-    #For Multiple Biologic, Pick One
-    mult_bio_status = bio_status %>%
-      unite("status", Adalimumab_status:Vedolizumab_status, sep = ";", remove = F, na.rm = T) %>%
-      mutate(yescount = str_count(status, pattern = "Yes")) %>%
-      filter(yescount > 1)
-
-    if(dim(mult_bio_status)[1] > 0){ mult_bio_status = mult_bio_status %>%
-      pivot_longer(cols = Adalimumab_status:Vedolizumab_status, names_to = "Biologic", values_to = "Biologic_Status" ) %>%
-      filter(Biologic_Status == "Yes") %>%
-      mutate(med_grp = gsub("_status", "", Biologic)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, Biologic_Status) %>%
-      left_join(cohort_bio) %>%
-      select(colnames(.)[1:4],(sort(colnames(.)[5:26]))) %>%
-      pivot_longer(cols = c(Adalimumab_ECRF:Vedolizumab_EMR), names_to = "column", values_to = "values") %>%
-      filter(values != "") %>%
-      filter(!grepl("status",column)) %>%
-      separate(column, c("Drug", "Source")) %>%
-      filter(med_grp == Drug) %>%
-      distinct() %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Drug), names_from = Source, values_from = values) %>%
-      mutate(emr_status = case_when(EMR %in% c("On Medication at Time of Index") ~ "Yes",
-                                    EMR %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)") ~ "More Possible",
-                                    EMR %in% c("Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)","Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)", "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)") ~ "Less Possible",
-                                    EMR %in% c("", " ") | is.na(EMR) ~ "No EMR Info",
-                                    TRUE ~ "No")) %>%
-      mutate(ecrf_status = case_when(ECRF %in% c("On Medication at Time of Index") ~ "Yes",
-                                     ECRF %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)") ~ "More Possible",
-                                     ECRF %in% c("Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)","Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)", "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)") ~ "Less Possible",
-                                     ECRF %in% c("", " ") | is.na(ECRF) ~ "No ECRF Info",
-                                     TRUE ~ "No")) %>%
-      mutate(Biologic_at_index_1 = case_when(emr_status == "Yes" & ecrf_status == "Yes" ~ paste0(Drug)),
-             Biologic_at_index_2 = case_when(emr_status == "No EMR Info" & ecrf_status %in% c("Yes", "More Possible", "Less Possible") ~ paste0(Drug)),
-             Biologic_at_index_3 = case_when(emr_status %in% c("Yes", "More Possible", "Less Possible") & ecrf_status == "No ECRF Info" ~ paste0(Drug)),
-             Biologic_at_index_4 = case_when(emr_status == "More Possible" & ecrf_status == "More Possible" ~ paste0(Drug)),
-             Biologic_at_index_5 = case_when(emr_status == "Less Possible" & ecrf_status == "Less Possible" ~ paste0(Drug)),
-             Biologic_at_index_7 = case_when(emr_status == "Yes" & ecrf_status %in% c("Less Possible", "More Possible") ~  paste0(Drug)),
-             Biologic_at_index_6 = case_when(emr_status %in% c("Less Possible", "More Possible") & ecrf_status %in% c("Yes")   ~ paste0(Drug)),
-             Biologic_at_index_8 = case_when(emr_status == "No" & ecrf_status %in% c("Yes","Less Possible", "More Possible") ~  paste0(Drug)),
-             Biologic_at_index_9 = case_when(emr_status %in% c("Yes","Less Possible", "More Possible") & ecrf_status %in% c("No")   ~ paste0(Drug))) %>%
-      pivot_longer(cols = Biologic_at_index_1:Biologic_at_index_9, names_to = "Strength", values_to = "Biologic") %>%
-      drop_na(Biologic) %>%
-      mutate(Strength = as.numeric(gsub("Biologic_at_index_", "", Strength)))  %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Strength)  %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-      slice(which.min(Strength)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Biologic, Strength)
-
-    bio_status = bio_status %>%
-      left_join(mult_bio_status) %>%
-      pivot_longer(cols = Adalimumab_status:Vedolizumab_status, names_to = "Biologic2", values_to = "Biologic_Status" ) %>%
-      mutate(Biologic2 = gsub("_status", "", Biologic2))    %>%
-      mutate(Biologic_Status = case_when(Biologic == Biologic2 ~ "Yes",
-                                         (!(Biologic_Status %in% c(" ", ""))) & Biologic != Biologic2  ~ "No",
-                                         TRUE ~ Biologic_Status)) %>%
-      mutate(Biologic2 = paste0(Biologic2, "_status")) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = Biologic2, values_from = Biologic_Status)} else{bio_status = bio_status}
-
-
-    cohort = left_join(cohort, bio_status)
-
-
-
-    #Biologic at Index ----
-
-
-    #get biologics list
-    bio_grp2 = bio_grp %>%
-      mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE)) %>%
-      select(med_grp) %>%
-      distinct()
-
-    match <- paste(bio_grp2$med_grp, collapse = "|")
-
-
-    match <- paste0("DEIDENTIFIED_MASTER_PATIENT_ID|index_date|", match)
-
-
-    biologics = cohort[,grep(match, colnames(cohort))]
-
-    index_biologics = biologics %>%
-      mutate_if(is.character, ~replace_na(., "")) %>%
-      pivot_longer(cols = Adalimumab_status:Vedolizumab_status, names_to = "Biologic", values_to = "Biologic_Status" ) %>%
-      filter(Biologic_Status == "Yes") %>%
-      mutate(med_grp = gsub("_status", "", Biologic)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, med_grp, Biologic_Status) %>%
-      left_join(biologics) %>%
-      select(colnames(.)[1:4],(sort(colnames(.)[5:26]))) %>%
-      pivot_longer(cols = c(Adalimumab_ECRF:Vedolizumab_EMR), names_to = "column", values_to = "values") %>%
-      filter(values != "") %>%
-      filter(!grepl("status",column)) %>%
-      separate(column, c("Drug", "Source"), sep = "_") %>%
-      filter(med_grp == Drug) %>%
-      distinct() %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Drug), names_from = Source, values_from = values)  %>%
-      mutate(emr_status = case_when(EMR %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "On Medication at Time of Index") ~ "Yes",
-                                    EMR %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)") ~ "More Possible",
-                                    EMR %in% c("Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)","Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)", "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)") ~ "Less Possible",
-                                    EMR %in% c("", " ") | is.na(EMR) ~ "No EMR Info",
-                                    TRUE ~ "No")) %>%
-      mutate(ecrf_status = case_when(ECRF %in% c("On Medication at Time of Index") ~ "Yes",
-                                     ECRF %in% c("Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication", "Possibly on Medication (Index Performed <= 3 Months After Last Reported Medication)") ~ "More Possible",
-                                     ECRF %in% c("Possibly on Medication (Index Performed <= 12 Months After Last Reported Medication)","Possibly on Medication (Index Performed > 1 Year After Last Reported Medication)", "Possibly on Medication (Index Performed <= 6 Months After Last Reported Medication)") ~ "Less Possible",
-                                     ECRF %in% c("", " ") | is.na(ECRF) ~ "No ECRF Info",
-                                     TRUE ~ "No")) %>%
-      mutate(Biologic_at_index_1 = case_when(emr_status == "Yes" & ecrf_status == "Yes" ~ paste0(Drug)),
-             Biologic_at_index_2 = case_when(emr_status == "No EMR Info" & ecrf_status %in% c("Yes", "More Possible", "Less Possible") ~ paste0(Drug)),
-             Biologic_at_index_3 = case_when(emr_status %in% c("Yes", "More Possible", "Less Possible") & ecrf_status == "No ECRF Info" ~ paste0(Drug)),
-             Biologic_at_index_4 = case_when(emr_status == "More Possible" & ecrf_status == "More Possible" ~ paste0(Drug)),
-             Biologic_at_index_5 = case_when(emr_status == "Less Possible" & ecrf_status == "Less Possible" ~ paste0(Drug)),
-             Biologic_at_index_7 = case_when(emr_status == "Yes" & ecrf_status %in% c("Less Possible", "More Possible") ~  paste0(Drug)),
-             Biologic_at_index_6 = case_when(emr_status %in% c("Less Possible", "More Possible") & ecrf_status %in% c("Yes")   ~ paste0(Drug)),
-             Biologic_at_index_8 = case_when(emr_status == "No" & ecrf_status %in% c("Yes","Less Possible", "More Possible") ~  paste0(Drug)),
-             Biologic_at_index_9 = case_when(emr_status %in% c("Yes","Less Possible", "More Possible") & ecrf_status %in% c("No")   ~ paste0(Drug))) %>%
-      pivot_longer(cols = Biologic_at_index_1:Biologic_at_index_9, names_to = "Strength", values_to = "Biologic") %>%
-      drop_na(Biologic) %>%
-      mutate(Strength = as.numeric(gsub("Biologic_at_index_", "", Strength)))  %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Strength)  %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-      slice(which.min(Strength)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Biologic, Strength) %>%
-      rename(Biologic_at_index = Biologic) %>%
-      rename(Biologic_at_index_confidence = Strength)
-
-    cohort = left_join(cohort, index_biologics)
 
 
     #FIND IF FIRST TIME ON BIOLOGIC (LOADING DATE) ----
 
-
+bio_grp = meds %>% filter(med_type == "Biologic")
 
     #EMR ----
 
@@ -1406,7 +1227,7 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
     #NO MEDICATION AT INDEX DATE ----
 
     no_med_index = cohort %>%
-      filter_at(vars(ends_with("_status")), all_vars(. %in% c("No", "", NA))) %>%
+      filter_at(vars(ends_with("_source")), all_vars(. %in% c("No", "", NA))) %>%
       mutate(No_IBD_Medication_At_Index = 1) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, No_IBD_Medication_At_Index)
 
@@ -1417,19 +1238,21 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
     #MEDICATION AT INDEX ----
 
     med_at_index = cohort %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, ends_with("_status", ignore.case = TRUE)) %>%
-      pivot_longer(ends_with("status", ignore.case = T), names_to = "med_grp", values_to = "onmed") %>%
-      filter(onmed == "Yes") %>%
-      mutate(med_grp = gsub("_status", "", med_grp)) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, ends_with("_source", ignore.case = TRUE)) %>%
+      select(!contains("loading", ignore.case = T)) %>%
+      pivot_longer(ends_with("source", ignore.case = T), names_to = "med_grp", values_to = "onmed") %>%
+      drop_na(onmed) %>%
+      mutate(med_grp = gsub("_source", "", med_grp)) %>%
       filter(med_grp != "Other IBD Medication") %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
       pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date),
                   names_from = c,
-                  values_from = med_grp,
-                  names_prefix = "MED_") %>%
-      unite("MEDICATION_AT_INDEX", starts_with("MED"), na.rm = T, sep = "; ") %>%
+                  values_from = c(med_grp, onmed)) %>%
+      unite("MEDICATION_AT_INDEX", starts_with("med_grp"), na.rm = T, sep = "; ") %>%
+      unite("MEDICATION_AT_INDEX_SOURCE", starts_with("onmed"), na.rm = T, sep = ";") %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date, everything())
+
 
 
     cohort = left_join(cohort, med_at_index)
@@ -1440,21 +1263,19 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
 
 
 
-
-    bionames =  bio_grp %>%
+    bionames =  grp1 %>%
       mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE)) %>%
-      arrange(match(med_type, c("Biologic")), med_grp) %>%
+      arrange(match(med_type, c("Biologic", "Immunomodulators", "Aminosalicylates")), med_grp) %>%
       distinct(med_grp) %>%
       rename(name = med_grp) %>%
-      add_row(name = c("Biologic_at_index"))  %>%
+      add_row(name = c("MEDICATION_AT_INDEX"))  %>%
       add_row(name = c("No_IBD_Medication")) %>%
-      add_row(name = c("MEDICATION_AT_INDEX")) %>%
-      arrange(match(name, c("No_IBD_Medication",  "Biologic_at_index","MEDICATION_AT_INDEX")))
+      arrange(match(name, c("No_IBD_Medication",  "MEDICATION_AT_INDEX")))
 
 
-    mednames = med_grp2 %>%
+    mednames = grp2 %>%
       mutate(med_grp = gsub("\u00A0", " ", med_grp, fixed = TRUE)) %>%
-      arrange(match(med_type, c("Antibiotics", "Corticosteroids", "Aminosalicylates", "Antidiarrheals", "Immunomodulators", "Probiotic", "Other")), med_grp) %>%
+      arrange(match(med_type, c("Antibiotics", "Corticosteroids",  "Antidiarrheals",  "Other")), med_grp) %>%
       distinct(med_grp) %>%
       rename(name = med_grp)
 
@@ -1467,29 +1288,31 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
 
     names(cohort) = toupper(names(cohort))
 
-    cohort = cohort %>% select(-BIOLOGIC_AT_INDEX_CONFIDENCE, -BIOLOGIC_AT_INDEX)
 
 
     #CREATE HEADER STYLES ----
 
     #blue
-    style1 <- createStyle(bgFill = "#BDD7EE", textDecoration = "bold")
+    style1 <- createStyle(bgFill = "#BDD7EE")
 
     #orange
     style2 <- createStyle(bgFill="#F8CBAD", textDecoration = "bold")
 
     #yellow
-    style3 <- createStyle(bgFill="#FFE699", textDecoration = "bold")
+    style3 <- createStyle(bgFill="#FFE699")
 
     #green
     style4 <-  createStyle(bgFill="#C6E0B4")
 
     #grey
-    style5 <-  createStyle(bgFill="#D9D9D9")
+    style5 <-  createStyle(bgFill="#D9D9D9", textDecoration = "bold")
 
     #red
     style6 <- createStyle(bgFill="#e84135")
 
+    #purple
+
+    style7 <- createStyle(bgFill="#B39BD8", textDecoration = "bold")
 
     #CREATE WORKBOOK ----
 
@@ -1507,18 +1330,17 @@ cohort = cohort %>% left_join(ecrf_med) %>% left_join(first_use) %>%
     rown = dim(cohort)[1]
     coln = dim(cohort)[2]
 
-    conf = max(which(colnames(cohort) %in% toupper("Medication_at_index")))
+    conf = max(which(colnames(cohort) %in% toupper("MEDICATION_AT_INDEX_SOURCE")))
 
     #column headers
-    conditionalFormatting(wb, "med_at_Index", cols=1:democoln, rows=1, rule="!=0", style = style1)
+    conditionalFormatting(wb, "med_at_Index", cols=1:democoln, rows=1, rule="!=0", style = style2)
     conditionalFormatting(wb, "med_at_Index", cols=(democoln+1):conf, rows=1, rule="!=0", style = style2)
-    conditionalFormatting(wb, "med_at_Index", cols=(conf+1):coln, rows=1, rule="!=0", style = style3)
+    conditionalFormatting(wb, "med_at_Index", cols=(conf+1):coln, rows=1, rule="!=0", style = style2)
 
 
-    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "Possible", style = style5)
-    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "Contradicts", style = style6)
-    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "No", style = style6)
-    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "Yes", style = style4)
+    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "ECRF", style = style1)
+    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "EMR", style = style3)
+    conditionalFormatting(wb, "med_at_Index", cols = (conf+1):coln, rows = 2:rown, type = "contains", rule = "Both", style = style4)
     #conditionalFormatting(wb, "med_at_Index", cols = (conf-1), rows = 2:rown, type = "colourScale",  style = c("green", "yellow", "orange"))
 
 
