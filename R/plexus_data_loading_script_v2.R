@@ -83,9 +83,9 @@ if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MA
 if(cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
 
 #LOAD DATA ----
-print(paste0("START TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
+#print(paste0("START TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
 data <- lapply(files, function(x) fread(x))
-print(paste0("END TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
+#print(paste0("END TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
 
 gc()
 #
@@ -98,32 +98,8 @@ gc()
 names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
 names(data) = gsub("_SiteExtract", "", names(data))
 names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
-
-
-
-#Clean Lab Data
-if("labs_emr" %in% names(data)){data$labs_emr = data.frame(apply(data$labs_emr, 2, function(x)
-{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-#Clean Encounter Data
-if("encounter_emr" %in% names(data)){data$encounter_emr = data.frame(apply(data$encounter_emr, 2, function(x)
-{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-#Clean Procedures Data
-if("procedures_emr" %in% names(data)){data$procedures_emr = data.frame(apply(data$procedures_emr, 2, function(x)
-{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-
-#Clean Observation Data
-if("observations_emr" %in% names(data)){data$observations_emr = data.frame(apply(data$observations_emr, 2, function(x)
-{gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-gc()
-
-#Assign Names
-
+names(data) = tolower(names(data))
 names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
-
 
 
 #Combine Data with the Same Name (Collapses EMR and CRF data together)
@@ -244,9 +220,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   if(cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
 
   #LOAD DATA ----
-  print(paste0("START TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
   data <- lapply(files, function(x) fread(x))
-  print(paste0("END TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
 
 
 
@@ -255,30 +229,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
   names(data) = gsub("_SiteExtract", "", names(data))
   names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
-
-
-gc()
-
-  #Clean Lab Data
-  if("labs_emr" %in% names(data)){data$labs_emr = data.frame(apply(data$labs_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-  #Clean Encounter Data
-  if("encounter_emr" %in% names(data)){data$encounter_emr = data.frame(apply(data$encounter_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-  #Clean Procedures Data
-  if("procedures_emr" %in% names(data)){data$procedures_emr = data.frame(apply(data$procedures_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-
-  #Clean Observation Data
-  if("observations_emr" %in% names(data)){data$observations_emr = data.frame(apply(data$observations_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-  gc()
-  #Assign Names
-
+  names(data) = tolower(names(data))
   names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
 
 
