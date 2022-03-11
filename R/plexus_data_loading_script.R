@@ -12,7 +12,6 @@
 #' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
 #'
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
-
 load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
 
 cohort = toupper(cohort)

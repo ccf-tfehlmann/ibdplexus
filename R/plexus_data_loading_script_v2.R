@@ -14,7 +14,7 @@
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
 load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
-
+  memory.limit(size = 80000)
 cohort = toupper(cohort)
 domains = toupper(domains)
 data_type = toupper(data_type)
@@ -71,6 +71,7 @@ files = files$rowname[grep("Old", files$rowname, ignore.case = T, invert = T)]
 
 
 
+
 if("ALL" %in% domains){files = files} else {
   filestring = paste(domains,collapse="|")
   files = grep(filestring, files, value = T, ignore.case = T)}
@@ -79,27 +80,17 @@ if("ALL" %in% domains){files = files} else {
 if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
   files = grep(filestring, files, value = T, ignore.case=T)} else {files = grep(data_type, files, value = T, ignore.case=T)}
 
-
-if(cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
+if(length(cohort) == 1 & cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
 
 #LOAD DATA ----
-#print(paste0("START TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
 data <- lapply(files, function(x) fread(x))
-#print(paste0("END TIME FREAD:", format(Sys.time(), "%a %b %d %X %Y")))
-
-gc()
-#
-#
-# data <- lapply(files, function(x)
-#   read.csv(x, stringsAsFactors = F, na.strings = c(NA, "", "NA"), header=T, sep=",") %>% discard(~all(is.na(.x))))
-
 
 #Assign Names
 names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
 names(data) = gsub("_SiteExtract", "", names(data))
 names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
-names(data) = tolower(names(data))
 names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+
 
 
 #Combine Data with the Same Name (Collapses EMR and CRF data together)
@@ -116,11 +107,14 @@ for (i in 1:length(dslist)){
 
   nums=grep(paste0(ii), names(data))
 
-  assign(paste0(ii), (bind_rows(data[nums])) %>% distinct())
+  assign(paste0(ii), (rbindlist(data[nums], fill=TRUE)) %>% distinct())
+  gc()
 }
 
-data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
+gc()
 
+data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
+gc()
 names(data) = tolower(names(data))
 
 remove(list = dslist)
@@ -129,12 +123,12 @@ remove(list = dslist)
 #Standardize variable names
 if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
-gc()
+
 
 rm(list = c("files", "folderinfo"))
 
 return(data)
-
+gc()
 }
 
 
@@ -217,19 +211,62 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
 
 
-  if(cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
-
-  #LOAD DATA ----
-  data <- lapply(files, function(x) fread(x))
+  #LOAD IN ALL FILES ----
 
 
+  data <- lapply(files, function(x)
+    read.csv(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header=T, sep=",") %>% discard(~all(is.na(.x))))
 
 
   #Assign Names
   names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
   names(data) = gsub("_SiteExtract", "", names(data))
   names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
+
+
+
+  #Combine Data with the Same Name (Collapses EMR and CRF data)
+  data = data[order(names(data))]
+
+  data = data %>% lapply(., mutate_if, is.integer, as.character) %>% lapply(., mutate_if, is.numeric, as.character)  %>% lapply(., mutate_if, is.factor, as.character)
+
+
+  dslist = unique(names(data))
+
+  for (i in 1:length(dslist)){
+
+    ii = (dslist[i])
+
+    nums=grep(paste0(ii), names(data))
+
+    assign(paste0(ii), (bind_rows(data[nums])) %>% distinct())
+  }
+
+  data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
+
   names(data) = tolower(names(data))
+
+  remove(list = dslist)
+
+  #Clean Lab Data
+  if("labs_emr" %in% names(data)){data$labs_emr = data.frame(apply(data$labs_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
+
+  #Clean Encounter Data
+  if("encounter_emr" %in% names(data)){data$encounter_emr = data.frame(apply(data$encounter_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
+
+  #Clean Procedures Data
+  if("procedures_emr" %in% names(data)){data$procedures_emr = data.frame(apply(data$procedures_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
+
+
+  #Clean Observation Data
+  if("observations_emr" %in% names(data)){data$observations_emr = data.frame(apply(data$observations_emr, 2, function(x)
+  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
+
+  #Assign Names
+
   names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
 
 
@@ -261,7 +298,6 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   #Standardize variable names
   if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
 
-  gc()
 
   return(data)
 }
