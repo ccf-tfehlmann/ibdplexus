@@ -80,7 +80,11 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
   files = grep(filestring, files, value = T, ignore.case=T)} else {files = grep(data_type, files, value = T, ignore.case=T)}
 
+<<<<<<< HEAD
   if(length(cohort) == 1 & cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
+=======
+if(length(cohort) == 1 & cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
+>>>>>>> 9563a14db4702b6590b3362a4a4f511ddfdec757
 
 
   #LOAD DATA ----
@@ -106,7 +110,13 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
     ii = (dslist[i])
 
+<<<<<<< HEAD
     nums=grep(paste0(ii), names(data))
+=======
+  assign(paste0(ii), (rbindlist(data[nums], fill=TRUE)) %>% distinct())
+  gc()
+}
+>>>>>>> 9563a14db4702b6590b3362a4a4f511ddfdec757
 
 
     assign(paste0(ii), (rbindlist(data[nums], fill=TRUE)) %>% distinct())
