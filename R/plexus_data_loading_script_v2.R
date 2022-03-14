@@ -79,7 +79,8 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
 
   if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
-  files = grep(filestring, files, value = T, ignore.case=T)} else {files = grep(data_type, files, value = T, ignore.case=T)}
+  files = grep(filestring, files, value = T, ignore.case=T)} else {filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
+  files = grep(filestring, files, value = T, ignore.case=T)}
 
 if(length(cohort) == 1 & cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
 
