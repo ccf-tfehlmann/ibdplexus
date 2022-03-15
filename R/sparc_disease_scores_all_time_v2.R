@@ -350,11 +350,11 @@ calculate_disease_scores <- function(datadir = "."){
   #===============================
   #ECRF
 
-  ses = data$procedures %>% filter(!is.na(SES.CD_Subscore)) %>%
+  ses = data$procedures %>% filter(!is.na(`SES-CD_Subscore`)) %>%
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(SES.CD_Subscore = ifelse(SES.CD_Subscore == "Not reached", as.numeric(as.character("0")), as.numeric(as.character(SES.CD_Subscore)))) %>%
+    mutate(`SES-CD_Subscore` = ifelse(`SES-CD_Subscore` == "Not reached", as.numeric(as.character("0")), as.numeric(as.character(`SES-CD_Subscore`)))) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE) %>%
-    dplyr::summarise(SES_Score = sum(SES.CD_Subscore)) %>%
+    dplyr::summarise(SES_Score = sum(`SES-CD_Subscore`)) %>%
     drop_na(SES_Score) %>%
     dplyr::rename(ses.date = PROC_START_DATE) %>%
     distinct_all() %>%
