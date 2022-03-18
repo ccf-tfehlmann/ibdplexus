@@ -38,7 +38,10 @@ calculate_disease_scores <- function(datadir = "."){
   #===============================
 
   data$observations = data$observations %>%
-    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME))
+    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
+    mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA)))
+
+
 
     #===============================
     #sCDAI
