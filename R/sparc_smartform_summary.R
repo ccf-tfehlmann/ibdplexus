@@ -639,7 +639,7 @@ sparc_sf <- function(datadir,
          mutate(across(c(SMARTFORM_AVAILABLE_ENROLLMENT), ~ replace_na(.x, 0)))
        } else if(index_info == "ENDOSCOPY"){
 
-           visit2 = visit %>%
+           visit = visit %>%
              filter(ENDOSCOPY == 1) %>%
              mutate(SMARTFORM_AVAILABLE_ENDOSCOPY = 1)
 
@@ -687,7 +687,7 @@ sparc_sf <- function(datadir,
 
        mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA", " "), NA))) %>%
        mutate(across(contains("SMARTFORM_AVAILABLE"), ~ replace_na(.x, 0)))  %>%
-       mutate(across(c(ENDOSCOPY,	ENROLLMENT,	BEFORE_ENROLLMENT,	FOLLOWUP,		LATEST), ~ replace_na(.x, "0")))
+       mutate(across(c(ENROLLMENT,	BEFORE_ENROLLMENT,	FOLLOWUP,		LATEST), ~ replace_na(.x, "0")))
 
 
          names(cohort) = toupper(names(cohort))
