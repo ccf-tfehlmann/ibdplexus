@@ -4,7 +4,6 @@
 # ibdplexus
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 ## Overview
@@ -16,18 +15,18 @@ information on Plexus and the cohorts can be found
 [here](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/ibd-plexus).
 Functions include:
 
-  - `load_data()` loads unzipped data from Plexus
-  - `load_zipped_data()` loads zipped data from Plexus
-  - `risk_extract_clinical_data()` creates a summary table by visit for
+-   `load_data()` loads unzipped data from Plexus
+-   `load_zipped_data()` loads zipped data from Plexus
+-   `risk_extract_clinical_data()` creates a summary table by visit for
     RISK
-  - `qorus_summary()` creates a summary table for QORUS
-  - `sparc_summary()` creates a summary table for SPARC
-  - `calculate_disease_scores()` calculates disease scores for SPARC
-  - `sparc_scores()` calculates disease scores at a specific time for
+-   `qorus_summary()` creates a summary table for QORUS
+-   `sparc_summary()` creates a summary table for SPARC
+-   `calculate_disease_scores()` calculates disease scores for SPARC
+-   `sparc_scores()` calculates disease scores at a specific time for
     SPARC
-  - `sparc_medication()` predicts the medication a SPARC participant is
+-   `sparc_medication()` predicts the medication a SPARC participant is
     on at a specific time
-  - `sparc_emr()` subsets the plexus extract based on specified ICD10,
+-   `sparc_emr()` subsets the plexus extract based on specified ICD10,
     LONIC or CPT codes
 
 ## Installation
@@ -42,15 +41,15 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 ## User Guides
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/Calculating%20Disease%20Activity%20Scores%20for%20SPARC.pdf">`calculate_disease_scores()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_medication_at_index_userguide_updated_102721.pdf">`sparc_medication()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_medication_at_index_userguide_updated_102721.pdf">`sparc_medication()`</a>
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
 
-  - <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/RISK%20Extract%20Clinical%20Data%20User%20Guide%20v1.1.pdf">`risk_extract_clinical_data()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>
 
 ## Example
 
