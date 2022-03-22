@@ -44,7 +44,7 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 ## User Guides
 
-* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/Calculating%20Disease%20Activity%20Scores%20for%20SPARC.pdf">`calculate_disease_scores()`</a>  
+* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>  
 
 * <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>  
 
@@ -52,7 +52,7 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 * <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>  
 
-* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/RISK%20Extract%20Clinical%20Data%20User%20Guide%20v1.1.pdf">`risk_extract_clinical_data()`</a>  
+* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>  
 
 ## Example
 

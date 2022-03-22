@@ -41,6 +41,19 @@ to_wide <- function(df, y.var, value.var){
   x.vars <- c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")
   x.var <- names(df)[names(df) %in% x.vars]
   if(y.var==value.var) {df %>% select(x.var, y.var)}else{
-    d <- reshape2::dcast(df, paste0(paste(x.var, collapse = " + "), "~", "df[,y.var]"), value.var = value.var, fun.aggregate=function(x) paste(unique(x), collapse = "; "))
+    d <- reshape2::dcast(df, paste0(paste(x.var, collapse = " + "), "~", y.var), value.var = value.var, fun.aggregate=function(x) paste(unique(x), collapse = "; "))
   }
 }
+
+
+#' proper
+#'
+#' Makes string with proper capitalization
+#'
+#' @param x string
+#'
+#' @return
+#'
+proper=function(x){ paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))}
+
+
