@@ -16,6 +16,7 @@
 #'
 #' @return A dataframe and an excel file.
 #' @export
+
 sparc_sf <- function(datadir,
                              index_info = c("ALL", "ENROLLMENT", "LATEST", "ENDOSCOPY"),
                              filename = "SMARTFORM_SUMMARY.xlsx"){
@@ -657,7 +658,7 @@ sparc_sf <- function(datadir,
            left_join(visit) %>%
            select(-v5, -d) %>%
            mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA", " "), NA))) %>%
-           mutate(across(c(SMARTFORM_AVAILABLE), ~ replace_na(.x, 0)))}     else if(index_info == "ALL"){
+           mutate(across(c(SMARTFORM_AVAILABLE), ~ replace_na(.x, 0)))}      else if(index_info == "ALL"){
 
            visit = visit %>%
              mutate(SMARTFORM_AVAILABLE = 1)
@@ -683,6 +684,7 @@ sparc_sf <- function(datadir,
          cohort <- cohort %>%
        arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT) %>%
        select(-DEIDENTIFIED_PATIENT_ID,-DATA_SOURCE) %>%
+
        mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA", " "), NA))) %>%
        mutate(across(contains("SMARTFORM_AVAILABLE"), ~ replace_na(.x, 0)))  %>%
        mutate(across(c(ENDOSCOPY,	ENROLLMENT,	BEFORE_ENROLLMENT,	FOLLOWUP,		LATEST), ~ replace_na(.x, "0")))
