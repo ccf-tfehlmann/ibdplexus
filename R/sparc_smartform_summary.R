@@ -686,8 +686,7 @@ sparc_sf <- function(datadir,
        select(-DEIDENTIFIED_PATIENT_ID,-DATA_SOURCE) %>%
 
        mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA", " "), NA))) %>%
-       mutate(across(contains("SMARTFORM_AVAILABLE"), ~ replace_na(.x, 0)))  %>%
-       mutate(across(c(ENROLLMENT,	BEFORE_ENROLLMENT,	FOLLOWUP,		LATEST), ~ replace_na(.x, "0")))
+       mutate(across(contains("SMARTFORM_AVAILABLE"), ~ replace_na(.x, 0)))
 
 
          names(cohort) = toupper(names(cohort))
