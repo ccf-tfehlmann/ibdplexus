@@ -1196,7 +1196,6 @@ if("LATEST" %in% index_info){cohort = cohort %>% select(-INDEX_DATE)}else{cohort
 
 # FORMAT CELLS ----
 
-democoln =  max(which(colnames(cohort) %in% "INDEX_DATE"))
 
 rown = dim(cohort)[1]
 coln = dim(cohort)[2]
