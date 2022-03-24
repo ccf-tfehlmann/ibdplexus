@@ -57,3 +57,20 @@ to_wide <- function(df, y.var, value.var){
 proper=function(x){ paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))}
 
 
+
+#' remove outliers
+#'
+#' remove outliers from BMI
+#'
+#' @param x bmi
+#'
+#' @return
+#'
+remove_outliers <- function(x, na.rm = TRUE, ...) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
+}

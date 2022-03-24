@@ -223,7 +223,23 @@ sparc_summary <- function(datadir,
           distinct()
         cohort = biosample %>% left_join(demo)
         }else if("LATEST" %in% index_info){
-          cohort = demo %>% mutate(index_date = today())
+
+          latest = data$encounter %>%
+            filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC")) %>%
+            filter(grepl("Smartform|Survey", TYPE_OF_ENCOUNTER, ignore.case = T)) %>%
+            mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+            arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(DATA_SOURCE), desc(VISIT_ENCOUNTER_START_DATE)) %>%
+            group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+            slice(which.max(VISIT_ENCOUNTER_START_DATE)) %>%
+            ungroup() %>%
+            select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, TYPE_OF_ENCOUNTER) %>%
+            rename(index_date = VISIT_ENCOUNTER_START_DATE,
+                   MOST_RECENT_ENCOUNTER_TYPE = TYPE_OF_ENCOUNTER) %>%
+            mutate(MOST_RECENT_ENCOUNTER_TYPE = case_when(grepl("Smartform", MOST_RECENT_ENCOUNTER_TYPE,ignore.case = T) ~ "Smartform",
+                                                          TRUE ~ MOST_RECENT_ENCOUNTER_TYPE))
+
+
+          cohort = demo %>% left_join(latest)
         }else {cohort = index_info %>% left_join(demo)}
 
 
@@ -1003,7 +1019,52 @@ sparc_summary <- function(datadir,
 
          cohort = left_join(cohort, es)
 
+# ADD BMI FROM EMR ----
 
+         obs_emr =  load_data(datadir = datadir,
+                              cohort = "SPARC",
+                              domains = "Observations",
+                              data_type = "EMR")
+
+         weight = obs_emr$observations %>%
+           filter(DATA_SOURCE == "EMR") %>%
+           filter(OBS_TEST_CONCEPT_NAME %in% c("Weight/Scale", "Weight")) %>%
+           drop_na(TEST_RESULT_NUMERIC) %>%
+           mutate(weight_kg = as.numeric(TEST_RESULT_NUMERIC)/35.274) %>%
+           mutate(date =  dmy(OBS_TEST_RESULT_DATE)) %>%
+           distinct(DEIDENTIFIED_MASTER_PATIENT_ID, weight_kg, date)
+
+
+         height = obs_emr$observations %>%
+           filter(DATA_SOURCE == "EMR") %>%
+           filter(OBS_TEST_CONCEPT_NAME %in% c("Height")) %>%
+           drop_na(TEST_RESULT_NUMERIC) %>%
+           mutate(height_m = as.numeric(TEST_RESULT_NUMERIC)/39.37) %>%
+           mutate(date = dmy(OBS_TEST_RESULT_DATE)) %>%
+           distinct(DEIDENTIFIED_MASTER_PATIENT_ID, height_m,date)
+
+
+         bmi = full_join(weight, height) %>%
+           mutate(bmi = weight_kg/(height_m^2)) %>%
+           drop_na(bmi) %>%
+           group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+           mutate(new = remove_outliers(bmi)) %>%
+           drop_na(new) %>%
+           ungroup() %>%
+           select(-new) %>%
+           right_join(cohort) %>%
+           mutate(diff = index_date - date) %>%
+           group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+           slice(which.min(abs(diff))) %>%
+           distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, bmi, date) %>%
+           rename(bmi_date = date) %>%
+           ungroup()
+
+         rm(obs_emr)
+
+         gc()
+
+         cohort = cohort %>% left_join(bmi)
 
 # FORMAT COLUMNS ----
 
@@ -1169,8 +1230,11 @@ sparc_summary <- function(datadir,
                                         is.na(DISEASE_ACTIVITY) & PGA == 3 ~ "Severe",
                                         TRUE ~ DISEASE_ACTIVITY))
 
-
-  if("LATEST" %in% index_info){cohort = cohort %>% select(-INDEX_DATE)}else{cohort = cohort}
+cohort = cohort %>%
+  setNames((gsub("\\(|\\)|\\-|\\'|\\."," ",names(.)))) %>%
+  setNames((gsub("  "," ",names(.)))) %>%
+  setNames((gsub("^ *| *$",'',names(.)))) %>%
+  setNames((gsub(" ","_",names(.))))
 
 # CREATE HEADER STYLES ----
 
