@@ -180,6 +180,7 @@ sparc_summary <- function(datadir,
 
   }else{demo = demo}
 
+
 # CONVERT DAYS AFTER INDEX  TO NUMERIC VALUE ----
 
   t = as.numeric(index_range)
@@ -933,6 +934,9 @@ sparc_summary <- function(datadir,
 
          cohort = left_join(cohort, omics_t)
 
+         cohort <- cohort %>%
+           arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+           mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA"), NA)))
 
 # ENDOSCOPY SCORES WITHIN t of INDEX DATE ----
 
@@ -1005,8 +1009,7 @@ sparc_summary <- function(datadir,
 
   cohort <- cohort %>%
         arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-        mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA"), NA))) %>%
-        mutate(across(where(is.numeric), ~ replace_na(.x, 0)))
+        mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA"), NA)))
 
 
   cohort <- cohort %>% arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date)
@@ -1014,7 +1017,6 @@ sparc_summary <- function(datadir,
 
   names(cohort) = toupper(names(cohort))
 
-if("LATEST" %in% index_info){cohort = cohort %>% select(-INDEX_DATE)}else{cohort = cohort}
 
 
 
@@ -1166,6 +1168,9 @@ if("LATEST" %in% index_info){cohort = cohort %>% select(-INDEX_DATE)}else{cohort
                                         is.na(DISEASE_ACTIVITY) & PGA == 2 ~ "Moderate",
                                         is.na(DISEASE_ACTIVITY) & PGA == 3 ~ "Severe",
                                         TRUE ~ DISEASE_ACTIVITY))
+
+
+  if("LATEST" %in% index_info){cohort = cohort %>% select(-INDEX_DATE)}else{cohort = cohort}
 
 # CREATE HEADER STYLES ----
 
