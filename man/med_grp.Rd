@@ -5,7 +5,7 @@
 \alias{med_grp}
 \title{med_grp}
 \format{
-A data frame with 90 rows and 3 variables:
+A data frame with 96 rows and 3 variables:
 \describe{
   \item{MEDICATION_NAME}{Medication Name as it appears in SF, ECRF or EMR}
   \item{med_type}{The class of medication}
@@ -19,6 +19,6 @@ med_grp
 \description{
 A dataframe containing the coding for Medications. Allows to group the same
 medications together if they have different names (generic v. scientific)
-from different source.
+from different source. Infliximab Biosimilars added March 2022.
 }
 \keyword{datasets}
