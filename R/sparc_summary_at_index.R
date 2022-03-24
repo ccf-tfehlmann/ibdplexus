@@ -11,7 +11,7 @@
 #' @param emr_codes the codes to search through in the extract
 #'
 #' @return A dataframe with the summary data and an excel file. If EMR codes are specified then a subset of those data are created for each domain where the code was found.
-#' @export
+
 sparc_summary <- function(datadir,
                              index_info = "DATE_OF_CONSENT",
                              filename = "SPARC_SUMMARY.xlsx",
