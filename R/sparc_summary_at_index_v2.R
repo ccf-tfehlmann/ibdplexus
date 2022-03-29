@@ -28,6 +28,9 @@ sparc_summary <- function(datadir,
 
   data = data[sapply(data, nrow)>1]
 
+  data = lapply(data, function(x) x %>% mutate(across(everything(), ~replace(., . %in% c(""), NA))))
+
+
 # DEMOGRAPHIC INFORMATION ----
 
   consent = data$demographics %>%
