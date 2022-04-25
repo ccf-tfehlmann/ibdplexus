@@ -438,7 +438,6 @@ if(0){
 #Calculate disease activity scores +/- t days of index
 #===============================
 
-
   data$observations = data$observations %>%
     mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME))
 
@@ -727,6 +726,7 @@ if(0){
   #ECRF
 
   ses = data$procedures %>%
+    rename(SES.CD_Subscore = `SES-CD_Subscore`) %>%
     filter(!is.na(SES.CD_Subscore)) %>%
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
     mutate(SES.CD_Subscore = as.numeric(gsub("Not reached", "0", SES.CD_Subscore))) %>%
@@ -758,7 +758,10 @@ if(0){
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MAX_EXTENT_ACTIVE_DISEASE, LOCATION, PROC_START_DATE, MAYO_ENDOSCOPIC_SUBSCORE) %>%
     mutate(MAYO_ENDOSCOPIC_SUBSCORE = as.numeric(gsub("Not seen", "0", MAYO_ENDOSCOPIC_SUBSCORE)))  %>%
-    pivot_wider(id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "PROC_START_DATE", "MAX_EXTENT_ACTIVE_DISEASE"), names_from = LOCATION, values_from = MAYO_ENDOSCOPIC_SUBSCORE) %>%
+    drop_na(LOCATION) %>%
+    filter(LOCATION != "") %>%
+    pivot_wider(id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "PROC_START_DATE", "MAX_EXTENT_ACTIVE_DISEASE"),
+                names_from = LOCATION, values_from = MAYO_ENDOSCOPIC_SUBSCORE) %>%
     rowwise(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE, MAX_EXTENT_ACTIVE_DISEASE) %>%
     mutate(MAYO_ENDOSCOPY_SCORE = max(Rectum, `Sigmoid colon`, `Right colon`, `Descending colon`, `Transverse colon`),
            MODIFIED_MAYO_SCORE = sum(Rectum, `Sigmoid colon`, `Right colon`, `Descending colon`, `Transverse colon`),
@@ -773,8 +776,7 @@ if(0){
     slice(which.min(abs(datediff))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, MAX_EXTENT_ACTIVE_DISEASE, Rectum, `Sigmoid colon`, `Right colon`,
              `Descending colon`, `Transverse colon`, MAYO_ENDOSCOPY_SCORE, MODIFIED_MAYO_SCORE, EXTENDED_MODIFIED_MAYO_SCORE, MODIFIED_MAYO_ENDOSCOPIC_SCORE, mes.date) %>%
-    ungroup() %>%
-    mutate()
+    ungroup()
 
   es = bind_rows(ses, mes) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, Ileum,`Descending colon`, `Left colon`, `Rectum`, `Right colon`, `Sigmoid colon`, `Transverse colon`,
