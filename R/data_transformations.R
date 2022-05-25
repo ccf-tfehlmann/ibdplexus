@@ -32,7 +32,7 @@ extract_consent <- function(demographics, study) {
     mutate(DATE_OF_CONSENT = DATE_OF_CONSENT_1) %>%
     mutate(DATE_OF_CONSENT_WITHDRAWN = if_else(is.na(DATE_OF_CONSENT_2), DATE_OF_CONSENT_WITHDRAWN_1, DATE_OF_CONSENT_WITHDRAWN_2)) %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, ends_with("1"), ends_with("2"))
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, everything())
 }
 
 
