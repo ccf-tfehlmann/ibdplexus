@@ -17,8 +17,9 @@ Imports:
     readxl,
     DT,
     magrittr
-Depends:    R (>= 2.10),
-tidyverse
+Depends:    
+    R (>= 2.10),
+    tidyverse
 RoxygenNote: 7.1.2
 URL: https://github.com/ccf-tfehlmann/ibdplexus
 BugReports: https://github.com/ccf-tfehlmann/ibdplexus/issues
