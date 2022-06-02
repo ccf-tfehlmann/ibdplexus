@@ -6,6 +6,8 @@
 #'
 #' @import tidyverse
 #' @import lubridate
+#' @import dplyr
+#' @importFrom magrittr %>%
 #' @param observations A dataframe with demographics data.
 #'
 #' @return A long dataframe with the deidentified_master_patient_id, date of bmi measurement and bmi.
