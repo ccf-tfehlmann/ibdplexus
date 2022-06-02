@@ -13,13 +13,10 @@ Imports:
     reshape2,
     openxlsx,
     lubridate,
-    reshape2,
     data.table,
     tidyverse,
     readxl,
-    lubridate,
-    DT,
-    tidyverse
+    DT
 Depends:    R (>= 2.10)
 RoxygenNote: 7.1.2
 URL: https://github.com/ccf-tfehlmann/ibdplexus
