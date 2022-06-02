@@ -33,7 +33,7 @@ extract_endoscopy <- function(procedures) {
 #'
 #'
 #'
-#' @param procedures A dataframe with procedures data.
+#' @param encounter A dataframe with encounter data.
 #'
 #' @return A dataframe with  date and type of most recent encounter.
 

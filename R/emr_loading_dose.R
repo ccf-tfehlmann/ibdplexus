@@ -7,8 +7,6 @@
 #'
 #'
 #' @param prescriptions A dataframe with prescriptions data usually generated using load_data.
-#' @param demographics a dataframe with demographic data usually generated using load_data.
-#' @param observations a dataframe with observations data usually generated using load_data.
 #' @param encounter a dataframe with encounter data usually generated using load_data.
 #'
 #' @return A dataframe with the first medication start date for each drug. Bionaive is 1 if a patient has no prior reported biologics (including JAK inhibitors and Tofacitinib). Started after enrollment is 1 if the medication start date is after the date of consent.

@@ -67,6 +67,7 @@ proper <- function(x) {
 #' remove outliers from BMI
 #'
 #' @param x bmi
+#' @param na.rm default is true
 #'
 #' @return
 #'
