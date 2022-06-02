@@ -10,7 +10,7 @@
 #' @param df dataframe
 #'
 #' @return
-read_data <- function(df){
+read_data <- function(df) {
   data <- lapply(df, function(x) read.csv(x, stringsAsFactors = F, na.strings = c(NA, "", "NA"), encoding = "UTF-8"))
   data <- do.call(rbind, data)
 }
@@ -23,7 +23,7 @@ read_data <- function(df){
 #' @param df dataframe
 #'
 #' @return
-remove_empty_cols <- function(df){
+remove_empty_cols <- function(df) {
   df[, colSums(!is.na(df)) != 0]
 }
 
@@ -37,11 +37,13 @@ remove_empty_cols <- function(df){
 #' @param value.var values to be transposed
 #'
 #' @return
-to_wide <- function(df, y.var, value.var){
+to_wide <- function(df, y.var, value.var) {
   x.vars <- c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")
   x.var <- names(df)[names(df) %in% x.vars]
-  if(y.var==value.var) {df %>% select(x.var, y.var)}else{
-    d <- reshape2::dcast(df, paste0(paste(x.var, collapse = " + "), "~", y.var), value.var = value.var, fun.aggregate=function(x) paste(unique(x), collapse = "; "))
+  if (y.var == value.var) {
+    df %>% select(x.var, y.var)
+  } else {
+    d <- reshape2::dcast(df, paste0(paste(x.var, collapse = " + "), "~", y.var), value.var = value.var, fun.aggregate = function(x) paste(unique(x), collapse = "; "))
   }
 }
 
@@ -54,7 +56,9 @@ to_wide <- function(df, y.var, value.var){
 #'
 #' @return
 #'
-proper=function(x){ paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))}
+proper <- function(x) {
+  paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
+}
 
 
 
@@ -67,7 +71,7 @@ proper=function(x){ paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))}
 #' @return
 #'
 remove_outliers <- function(x, na.rm = TRUE, ...) {
-  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+  qnt <- quantile(x, probs = c(.25, .75), na.rm = na.rm, ...)
   H <- 1.5 * IQR(x, na.rm = na.rm)
   y <- x
   y[x < (qnt[1] - H)] <- NA

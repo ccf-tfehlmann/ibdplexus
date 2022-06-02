@@ -18,7 +18,7 @@
 emr_loading_pattern <- function(prescriptions, encounter) {
 
 
-#EMR
+  # EMR
 
   meds <- med_grp %>%
     filter(med_type %in% c("Biologic"))
@@ -92,75 +92,79 @@ emr_loading_pattern <- function(prescriptions, encounter) {
     distinct()
 
 
-loading = medications %>%
-  filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
-  left_join(encounter) %>%
-  mutate(MED_START_DATE = dmy(MED_START_DATE),
-         MED_END_DATE = dmy(MED_END_DATE),
-         VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
-  filter(year(MED_START_DATE) > 1900) %>%
-  arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_START_DATE) %>%
-  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-  select(DEIDENTIFIED_MASTER_PATIENT_ID,  VISIT_ENCOUNTER_START_DATE, new_med_name, ROUTE_OF_MEDICATION ,MEDICATION_DOMAIN ,MED_START_DATE,
-         MED_END_DATE, DOSE_OF_MEDICATION,CURRENT_MEDICATION,OTHER_MEDICATION,UNIT_OF_MEASURE_FOR_MEDICATION,   MEDICATION_FREQUENCE   ,
-         MEDICATION_ADMINISTRATED_CODE  ,MEDICATION_ADMINISTRATED   ,FREQUENCY_IN_DAYS  ,    REASON_STOPPED   ,SUMMARY   ,
-         MED_DISCONT_START_DATE   ,MEDICATION_STRENGTH  ,  MED_STRENGTH_UNIT_OF_MEASURE  ,MEDICATION_QUANTITY,MED_QUANTITY_UOM,MED_FORM   ,
-         MEDICATION_TREATMENT_COURSE  ,FREQUENCE_UNIT_OF_MEASURE   ,MEDICATION_ADMIN_DURATION   ,MED_ADMIN_DURATION_UOM  ,
-         GENERIC_MEDICINE_FLAG   ,SUBSTITUTE_MED_INDICATION_FLAG ,PLACE_OF_SERVICE,MEDICATION_REFILLS) %>%
-  distinct() %>%
-  mutate(weeks_between_med = difftime(MED_START_DATE, lag(MED_START_DATE), units = "weeks")) %>%
-  mutate(dose = ifelse(is.na(DOSE_OF_MEDICATION), MEDICATION_STRENGTH, DOSE_OF_MEDICATION)) %>%
-  mutate(route = ifelse(is.na(ROUTE_OF_MEDICATION), MED_FORM, ROUTE_OF_MEDICATION)) %>%
-  mutate(first_date = case_when(is.na(weeks_between_med) ~ MED_START_DATE)) %>%
-  fill(first_date,.direction = c("down"))
+  loading <- medications %>%
+    filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
+    left_join(encounter) %>%
+    mutate(
+      MED_START_DATE = dmy(MED_START_DATE),
+      MED_END_DATE = dmy(MED_END_DATE),
+      VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)
+    ) %>%
+    filter(year(MED_START_DATE) > 1900) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_START_DATE) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
+    select(
+      DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, new_med_name, ROUTE_OF_MEDICATION, MEDICATION_DOMAIN, MED_START_DATE,
+      MED_END_DATE, DOSE_OF_MEDICATION, CURRENT_MEDICATION, OTHER_MEDICATION, UNIT_OF_MEASURE_FOR_MEDICATION, MEDICATION_FREQUENCE,
+      MEDICATION_ADMINISTRATED_CODE, MEDICATION_ADMINISTRATED, FREQUENCY_IN_DAYS, REASON_STOPPED, SUMMARY,
+      MED_DISCONT_START_DATE, MEDICATION_STRENGTH, MED_STRENGTH_UNIT_OF_MEASURE, MEDICATION_QUANTITY, MED_QUANTITY_UOM, MED_FORM,
+      MEDICATION_TREATMENT_COURSE, FREQUENCE_UNIT_OF_MEASURE, MEDICATION_ADMIN_DURATION, MED_ADMIN_DURATION_UOM,
+      GENERIC_MEDICINE_FLAG, SUBSTITUTE_MED_INDICATION_FLAG, PLACE_OF_SERVICE, MEDICATION_REFILLS
+    ) %>%
+    distinct() %>%
+    mutate(weeks_between_med = difftime(MED_START_DATE, lag(MED_START_DATE), units = "weeks")) %>%
+    mutate(dose = ifelse(is.na(DOSE_OF_MEDICATION), MEDICATION_STRENGTH, DOSE_OF_MEDICATION)) %>%
+    mutate(route = ifelse(is.na(ROUTE_OF_MEDICATION), MED_FORM, ROUTE_OF_MEDICATION)) %>%
+    mutate(first_date = case_when(is.na(weeks_between_med) ~ MED_START_DATE)) %>%
+    fill(first_date, .direction = c("down"))
 
-first_use = split(loading, loading$med_grp)
+  first_use <- split(loading, loading$med_grp)
 
-for (i in 1:length(first_use)){
-  if("Infliximab" %in% names(first_use[i])){
-    first_use[[i]] = first_use[[i]] %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp,first_date,MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
-      mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,  med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
-      ungroup() %>%
-      mutate(first_use = if_else(weeks_between_med_2 >=2 & weeks_between_med_2 < 3 &
-                                   weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
-  } else if("Adalimumab" %in% names(first_use[i])){
-    first_use[[i]] = first_use[[i]] %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp,first_date,MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
-      mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,  med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
-      ungroup() %>%
-      mutate(first_use = ifelse(dose_1 == "160" & dose_2 == "80", "Loading Dose", "Not Loading Dose"))
-  } else if("Certolizumab Pegol" %in% names(first_use[i])){
-    first_use[[i]] = first_use[[i]] %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp,first_date,MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
-      mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,  med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
-      ungroup() %>%
-      mutate(first_use = if_else(weeks_between_med_2 >=2 & weeks_between_med_2 < 3 &
-                                   weeks_between_med_3 >= 1.5 & weeks_between_med_3 < 3.5, "Loading Dose", "Not Loading Dose"))
-  } else if("Vedolizumab" %in% names(first_use[i])){
-    first_use[[i]] = first_use[[i]] %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp,first_date,MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
-      mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,  med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
-      ungroup() %>%
-      mutate(first_use = if_else(weeks_between_med_2 >=2 & weeks_between_med_2 < 3 &
-                                   weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
-  } else if("Ustekinumab" %in% names(first_use[i])){
-    first_use[[i]] = first_use[[i]] %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp,first_date,MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
-      mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,  med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
-      ungroup() %>%
-      mutate(first_use = ifelse(toupper(route_1) == "INTRAVENOUS", "Loading Dose", "Not Loading Dose"))
+  for (i in 1:length(first_use)) {
+    if ("Infliximab" %in% names(first_use[i])) {
+      first_use[[i]] <- first_use[[i]] %>%
+        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
+        mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
+        ungroup() %>%
+        mutate(first_use = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
+          weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
+    } else if ("Adalimumab" %in% names(first_use[i])) {
+      first_use[[i]] <- first_use[[i]] %>%
+        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
+        mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
+        ungroup() %>%
+        mutate(first_use = ifelse(dose_1 == "160" & dose_2 == "80", "Loading Dose", "Not Loading Dose"))
+    } else if ("Certolizumab Pegol" %in% names(first_use[i])) {
+      first_use[[i]] <- first_use[[i]] %>%
+        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
+        mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
+        ungroup() %>%
+        mutate(first_use = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
+          weeks_between_med_3 >= 1.5 & weeks_between_med_3 < 3.5, "Loading Dose", "Not Loading Dose"))
+    } else if ("Vedolizumab" %in% names(first_use[i])) {
+      first_use[[i]] <- first_use[[i]] %>%
+        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
+        mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
+        ungroup() %>%
+        mutate(first_use = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
+          weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
+    } else if ("Ustekinumab" %in% names(first_use[i])) {
+      first_use[[i]] <- first_use[[i]] %>%
+        distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
+        mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
+        ungroup() %>%
+        mutate(first_use = ifelse(toupper(route_1) == "INTRAVENOUS", "Loading Dose", "Not Loading Dose"))
+    }
   }
-}
 
-first_use_emr = bind_rows(first_use)  %>%
-  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, first_use) %>%
-  filter(first_use == "Loading Dose") %>%
-  mutate(med_grp = paste0(med_grp, "_Loading_Date_EMR")) %>%
-  pivot_wider(id_cols = DEIDENTIFIED_MASTER_PATIENT_ID, names_from = med_grp, values_from = first_date)
+  first_use_emr <- bind_rows(first_use) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, med_grp, first_date, first_use) %>%
+    filter(first_use == "Loading Dose") %>%
+    mutate(med_grp = paste0(med_grp, "_Loading_Date_EMR")) %>%
+    pivot_wider(id_cols = DEIDENTIFIED_MASTER_PATIENT_ID, names_from = med_grp, values_from = first_date)
 }

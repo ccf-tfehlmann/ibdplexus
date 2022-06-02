@@ -14,51 +14,54 @@
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
 load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
-
   memory.limit(size = 80000)
-  cohort = toupper(cohort)
-  domains = toupper(domains)
-  data_type = toupper(data_type)
+  cohort <- toupper(cohort)
+  domains <- toupper(domains)
+  data_type <- toupper(data_type)
 
-  #GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
+  # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 
-  folders = list.files(path=paste0(datadir))
-
-
-  list_names = grep("demographic", folders, ignore.case = T, value = T)
-  list_names = grep("family", list_names, ignore.case = T, value = T, invert = T)
+  folders <- list.files(path = paste0(datadir))
 
 
-  cohorts = lapply(paste0(datadir,list_names), function(x) {read.csv(x, header = T, nrows = 2)})
-
-  names(cohorts) = gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
-  names(cohorts) = gsub("___", '__',  names(cohorts))
-
-  names(cohorts) = gsub("^([^__]*__[^_]*).*", '\\1',  names(cohorts))
+  list_names <- grep("demographic", folders, ignore.case = T, value = T)
+  list_names <- grep("family", list_names, ignore.case = T, value = T, invert = T)
 
 
-  cohorts = bind_rows(cohorts, .id = "df")
+  cohorts <- lapply(paste0(datadir, list_names), function(x) {
+    read.csv(x, header = T, nrows = 2)
+  })
 
-  cohorts = cohorts %>%
+  names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
+  names(cohorts) <- gsub("___", "__", names(cohorts))
+
+  names(cohorts) <- gsub("^([^__]*__[^_]*).*", "\\1", names(cohorts))
+
+
+  cohorts <- bind_rows(cohorts, .id = "df")
+
+  cohorts <- cohorts %>%
     distinct(df, DATA_SOURCE) %>%
-    mutate(Date = ymd(gsub(".*_","", df)),
-           Cohort = gsub("ECRF_","", DATA_SOURCE)) %>%
+    mutate(
+      Date = ymd(gsub(".*_", "", df)),
+      Cohort = gsub("ECRF_", "", DATA_SOURCE)
+    ) %>%
     distinct(Cohort, Date, df) %>%
-    mutate(df = gsub('_.*',"", df)) %>%
+    mutate(df = gsub("_.*", "", df)) %>%
     group_by(Cohort) %>%
-    filter(Date==max(ymd(Date)))
+    filter(Date == max(ymd(Date)))
 
 
 
-  folderinfo = file.info(paste0(datadir,folders)) %>%
+  folderinfo <- file.info(paste0(datadir, folders)) %>%
     rownames_to_column()
 
-  files = folderinfo %>%
-    filter(grepl(".txt|.csv",rowname)) %>%
-    filter(grepl(paste0(datadir,"[0-9]"),rowname)) %>%
+  files <- folderinfo %>%
+    filter(grepl(".txt|.csv", rowname)) %>%
+    filter(grepl(paste0(datadir, "[0-9]"), rowname)) %>%
     mutate(time = as.character.POSIXt(strptime(mtime, "%Y-%m-%d"))) %>%
-    mutate(df =gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", rowname)) %>%
-    mutate(df = gsub('_.*',"", df)) %>%
+    mutate(df = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", rowname)) %>%
+    mutate(df = gsub("_.*", "", df)) %>%
     left_join(cohorts, by = "df") %>%
     arrange(desc(time)) %>%
     group_by(Cohort) %>%
@@ -66,68 +69,90 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
     ungroup() %>%
     select(rowname)
 
-  #remove patient history old
+  # remove patient history old
 
-  files = files$rowname[grep("Old", files$rowname, ignore.case = T, invert = T)]
-
-
+  files <- files$rowname[grep("Old", files$rowname, ignore.case = T, invert = T)]
 
 
-  if("ALL" %in% domains){files = files} else {
-    filestring = paste(domains,collapse="|")
-    files = grep(filestring, files, value = T, ignore.case = T)}
+
+  if ("ALL" %in% domains) {
+    files <- files
+  } else {
+    filestring <- paste(domains, collapse = "|")
+    files <- grep(filestring, files, value = T, ignore.case = T)
+  }
 
 
-  if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
-  files = grep(filestring, files, value = T, ignore.case=T)} else {filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
-  files = grep(filestring, files, value = T, ignore.case=T)}
+  if (data_type == "BOTH") {
+    files <- files
+  } else if ("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains) {
+    filestring <- paste0(data_type, "|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
+    files <- grep(filestring, files, value = T, ignore.case = T)
+  } else {
+    filestring <- paste0(data_type, "|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
+    files <- grep(filestring, files, value = T, ignore.case = T)
+  }
 
-if(length(cohort) == 1 & cohort == "SPARC"){files = files[grep("family|study", files, invert = T, ignore.case = T)]} else{files = files}
+  if (length(cohort) == 1) {
+    if (cohort == "SPARC") {
+      files <- files[grep("family|study", files, invert = T, ignore.case = T)]
+    } else {
+      files <- files
+    }
+  }
 
 
-  #LOAD DATA ----
+  # LOAD DATA ----
   data <- lapply(files, function(x) fread(x))
 
-  #Assign Names
-  names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
-  names(data) = gsub("_SiteExtract", "", names(data))
-  names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
-  names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+  # Assign Names
+  names(data) <- gsub(paste0(datadir, "|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
+  names(data) <- gsub("_SiteExtract", "", names(data))
+  names(data) <- gsub("^[_]|_$|__$|___$|____$", "", names(data))
+  names(data) <- gsub("_CRF|_EMR", "", names(data), ignore.case = T)
 
 
 
-  #Combine Data with the Same Name (Collapses EMR and CRF data together)
-  data = data[order(names(data))]
+  # Combine Data with the Same Name (Collapses EMR and CRF data together)
+  data <- data[order(names(data))]
 
-  data = data %>% lapply(., mutate_if, is.integer, as.character) %>% lapply(., mutate_if, is.numeric, as.character)  %>% lapply(., mutate_if, is.factor, as.character)
-
-
-  dslist = unique(names(data))
-
-  for (i in 1:length(dslist)){
-
-    ii = (dslist[i])
+  data <- data %>%
+    lapply(., mutate_if, is.integer, as.character) %>%
+    lapply(., mutate_if, is.numeric, as.character) %>%
+    lapply(., mutate_if, is.factor, as.character)
 
 
-    nums=grep(paste0(ii), names(data))
+  dslist <- unique(names(data))
 
-  assign(paste0(ii), (rbindlist(data[nums], fill=TRUE)) %>% distinct())
+  for (i in 1:length(dslist)) {
+    ii <- (dslist[i])
+
+
+    nums <- grep(paste0(ii), names(data))
+
+    assign(paste0(ii), (rbindlist(data[nums], fill = TRUE)) %>% distinct())
+    gc()
+  }
+
+
   gc()
-}
 
-
+  data <- Filter(function(x) is(x, "data.frame"), mget(intersect(ls(), names(data))))
   gc()
-
-  data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
-  gc()
-  names(data) = tolower(names(data))
+  names(data) <- tolower(names(data))
 
   remove(list = dslist)
 
 
-  #Standardize variable names
-  if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
+  # Standardize variable names
+  if ("encounter" %in% names(data)) {
+    data$encounter <- data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)
+  }
 
+
+  data <- data[sapply(data, nrow) > 1]
+
+  data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
 
   rm(list = c("files", "folderinfo"))
@@ -153,49 +178,52 @@ if(length(cohort) == 1 & cohort == "SPARC"){files = files[grep("family|study", f
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
 load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR"), exdir = ".") {
+  cohort <- toupper(cohort)
+  domains <- toupper(domains)
+  data_type <- toupper(data_type)
 
-  cohort = toupper(cohort)
-  domains = toupper(domains)
-  data_type = toupper(data_type)
-
-  #GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
-
-
-  zipfiles = unique(grep(".zip",paste0(datadir,list.files(datadir)), value=TRUE))
-  zipfileinfo = file.info(path=zipfiles)
-  filepath = rownames(zipfileinfo[which.max(zipfileinfo$mtime),])
+  # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 
 
-  folders = unzip(filepath, list=TRUE)$Name
-
-  list_names = grep("demographic", folders, ignore.case = T, value = T)
-  list_names = grep("family", list_names, ignore.case = T, value = T, invert = T)
-
-
-  cohorts = lapply(list_names, function(x) {read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 2)})
-
-  names(cohorts) = gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
-  names(cohorts) = gsub("___", '__',  names(cohorts))
-
-  names(cohorts) = gsub("^([^__]*__[^_]*).*", '\\1',  names(cohorts))
+  zipfiles <- unique(grep(".zip", paste0(datadir, list.files(datadir)), value = TRUE))
+  zipfileinfo <- file.info(path = zipfiles)
+  filepath <- rownames(zipfileinfo[which.max(zipfileinfo$mtime), ])
 
 
-  cohorts = bind_rows(cohorts, .id = "df")
+  folders <- unzip(filepath, list = TRUE)$Name
 
-  cohorts = cohorts %>%
+  list_names <- grep("demographic", folders, ignore.case = T, value = T)
+  list_names <- grep("family", list_names, ignore.case = T, value = T, invert = T)
+
+
+  cohorts <- lapply(list_names, function(x) {
+    read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 2)
+  })
+
+  names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
+  names(cohorts) <- gsub("___", "__", names(cohorts))
+
+  names(cohorts) <- gsub("^([^__]*__[^_]*).*", "\\1", names(cohorts))
+
+
+  cohorts <- bind_rows(cohorts, .id = "df")
+
+  cohorts <- cohorts %>%
     distinct(df, DATA_SOURCE) %>%
-    mutate(Date = ymd(gsub(".*_","", df)),
-           Cohort = gsub("ECRF_","", DATA_SOURCE)) %>%
+    mutate(
+      Date = ymd(gsub(".*_", "", df)),
+      Cohort = gsub("ECRF_", "", DATA_SOURCE)
+    ) %>%
     distinct(Cohort, Date, df) %>%
-    mutate(df = gsub('_.*',"", df)) %>%
+    mutate(df = gsub("_.*", "", df)) %>%
     group_by(Cohort) %>%
-    filter(Date==max(ymd(Date)))
+    filter(Date == max(ymd(Date)))
 
 
-  files = data.frame(files = folders) %>%
-    filter(grepl(".txt|.csv",files)) %>%
-    mutate(df =gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", files)) %>%
-    mutate(df = gsub('_.*',"", df)) %>%
+  files <- data.frame(files = folders) %>%
+    filter(grepl(".txt|.csv", files)) %>%
+    mutate(df = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", files)) %>%
+    mutate(df = gsub("_.*", "", df)) %>%
     left_join(cohorts, by = "df") %>%
     group_by(Cohort) %>%
     filter(Cohort %in% cohort) %>%
@@ -203,106 +231,97 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     select(files)
 
   # files = files$files
-  files = files$files[grep("Old", files$files, ignore.case = T, invert = T)]
+  files <- files$files[grep("Old", files$files, ignore.case = T, invert = T)]
 
 
-  if("ALL" %in% domains){files = files} else {
-    filestring = paste(domains,collapse="|")
-    files = grep(filestring, files, value = T, ignore.case = T)}
-
-
-  if(data_type == "BOTH"){files = files} else if("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains| "BIOSAMPLE" %in% domains | "OMICS" %in% domains){filestring = paste0(data_type,"|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
-  files = grep(filestring, files, value = T, ignore.case=T)} else {files = grep(data_type, files, value = T, ignore.case=T)}
-
-
-
-  #LOAD IN ALL FILES ----
-
-
-  data <- lapply(files, function(x)
-    read.csv(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header=T, sep=",") %>% discard(~all(is.na(.x))))
-
-
-  #Assign Names
-  names(data) =  gsub(paste0(datadir,"|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
-  names(data) = gsub("_SiteExtract", "", names(data))
-  names(data) = gsub("^[_]|_$|__$|___$|____$", "", names(data))
+  if ("ALL" %in% domains) {
+    files <- files
+  } else {
+    filestring <- paste(domains, collapse = "|")
+    files <- grep(filestring, files, value = T, ignore.case = T)
+  }
 
 
 
-  #Combine Data with the Same Name (Collapses EMR and CRF data)
-  data = data[order(names(data))]
+  if (data_type == "BOTH") {
+    files <- files
+  } else if ("DEMOGRAPHICS" %in% domains | "MASTER" %in% domains | "BIOSAMPLE" %in% domains | "OMICS" %in% domains) {
+    filestring <- paste0(data_type, "|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
+    files <- grep(filestring, files, value = T, ignore.case = T)
+  } else {
+    filestring <- paste0(data_type, "|DEMOGRAPHICS|MASTER|BIOSAMPLE|OMICS")
+    files <- grep(filestring, files, value = T, ignore.case = T)
+  }
 
-  data = data %>% lapply(., mutate_if, is.integer, as.character) %>% lapply(., mutate_if, is.numeric, as.character)  %>% lapply(., mutate_if, is.factor, as.character)
+
+  if (length(cohort) == 1) {
+    if (cohort == "SPARC") {
+      files <- files[grep("family|study", files, invert = T, ignore.case = T)]
+    } else {
+      files <- files
+    }
+  }
 
 
-  dslist = unique(names(data))
 
-  for (i in 1:length(dslist)){
+  # LOAD IN ALL FILES ----
 
-    ii = (dslist[i])
 
-    nums=grep(paste0(ii), names(data))
+  data <- lapply(files, function(x) {
+    read.csv(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header = T, sep = ",") %>% discard(~ all(is.na(.x)))
+  })
+
+
+  # Assign Names
+  names(data) <- gsub(paste0(datadir, "|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
+  names(data) <- gsub("_SiteExtract", "", names(data))
+  names(data) <- gsub("^[_]|_$|__$|___$|____$", "", names(data))
+
+  names(data) <- gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+
+
+  # Combine Data with the Same Name (Collapses EMR and CRF data)
+
+
+
+
+
+
+  # Combine Data with the Same Name (Collapses EMR and CRF data together)
+  data <- data[order(names(data))]
+
+  data <- data %>%
+    lapply(., mutate_if, is.integer, as.character) %>%
+    lapply(., mutate_if, is.numeric, as.character) %>%
+    lapply(., mutate_if, is.factor, as.character)
+
+
+  dslist <- unique(names(data))
+
+  for (i in 1:length(dslist)) {
+    ii <- (dslist[i])
+
+    nums <- grep(paste0(ii), names(data))
 
     assign(paste0(ii), (bind_rows(data[nums])) %>% distinct())
   }
 
-  data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
+  data <- Filter(function(x) is(x, "data.frame"), mget(intersect(ls(), names(data))))
 
-  names(data) = tolower(names(data))
+  names(data) <- tolower(names(data))
 
   remove(list = dslist)
 
-  #Clean Lab Data
-  if("labs_emr" %in% names(data)){data$labs_emr = data.frame(apply(data$labs_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
 
-  #Clean Encounter Data
-  if("encounter_emr" %in% names(data)){data$encounter_emr = data.frame(apply(data$encounter_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-  #Clean Procedures Data
-  if("procedures_emr" %in% names(data)){data$procedures_emr = data.frame(apply(data$procedures_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-
-  #Clean Observation Data
-  if("observations_emr" %in% names(data)){data$observations_emr = data.frame(apply(data$observations_emr, 2, function(x)
-  {gsub("crma|uwmf|uwhc|mgh|bwh|nwh|hma|nsmc|bwf|uwh|univ of penn|st. Mary's|upmc|uphs|uhs|chp|MyAurora|penn|mwh|Princeton|Chester|Magee|Drexel Hill|Montgomery|Fredrick Weinberg|Chicago|Boston|dfci|South Shore|Wdh|cmmc|Ucmc|Ucm|UMMC", "", x, ignore.case = T) }))}
-
-  #Assign Names
-
-  names(data) =  gsub("_CRF|_EMR", "", names(data), ignore.case = T)
-
-
-
-  #Combine Data with the Same Name (Collapses EMR and CRF data together)
-  data = data[order(names(data))]
-
-  data = data %>% lapply(., mutate_if, is.integer, as.character) %>% lapply(., mutate_if, is.numeric, as.character)  %>% lapply(., mutate_if, is.factor, as.character)
-
-
-  dslist = unique(names(data))
-
-  for (i in 1:length(dslist)){
-
-    ii = (dslist[i])
-
-    nums=grep(paste0(ii), names(data))
-
-    assign(paste0(ii), (bind_rows(data[nums])) %>% distinct())
+  # Standardize variable names
+  if ("encounter" %in% names(data)) {
+    data$encounter <- data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)
   }
 
-  data <- Filter(function(x) is(x, "data.frame") , mget(intersect(ls(), names(data))))
 
-  names(data) = tolower(names(data))
+  data <- data[sapply(data, nrow) > 1]
 
-  remove(list = dslist)
-
-
-  #Standardize variable names
-  if("encounter" %in% names(data)){data$encounter = data$encounter %>% rename(VISIT_ENCOUNTER_ID = VISITENC_ID)}
-
+  data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
   return(data)
 }

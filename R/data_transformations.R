@@ -21,7 +21,6 @@ extract_consent <- function(demographics, study) {
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN) %>%
     mutate(
       DATE_OF_CONSENT = dmy(DATE_OF_CONSENT),
-
       DATE_OF_CONSENT_WITHDRAWN = dmy(DATE_OF_CONSENT_WITHDRAWN)
     ) %>%
     filter(year(DATE_OF_CONSENT) >= 2016) %>%
@@ -55,7 +54,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
     dx <- diagnosis %>%
       filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
-      left_join(encounter,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
+      left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
       dplyr::mutate(keep = ifelse(DATA_SOURCE == "SF_SPARC" & is.na(DIAG_STATUS_CONCEPT_NAME), 0, 1)) %>% # Smartform Data should have a DIAG_STATUS_CONCEPT_NAME equal to yes
@@ -87,7 +86,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       ungroup()
 
     dxy <- bind_rows(dx_date_sf, dx_date_ecrf) %>%
-      left_join(demographics,by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
+      left_join(demographics, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
       filter(DIAGNOSIS_DATE >= as.numeric(BIRTH_YEAR)) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS_DATE) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -95,7 +94,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       ungroup() %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS_DATE)
 
-    dx <- dx %>% left_join(dxy,by = "DEIDENTIFIED_MASTER_PATIENT_ID")
+    dx <- dx %>% left_join(dxy, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
   } else {
     dx <- diagnosis %>%
       filter(DATA_SOURCE %in% c("ECRF_QORUS")) %>%
@@ -112,7 +111,6 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, DIAGNOSIS_DATE, DISEASE_SITE, DISEASE_PHENOTYPE) %>%
       ungroup()
   }
-
 }
 
 #' extract_demo
@@ -129,9 +127,9 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
 extract_demo <- function(demographics, study) {
   data_source <- paste0("ECRF_", toupper(study))
 
-  demo = demographics %>%
+  demo <- demographics %>%
     filter(DATA_SOURCE %in% c("EMR", data_source)) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID,desc(DATA_SOURCE)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(DATA_SOURCE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(1) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIRTH_YEAR, GENDER) %>%
@@ -153,19 +151,21 @@ extract_demo <- function(demographics, study) {
 extract_race <- function(demographics, study) {
   data_source <- paste0("ECRF_", toupper(study))
 
-  race = demographics %>%
+  race <- demographics %>%
     filter(DATA_SOURCE %in% c(data_source, "EMR")) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, RACE, ETHNICITY,RACE_OTHER) %>%
-    mutate(across(everything(), ~replace(., . %in% c("N.A.", "NA", "N/A", ""), NA))) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, RACE, ETHNICITY, RACE_OTHER) %>%
+    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", ""), NA))) %>%
     rowwise() %>%
     mutate(s = sum(is.na(c_across(ETHNICITY:RACE_OTHER)))) %>%
     filter(s < 3) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE) %>%
     mutate(RACE = ifelse(RACE %in% c("Other", "Other Race") & !is.na(RACE_OTHER), RACE_OTHER, RACE)) %>%
     select(-RACE_OTHER) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,  RACE, ETHNICITY) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, RACE, ETHNICITY) %>%
     ungroup()
 
   race <- data.table::as.data.table(race)
-  race <- race[, lapply(.SD, function(x){paste0(unique(x[!is.na(x)]), collapse="; ")}), by = DEIDENTIFIED_MASTER_PATIENT_ID]
+  race <- race[, lapply(.SD, function(x) {
+    paste0(unique(x[!is.na(x)]), collapse = "; ")
+  }), by = DEIDENTIFIED_MASTER_PATIENT_ID]
 }
