@@ -8,7 +8,7 @@ Description: This package has scripts to load and manipulate IBD Plexus data for
 License: CC0
 Encoding: UTF-8
 LazyData: true
-Imports: 
+Depends: 
     dplyr,
     reshape2,
     openxlsx,
@@ -16,8 +16,7 @@ Imports:
     data.table,
     readxl,
     DT,
-    magrittr
-Depends:    
+    magrittr,
     R (>= 2.10),
     tidyverse,
     tibble
