@@ -29,7 +29,7 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
   # sCDAI ----
 
-  scdai <- calculate_scdai(observations, encounter)
+  scdai <- calculate_scdai(observations)
 
   scdai <- scdai %>%
     left_join(dx) %>%
