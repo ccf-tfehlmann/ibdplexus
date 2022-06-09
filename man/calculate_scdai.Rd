@@ -4,12 +4,10 @@
 \alias{calculate_scdai}
 \title{calculate_scdai}
 \usage{
-calculate_scdai(observations, encounter)
+calculate_scdai(observations)
 }
 \arguments{
 \item{observations}{observation table usually uploaded using load_data}
-
-\item{encounter}{encounter table usually uploaded using load_data}
 }
 \value{
 A dataframe with all sCDAI scores from eCRF and Smartform regardless of IBD diagnosis.

@@ -7,7 +7,7 @@
 extract_latest(encounter)
 }
 \arguments{
-\item{procedures}{A dataframe with procedures data.}
+\item{encounter}{A dataframe with encounter data.}
 }
 \value{
 A dataframe with  date and type of most recent encounter.

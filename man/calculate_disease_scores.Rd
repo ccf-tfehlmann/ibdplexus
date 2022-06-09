@@ -27,7 +27,10 @@ calculate_disease_scores(
 An excel spreadsheet with the scores as different tabs and a list of dataframes with each score as a list element.
 }
 \description{
-Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI (CD patients only), 6pt Mayo (UC Patients only), Manitoba, PGA, MES (UC patients only) and SES-CD (CD patients only) for SPARC patients
+Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI
+(CD patients only), 6pt Mayo (UC Patients only), Manitoba, PGA, MES (UC
+patients only), SES-CD (CD patients only), PRO2 (CD patients only) for SPARC
+patients
 Data can be loaded for this function using:
 data <- load_data(datadir = datadir, cohort = "SPARC", domains = c("Demographics", "Diagnosis", "Procedures", "Encounter", "Observations"), data_type = "CRF")
 }
