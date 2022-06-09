@@ -318,7 +318,6 @@ calculate_mayo <- function(observations) {
       S = ifelse(is.na(S) & (diff2 <= 7), lead(S), S),
       R = ifelse(is.na(R) & (diff2 <= 7), lead(R), R)
     ) %>%
-    select(-T2, -S2, -R2, -diff, -diff2, -T3, -R3, -S3) %>%
     dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R, Global.Assessment.Score = T) %>%
     mutate(
       UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score,
@@ -372,7 +371,6 @@ calculate_mayo <- function(observations) {
       S = ifelse(is.na(S) & (diff2 <= 7), lead(S), S),
       R = ifelse(is.na(R) & (diff2 <= 7), lead(R), R)
     ) %>%
-    select(-S2, -R2, -diff, -diff2, -R3, -S3) %>%
     dplyr::rename(Stool.Freq.Score = S, Rectal.Bleeding.Score = R) %>%
     mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score, Source = "ECRF") %>%
     mutate(UCDAI.date = OBS_TEST_RESULT_DATE) %>%
