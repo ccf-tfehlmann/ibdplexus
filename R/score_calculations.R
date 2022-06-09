@@ -92,12 +92,11 @@ calculate_mes <- function(procedures) {
 #' Calculates short CDAI score from SPARC data.
 #'
 #' @param observations observation table usually uploaded using load_data
-#' @param encounter encounter table usually uploaded using load_data
 #'
 #' @return A dataframe with all sCDAI scores from eCRF and Smartform regardless of IBD diagnosis.
 #'
 #'
-calculate_scdai <- function(observations, encounter) {
+calculate_scdai <- function(observations) {
 
 
   # Smartform
@@ -120,7 +119,6 @@ calculate_scdai <- function(observations, encounter) {
       TRUE ~ as.numeric(result)
     )) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
-    left_join(encounter) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
     slice(1) %>%
@@ -149,17 +147,7 @@ calculate_scdai <- function(observations, encounter) {
       B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
       TRUE ~ as.character(NA)
     )) %>%
-    mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question, A3 = A, B3 = B, G3 = G, DBQ3 = Daily.BM.Question) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    fill(A2, .direction = "down") %>%
-    fill(B2, .direction = "down") %>%
-    fill(G2, .direction = "down") %>%
-    fill(DBQ2, .direction = "down") %>%
-    fill(A3, .direction = "up") %>%
-    fill(B3, .direction = "up") %>%
-    fill(G3, .direction = "up") %>%
-    fill(DBQ3, .direction = "up") %>%
-    mutate(
+     mutate(
       A = ifelse(is.na(A) & diff <= 7, lag(A), A),
       G = ifelse(is.na(G) & diff <= 7, lag(G), G),
       B = ifelse(is.na(B) & diff <= 7, lag(B), B),
@@ -171,7 +159,6 @@ calculate_scdai <- function(observations, encounter) {
       B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
       Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff2 <= 7), lead(Daily.BM.Question), Daily.BM.Question)
     ) %>%
-    select(-A2, -B2, -G2, -diff, -DBQ2, -diff2, -A3, -B3, -G3, -DBQ3) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44 + (2 * 7 * Daily.BM) + (5 * 7 * Abdominal.Pain.Score) + (7 * 7 * General.well.being.score), Source = "SF") %>%
     dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -223,16 +210,7 @@ calculate_scdai <- function(observations, encounter) {
     ) %>%
     # mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
-    mutate(A2 = A, B2 = B, G2 = G, DBQ2 = Daily.BM.Question, A3 = A, B3 = B, G3 = G, DBQ3 = Daily.BM.Question) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    fill(A2, .direction = "down") %>%
-    fill(B2, .direction = "down") %>%
-    fill(G2, .direction = "down") %>%
-    fill(DBQ2, .direction = "down") %>%
-    fill(A3, .direction = "up") %>%
-    fill(B3, .direction = "up") %>%
-    fill(G3, .direction = "up") %>%
-    fill(DBQ3, .direction = "up") %>%
     mutate(
       A = ifelse(is.na(A) & diff <= 7, lag(A), A),
       G = ifelse(is.na(G) & diff <= 7, lag(G), G),
@@ -245,7 +223,6 @@ calculate_scdai <- function(observations, encounter) {
       B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
       Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff2 <= 7), lead(Daily.BM.Question), Daily.BM.Question)
     ) %>%
-    select(-A2, -B2, -G2, -diff, -DBQ2, -diff2, -A3, -B3, -G3, -DBQ3) %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44 + (2 * 7 * Daily.BM) + (5 * 7 * Abdominal.Pain.Score) + (7 * 7 * General.well.being.score), Source = "ECRF") %>%
     dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -329,16 +306,8 @@ calculate_mayo <- function(observations) {
       diff = OBS_TEST_RESULT_DATE - lag(OBS_TEST_RESULT_DATE),
       diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE
     ) %>%
-    # mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
-    mutate(T2 = T, R2 = R, S2 = S, T3 = T, R3 = R, S3 = S) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    fill(T2, .direction = "down") %>%
-    fill(S2, .direction = "down") %>%
-    fill(R2, .direction = "down") %>%
-    fill(T3, .direction = "up") %>%
-    fill(S3, .direction = "up") %>%
-    fill(R3, .direction = "up") %>%
     mutate(
       T = ifelse(is.na(T) & (diff <= 7), lag(T), T),
       S = ifelse(is.na(S) & (diff <= 7), lag(S), S),
@@ -394,14 +363,7 @@ calculate_mayo <- function(observations) {
     ) %>%
     # mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
     ungroup() %>%
-    mutate(R2 = R, S2 = S) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(R2 = R, S2 = S, T3 = T, R3 = R, S3 = S) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    fill(S2, .direction = "down") %>%
-    fill(R2, .direction = "down") %>%
-    fill(S3, .direction = "up") %>%
-    fill(R3, .direction = "up") %>%
     mutate(
       S = ifelse(is.na(S) & (diff <= 7), lag(S), S),
       R = ifelse(is.na(R) & (diff <= 7), lead(R), R)
@@ -489,6 +451,285 @@ calculate_pga <- function(observations) {
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PGA.date) %>%
     mutate(PGA.source = "SF") %>%
     distinct_all() %>%
+    setNames(toupper(names(.))) %>%
+    setNames(gsub("\\.", "_", names(.)))
+}
+
+
+#' calculate_pro2
+#'
+#' Calculates pro2 from SPARC data.
+#'
+#' @param observations observation table usually uploaded using load_data
+#'
+#' @return A dataframe with all pro2 scores from eCRF and Smartform regardless of IBD diagnosis.
+#'
+#'
+calculate_pro2 <- function(observations) {
+
+  #remission/mild/moderate/severe definition from https://pubmed.ncbi.nlm.nih.gov/25348809/
+
+  # Smartform
+
+  pro2_sf <- observations %>%
+    filter(DATA_SOURCE == "SF_SPARC") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Current Average Number of Daily Liquid Bowel Movements", "Abdominal Pain Score", "Abdominal Pain - Pain Scale")) %>%
+    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = case_when(
+      result == "None" ~ 0,
+      result == "Mild" ~ 1,
+      result == "Moderate" ~ 2,
+      result == "Severe" ~ 3,
+      TRUE ~ as.numeric(result)
+    )) %>%
+    mutate(result = ifelse(result > 20, 20, result)) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    slice(1) %>%
+    pivot_wider(
+      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
+      names_from = c(OBS_TEST_CONCEPT_NAME),
+      values_from = c(result)
+    ) %>%
+    mutate(
+      A = ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`),
+      B = `Current Average Number of Daily Liquid Bowel Movements`
+    ) %>%
+    ungroup() %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(
+      diff = OBS_TEST_RESULT_DATE - lag(OBS_TEST_RESULT_DATE),
+      diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE
+    ) %>%
+    ungroup() %>%
+    mutate(
+      A = ifelse(is.na(A) & diff <= 7, lag(A), A),
+      B = ifelse(is.na(B) & diff <= 7, lag(B), B)
+    ) %>%
+    mutate(
+      A = ifelse(is.na(A) & (diff2 <= 7), lead(A), A),
+      B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B)
+    ) %>%
+    dplyr::rename(Liquid.BM = B, Abdominal.Pain.Score = A) %>%
+    mutate(pro2.score = (Liquid.BM*2) + (Abdominal.Pain.Score*5), Source = "SF") %>%
+    dplyr::rename(pro2.date = OBS_TEST_RESULT_DATE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, pro2.date, pro2.score, Source, Liquid.BM, Abdominal.Pain.Score)
+
+
+  # ECRF
+  pro2_ecrf <- observations %>%
+    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Current Average Number of Daily Liquid Bowel Movements", "Abdominal Pain")) %>%
+    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = case_when(
+      result == "None" ~ 0,
+      result == "Mild" ~ 1,
+      result == "Moderate" ~ 2,
+      result == "Severe" ~ 3,
+      result == "20+" ~ 20,
+      TRUE ~ as.numeric(result)
+    )) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    slice(1) %>%
+    pivot_wider(
+      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
+      names_from = c(OBS_TEST_CONCEPT_NAME),
+      values_from = c(result)
+    ) %>%
+    mutate(
+      A = `Abdominal Pain`,
+      B = `Current Average Number of Daily Liquid Bowel Movements`
+    ) %>%
+    ungroup() %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(
+      diff = OBS_TEST_RESULT_DATE - lag(OBS_TEST_RESULT_DATE),
+      diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE
+    ) %>%
+    ungroup() %>%
+    mutate(
+      A = ifelse(is.na(A) & diff <= 7, lag(A), A),
+      B = ifelse(is.na(B) & diff <= 7, lag(B), B)
+    ) %>%
+    mutate(
+      A = ifelse(is.na(A) & (diff2 <= 7), lead(A), A),
+      B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B)
+    ) %>%
+    dplyr::rename(Liquid.BM = B, Abdominal.Pain.Score = A) %>%
+    mutate(pro2.score = (Liquid.BM*2) + (Abdominal.Pain.Score*5), Source = "ECRF") %>%
+    dplyr::rename(pro2.date = OBS_TEST_RESULT_DATE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, pro2.date, pro2.score, Source, Liquid.BM, Abdominal.Pain.Score)
+
+
+
+  pro2 <- pro2_sf %>%
+    bind_rows(pro2_ecrf) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID,  pro2.date) %>%
+    dplyr::rename(pro2.source = Source) %>%
+    distinct_all() %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, pro2.date, pro2.score, pro2.source, Liquid.BM, Abdominal.Pain.Score) %>%
+    ungroup() %>%
+    dplyr::mutate(pro2.category = case_when(
+      pro2.score < 8 ~ "Remission",
+      pro2.score >= 8 & pro2.score <= 13 ~ "Mild",
+      pro2.score >= 14 & pro2.score <= 35 ~ "Moderate",
+      pro2.score > 35 ~ "Severe",
+      TRUE ~ as.character(NA)
+    )) %>%
+    select(sort(names(.))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, everything()) %>%
+    setNames(toupper(names(.))) %>%
+    setNames(gsub("\\.", "_", names(.)))
+}
+
+#' calculate_pro3
+#'
+#' Calculates pro3 from SPARC data.
+#'
+#' @param observations observation table usually uploaded using load_data
+#'
+#' @return A dataframe with all pro3 scores from eCRF and Smartform regardless of IBD diagnosis.
+#'
+#'
+calculate_pro3 <- function(observations) {
+
+  #remission/mild/moderate/severe definition from https://pubmed.ncbi.nlm.nih.gov/25348809/
+
+  # Smartform
+  pro3_sf <- observations %>%
+    filter(DATA_SOURCE == "SF_SPARC") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Current Average Number of Daily Liquid Bowel Movements", "Abdominal Pain Score", "Abdominal Pain - Pain Scale","General Well Being Score","Constitutional - General Well-Being")) %>%
+    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = case_when(
+        result == "None" ~ 0,
+        result == "Mild" ~ 1,
+        result == "Moderate" ~ 2,
+        result == "Severe" ~ 3,
+        result == "Generally well" ~ 0,
+        result == "Slightly under par" ~ 1,
+        result == "Poor" ~ 2,
+        result == "Very poor" ~ 3,
+        result == "Terrible" ~ 4,
+        TRUE ~ as.numeric(result)
+      )) %>%
+    mutate(result = ifelse(result > 20, 20, result)) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    slice(1) %>%
+    pivot_wider(
+      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
+      names_from = c(OBS_TEST_CONCEPT_NAME),
+      values_from = c(result)
+    ) %>%
+    mutate(
+      A = ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`),
+      B = `Current Average Number of Daily Liquid Bowel Movements`,
+      G =  ifelse(is.na(`Constitutional - General Well-Being`), `General Well Being Score`, `Constitutional - General Well-Being`)
+    ) %>%
+    ungroup() %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(
+      diff = OBS_TEST_RESULT_DATE - lag(OBS_TEST_RESULT_DATE),
+      diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE
+    ) %>%
+    ungroup() %>%
+    mutate(
+      A = ifelse(is.na(A) & diff <= 7, lag(A), A),
+      B = ifelse(is.na(B) & diff <= 7, lag(B), B),
+      G = ifelse(is.na(G) & diff <= 7, lag(G), G)
+    ) %>%
+    mutate(
+      A = ifelse(is.na(A) & (diff2 <= 7), lead(A), A),
+      B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
+      G = ifelse(is.na(G) & (diff2 <= 7), lead(G), G)
+    ) %>%
+    dplyr::rename(Liquid.BM = B, Abdominal.Pain.Score = A,General.well.being.score = G) %>%
+    mutate(pro3.score = (Liquid.BM*2) + (Abdominal.Pain.Score*5) + (General.well.being.score*7), Source = "SF") %>%
+    dplyr::rename(pro3.date = OBS_TEST_RESULT_DATE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, pro3.date, pro3.score, Source, Liquid.BM, Abdominal.Pain.Score,General.well.being.score)
+
+
+  # ECRF
+  pro3_ecrf <- observations %>%
+    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Current Average Number of Daily Liquid Bowel Movements", "Abdominal Pain", "General Well-Being")) %>%
+    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = case_when(
+      result == "None" ~ 0,
+      result == "Mild" ~ 1,
+      result == "Moderate" ~ 2,
+      result == "Severe" ~ 3,
+      result == "Generally well" ~ 0,
+      result == "Slightly under par" ~ 1,
+      result == "Poor" ~ 2,
+      result == "Very poor" ~ 3,
+      result == "Terrible" ~ 4,
+      result == "20+" ~ 20,
+      TRUE ~ as.numeric(result)
+    )) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    slice(1) %>%
+    pivot_wider(
+      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
+      names_from = c(OBS_TEST_CONCEPT_NAME),
+      values_from = c(result)
+    ) %>%
+    mutate(
+      A = `Abdominal Pain`,
+      B = `Current Average Number of Daily Liquid Bowel Movements`,
+      G = `General Well-Being`
+    ) %>%
+    ungroup() %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(
+      diff = OBS_TEST_RESULT_DATE - lag(OBS_TEST_RESULT_DATE),
+      diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE
+    ) %>%
+    ungroup() %>%
+    mutate(
+      A = ifelse(is.na(A) & diff <= 7, lag(A), A),
+      B = ifelse(is.na(B) & diff <= 7, lag(B), B),
+      G = ifelse(is.na(G) & diff <= 7, lag(G), G)
+    ) %>%
+    mutate(
+      A = ifelse(is.na(A) & (diff2 <= 7), lead(A), A),
+      B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
+      G = ifelse(is.na(G) & (diff2 <= 7), lead(G), G)
+    ) %>%
+    dplyr::rename(Liquid.BM = B, Abdominal.Pain.Score = A,General.well.being.score = G) %>%
+    mutate(pro3.score = (Liquid.BM*2) + (Abdominal.Pain.Score*5) + (General.well.being.score*7), Source = "ECRF") %>%
+    dplyr::rename(pro3.date = OBS_TEST_RESULT_DATE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, pro3.date, pro3.score, Source, Liquid.BM, Abdominal.Pain.Score,General.well.being.score)
+
+
+  pro3 <- pro3_sf %>%
+    bind_rows(pro3_ecrf) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID,  pro3.date) %>%
+    dplyr::rename(pro3.source = Source) %>%
+    distinct_all() %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, pro3.date, pro3.score, pro3.source, Liquid.BM, Abdominal.Pain.Score,General.well.being.score) %>%
+  ungroup() %>%
+    dplyr::mutate(pro3.category = case_when(
+      pro3.score < 13 ~ "Remission",
+      pro3.score >= 13 & pro3.score <= 21 ~ "Mild",
+      pro3.score >= 22 & pro3.score <= 53 ~ "Moderate",
+      pro3.score > 53 ~ "Severe",
+      TRUE ~ as.character(NA)
+    )) %>%
+    select(sort(names(.))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, everything()) %>%
     setNames(toupper(names(.))) %>%
     setNames(gsub("\\.", "_", names(.)))
 }

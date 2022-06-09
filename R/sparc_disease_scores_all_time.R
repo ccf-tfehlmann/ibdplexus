@@ -1,7 +1,10 @@
 
 #' calculate_disease_scores
 #'
-#' Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI (CD patients only), 6pt Mayo (UC Patients only), Manitoba, PGA, MES (UC patients only) and SES-CD (CD patients only) for SPARC patients
+#' Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI
+#' (CD patients only), 6pt Mayo (UC Patients only), Manitoba, PGA, MES (UC
+#' patients only), SES-CD (CD patients only), PRO2 (CD patients only) for SPARC
+#' patients
 #' Data can be loaded for this function using:
 #' data <- load_data(datadir = datadir, cohort = "SPARC", domains = c("Demographics", "Diagnosis", "Procedures", "Encounter", "Observations"), data_type = "CRF")
 #'
@@ -16,11 +19,6 @@
 calculate_disease_scores <- function(demographics, diagnosis, procedures, encounter, observations) {
 
   # Update observations
-
-  observations <- observations %>%
-    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
-    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE))
 
   # LATEST DIAGNOSIS ----
 
@@ -41,12 +39,6 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
     ungroup()
 
 
-  # PRO2 ----
-
-
-
-
-  # PRO3 ----
 
 
 
@@ -103,9 +95,33 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
     ungroup()
 
 
+
+# PRO2 ----
+
+  pro2 <- calculate_pro2(observations)
+
+  pro2 <- pro2 %>%
+    left_join(dx) %>%
+    filter(DIAGNOSIS == "Crohn's Disease") %>%
+    select(-DIAGNOSIS) %>%
+    distinct() %>%
+    ungroup()
+
+# PRO3 ----
+
+  pro3 <- calculate_pro3(observations)
+
+  pro3 <- pro3 %>%
+    left_join(dx) %>%
+    filter(DIAGNOSIS == "Crohn's Disease") %>%
+    select(-DIAGNOSIS) %>%
+    distinct() %>%
+    ungroup()
+
+
   # ALL SCORES ----
 
-  sparc_scores <- list(diagnosis = dx, scdai = scdai, mayo = mayo, manitoba = manitoba, pga = pga, ses = ses, mes = mes)
+  sparc_scores <- list(diagnosis = dx, scdai = scdai, mayo = mayo, manitoba = manitoba, pga = pga, ses = ses, mes = mes, pro2 = pro2, pro3=pro3)
 
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 
