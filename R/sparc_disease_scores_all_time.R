@@ -125,7 +125,9 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 
+  write.xlsx(sparc_scores, paste0("SPARC_scores_", Sys.Date(), ".xlsx"), colnames = T)
+
+
   return(sparc_scores)
 
-  write.xlsx(sparc_scores, paste0("SPARC_scores_", Sys.Date(), ".xlsx"), colnames = T)
 }
