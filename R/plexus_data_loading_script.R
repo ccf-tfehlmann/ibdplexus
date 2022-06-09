@@ -155,6 +155,13 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
 
+
+  data$observations <- data$observations %>%
+    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
+    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
+    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE))
+
+
   rm(list = c("files", "folderinfo"))
 
   return(data)
@@ -322,6 +329,15 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   data <- data[sapply(data, nrow) > 1]
 
   data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
+
+
+
+
+  data$observations <- data$observations %>%
+    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
+    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
+    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE))
+
 
   return(data)
 }
