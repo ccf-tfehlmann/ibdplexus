@@ -9,6 +9,7 @@ License: CC0
 Encoding: UTF-8
 LazyData: true
 Depends: 
+    tidyverse,
     dplyr,
     reshape2,
     openxlsx,
@@ -18,7 +19,6 @@ Depends:
     DT,
     magrittr,
     R (>= 2.10),
-    tidyverse,
     tibble
 RoxygenNote: 7.1.2
 URL: https://github.com/ccf-tfehlmann/ibdplexus
