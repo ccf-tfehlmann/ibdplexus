@@ -15,7 +15,6 @@ sparc_summary <- function(data,
                           index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
                           filename = "SPARC_SUMMARY.xlsx",
                           index_range = "30") {
-
   if (class(index_info) == "character") {
     index_info <- toupper(index_info)
   } else {
@@ -172,7 +171,6 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% c("Crohn's Disease Phenotype", "IBD Manifestations - Abdominal Abscess, Fistula, or Other Penetrating Complication") | str_detect(OBS_TEST_CONCEPT_NAME, "^Phenotype")) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
     right_join(cohort) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
@@ -207,7 +205,6 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% "Extent of Macroscopic Ulcerative Colitis" & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
     right_join(cohort) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
@@ -250,7 +247,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     filter(OBS_TEST_CONCEPT_CODE %in% c("EPIC#31000125051", "EPIC#31000125052", "EPIC#31000125053", "EPIC#31000125054", "EPIC#31000125055", "SMART_Q61__C") & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
+
     right_join(cohort) %>%
     filter(DIAGNOSIS == "IBD Unclassified") %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
@@ -329,7 +326,7 @@ sparc_summary <- function(data,
     filter(OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
+
     right_join(cohort) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
@@ -399,7 +396,7 @@ sparc_summary <- function(data,
     )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
+
     right_join(cohort) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
@@ -718,7 +715,7 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(grepl("Tobacco", OBS_TEST_CONCEPT_NAME)) %>%
     filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
+
     left_join(cohort) %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
     # filter(diff <= t) %>%
@@ -737,7 +734,7 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(grepl("narcotic", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
     filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
+
     left_join(cohort) %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
     # filter(diff <= t) %>%
@@ -840,7 +837,7 @@ sparc_summary <- function(data,
   score <- data$observations %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(grepl("Abdominal Pain|General Well|Number of Daily Bowel Movements|Stool Frequency|Blood in Stool|Global Assessment", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
+
     mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", ""), NA))) %>%
     mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
     drop_na(result) %>%
@@ -1212,7 +1209,7 @@ sparc_summary <- function(data,
     setNames((gsub("^ *| *$", "", names(.)))) %>%
     setNames((gsub(" ", "_", names(.))))
 
-  names(cohort) = toupper(names(cohort))
+  names(cohort) <- toupper(names(cohort))
 
 
 
