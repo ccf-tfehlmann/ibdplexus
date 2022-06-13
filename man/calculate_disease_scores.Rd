@@ -9,7 +9,8 @@ calculate_disease_scores(
   diagnosis,
   procedures,
   encounter,
-  observations
+  observations,
+  export = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ calculate_disease_scores(
 \item{encounter}{encounter data from encounter_crf table}
 
 \item{observations}{observations data from encounter_crf table}
+
+\item{export}{if excel spreadsheet should be exported. TRUE is default.}
 }
 \value{
 An excel spreadsheet with the scores as different tabs and a list of dataframes with each score as a list element.

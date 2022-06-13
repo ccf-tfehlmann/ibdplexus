@@ -10,7 +10,7 @@ remove_empty_cols(df)
 \item{df}{dataframe}
 }
 \value{
-
+non empty columns
 }
 \description{
 Function to remove empty columns from a table. From rancho.

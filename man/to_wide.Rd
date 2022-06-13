@@ -14,7 +14,7 @@ to_wide(df, y.var, value.var)
 \item{value.var}{values to be transposed}
 }
 \value{
-
+transposed data
 }
 \description{
 Function to reshape table into a wide format. From rancho.

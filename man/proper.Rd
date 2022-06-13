@@ -10,7 +10,7 @@ proper(x)
 \item{x}{string}
 }
 \value{
-
+string
 }
 \description{
 Makes string with proper capitalization

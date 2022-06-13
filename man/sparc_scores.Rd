@@ -24,5 +24,5 @@ sparc_scores(
 A dataframe with scores at that date and an excel spreadsheet.
 }
 \description{
-reads in SPARC data from IBD Plexus, and calculates diagnosis, phenotype, disease, and endoscopy scores at a specific (“index”) date.
+reads in SPARC data from IBD Plexus, and calculates diagnosis,  disease activity, and endoscopy scores at a specific (“index”) date.
 }

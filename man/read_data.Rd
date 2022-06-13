@@ -10,7 +10,7 @@ read_data(df)
 \item{df}{dataframe}
 }
 \value{
-
+data from csv/txt files
 }
 \description{
 Function to read data tables into a list and combine tables of each type. From rancho.
