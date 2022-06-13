@@ -14,7 +14,7 @@ calculate_bmi <- function(observations) {
     filter(OBS_TEST_CONCEPT_NAME %in% c("Weight/Scale", "Weight")) %>%
     drop_na(TEST_RESULT_NUMERIC) %>%
     mutate(weight_kg = as.numeric(TEST_RESULT_NUMERIC) / 35.274) %>%
-    mutate(date = dmy(OBS_TEST_RESULT_DATE)) %>%
+    mutate(date = (OBS_TEST_RESULT_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, weight_kg, date)
 
 
@@ -23,7 +23,7 @@ calculate_bmi <- function(observations) {
     filter(OBS_TEST_CONCEPT_NAME %in% c("Height")) %>%
     drop_na(TEST_RESULT_NUMERIC) %>%
     mutate(height_m = as.numeric(TEST_RESULT_NUMERIC) / 39.37) %>%
-    mutate(date = dmy(OBS_TEST_RESULT_DATE)) %>%
+    mutate(date = (OBS_TEST_RESULT_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, height_m, date)
 
 
