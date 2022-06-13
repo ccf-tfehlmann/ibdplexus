@@ -9,7 +9,7 @@
 #'
 #' @param df dataframe
 #'
-#' @return
+#' @return  data from csv/txt files
 read_data <- function(df) {
   data <- lapply(df, function(x) read.csv(x, stringsAsFactors = F, na.strings = c(NA, "", "NA"), encoding = "UTF-8"))
   data <- do.call(rbind, data)
@@ -22,7 +22,7 @@ read_data <- function(df) {
 #'
 #' @param df dataframe
 #'
-#' @return
+#' @return non empty columns
 remove_empty_cols <- function(df) {
   df[, colSums(!is.na(df)) != 0]
 }
@@ -36,7 +36,7 @@ remove_empty_cols <- function(df) {
 #' @param y.var column names to be transposed
 #' @param value.var values to be transposed
 #'
-#' @return
+#' @return transposed data
 to_wide <- function(df, y.var, value.var) {
   x.vars <- c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")
   x.var <- names(df)[names(df) %in% x.vars]
@@ -54,7 +54,7 @@ to_wide <- function(df, y.var, value.var) {
 #'
 #' @param x string
 #'
-#' @return
+#' @return string
 #'
 proper <- function(x) {
   paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
@@ -69,7 +69,7 @@ proper <- function(x) {
 #' @param x bmi
 #' @param na.rm default is true
 #'
-#' @return
+#' @return bmi
 #'
 remove_outliers <- function(x, na.rm = TRUE, ...) {
   qnt <- quantile(x, probs = c(.25, .75), na.rm = na.rm, ...)
