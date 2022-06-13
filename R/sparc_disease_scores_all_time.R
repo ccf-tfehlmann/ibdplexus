@@ -13,10 +13,11 @@
 #' @param procedures procedures data from procedures_crf table
 #' @param encounter encounter data from encounter_crf table
 #' @param observations observations data from encounter_crf table
+#' @param export if excel spreadsheet should be exported. TRUE is default.
 #'
 #' @return An excel spreadsheet with the scores as different tabs and a list of dataframes with each score as a list element.
 #' @export
-calculate_disease_scores <- function(demographics, diagnosis, procedures, encounter, observations) {
+calculate_disease_scores <- function(demographics, diagnosis, procedures, encounter, observations, export = TRUE) {
 
   # Update observations
 
@@ -24,7 +25,7 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
   dx <- extract_diagnosis(diagnosis, encounter, demographics, "SPARC")
 
-  dx <- dx %>%  select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS)
+  dx <- dx %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS)
 
 
   # sCDAI ----
@@ -96,7 +97,7 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
 
 
-# PRO2 ----
+  # PRO2 ----
 
   pro2 <- calculate_pro2(observations)
 
@@ -107,7 +108,7 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
     distinct() %>%
     ungroup()
 
-# PRO3 ----
+  # PRO3 ----
 
   pro3 <- calculate_pro3(observations)
 
@@ -121,13 +122,14 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
   # ALL SCORES ----
 
-  sparc_scores <- list(diagnosis = dx, scdai = scdai, mayo = mayo, manitoba = manitoba, pga = pga, ses = ses, mes = mes, pro2 = pro2, pro3=pro3)
+  sparc_scores <- list(diagnosis = dx, scdai = scdai, mayo = mayo, manitoba = manitoba, pga = pga, ses = ses, mes = mes, pro2 = pro2, pro3 = pro3)
 
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 
-  write.xlsx(sparc_scores, paste0("SPARC_scores_", Sys.Date(), ".xlsx"), colnames = T)
+  if (export == "TRUE") {
+    write.xlsx(sparc_scores, paste0("SPARC_scores_", Sys.Date(), ".xlsx"), colnames = T)
+  }
 
 
   return(sparc_scores)
-
 }
