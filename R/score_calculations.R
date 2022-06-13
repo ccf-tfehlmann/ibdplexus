@@ -30,7 +30,8 @@ calculate_ses <- function(procedures) {
     mutate(SCORE_DATE = PROC_START_DATE) %>%
     distinct_all() %>%
     mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, SES_Score, SCORE_DATE) %>%
+    ungroup() %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, SES_Score, SCORE_DATE, Ileum, `Left colon`, Rectum, `Right colon`, `Transverse colon`) %>%
     mutate(ses_category = case_when(
       SES_Score <= 2 ~ "Remission",
       SES_Score > 2 & SES_Score <= 6 ~ "Mild",
@@ -39,7 +40,8 @@ calculate_ses <- function(procedures) {
     )) %>%
     ungroup() %>%
     setNames(toupper(names(.))) %>%
-    setNames(gsub("\\.", "_", names(.)))
+    setNames(gsub("\\.", "_", names(.))) %>%
+    setNames(gsub(" ", "_", names(.)))
 }
 
 #' calculate_mes
@@ -74,8 +76,9 @@ calculate_mes <- function(procedures) {
     ) %>%
     distinct_all() %>%
     mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MAX_EXTENT_ACTIVE_DISEASE, MAYO_ENDOSCOPY_SCORE, MODIFIED_MAYO_SCORE, EXTENDED_MODIFIED_MAYO_SCORE, MODIFIED_MAYO_ENDOSCOPIC_SCORE, SCORE_DATE) %>%
     ungroup() %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MAX_EXTENT_ACTIVE_DISEASE, MAYO_ENDOSCOPY_SCORE, MODIFIED_MAYO_SCORE, EXTENDED_MODIFIED_MAYO_SCORE, MODIFIED_MAYO_ENDOSCOPIC_SCORE, SCORE_DATE,
+             Rectum, `Sigmoid colon`, `Right colon`, `Descending colon`, `Transverse colon`) %>%
     mutate(mes_catgory = case_when(
       MAYO_ENDOSCOPY_SCORE == 0 ~ "Remission",
       MAYO_ENDOSCOPY_SCORE == 1 ~ "Mild",
@@ -83,7 +86,8 @@ calculate_mes <- function(procedures) {
       MAYO_ENDOSCOPY_SCORE == 3 ~ "Severe"
     )) %>%
     setNames(toupper(names(.))) %>%
-    setNames(gsub("\\.", "_", names(.)))
+    setNames(gsub("\\.", "_", names(.))) %>%
+    setNames(gsub(" ", "_", names(.)))
 }
 
 
