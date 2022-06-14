@@ -29,7 +29,7 @@ Smartform, EMR and eCRF data fields at a particular point in time
 }
 \examples{
 # upload data
-# data <- load_data(datadir, cohort = "SPARC", domains = c("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions"), data_type = "both")
+# data <- load_data(datadir, cohort = "SPARC", domains = "ALL", data_type = "both")
 # get summary data within 30 days of endoscopy
 # endoscopy_summary <- sparc_summary(data = data, index_info = "ENDOSCOPY")
 }

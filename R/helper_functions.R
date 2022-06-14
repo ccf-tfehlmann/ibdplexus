@@ -68,6 +68,7 @@ proper <- function(x) {
 #'
 #' @param x bmi
 #' @param na.rm default is true
+#' @param ... Passed to quantile
 #'
 #' @return bmi
 #'

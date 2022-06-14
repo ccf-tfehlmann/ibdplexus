@@ -10,10 +10,6 @@ emr_loading_pattern(prescriptions, encounter)
 \item{prescriptions}{A dataframe with prescriptions data usually generated using load_data.}
 
 \item{encounter}{a dataframe with encounter data usually generated using load_data.}
-
-\item{demographics}{a dataframe with demographic data usually generated using load_data.}
-
-\item{observations}{a dataframe with observations data usually generated using load_data.}
 }
 \value{
 A dataframe with the first medication start date for each drug. Bionaive is 1 if a patient has no prior reported biologics (including JAK inhibitors and Tofacitinib). Started after enrollment is 1 if the medication start date is after the date of consent.
