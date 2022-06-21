@@ -5,7 +5,7 @@
 \alias{med_grp}
 \title{med_grp}
 \format{
-A data frame with 96 rows and 3 variables:
+A data frame with 105 rows and 3 variables:
 \describe{
   \item{MEDICATION_NAME}{Medication Name as it appears in SF, ECRF or EMR}
   \item{med_type}{The class of medication}
