@@ -1022,8 +1022,8 @@ sparc_summary <- function(data,
 
   cohort <- cohort %>%
     mutate(DISEASE_ACTIVITY = case_when(
-      DIAGNOSIS == "Crohn's Disease"  ~ "SCDAI_CATEGORY",
-      DIAGNOSIS == "Ulcerative Colitis" ~  "MAYO6_CATEGORY",
+      DIAGNOSIS == "Crohn's Disease"  ~ SCDAI_CATEGORY,
+      DIAGNOSIS == "Ulcerative Colitis" ~  MAYO6_CATEGORY,
       TRUE ~ as.character(NA)
     )) %>%
     mutate(DISEASE_ACTIVITY = case_when(
