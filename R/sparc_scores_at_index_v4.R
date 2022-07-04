@@ -754,21 +754,7 @@ if(0){
   #Mayo Endocscopy Score - source: https://academic.oup.com/ecco-jcc/article/9/10/846/425061
   #===============================
   mes = data$procedures %>%
-    filter(!is.na(MAYO_ENDOSCOPIC_SUBSCORE)) %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MAX_EXTENT_ACTIVE_DISEASE, LOCATION, PROC_START_DATE, MAYO_ENDOSCOPIC_SUBSCORE) %>%
-    mutate(MAYO_ENDOSCOPIC_SUBSCORE = as.numeric(gsub("Not seen", "0", MAYO_ENDOSCOPIC_SUBSCORE)))  %>%
-    drop_na(LOCATION) %>%
-    filter(LOCATION != "") %>%
-    pivot_wider(id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "PROC_START_DATE", "MAX_EXTENT_ACTIVE_DISEASE"),
-                names_from = LOCATION, values_from = MAYO_ENDOSCOPIC_SUBSCORE) %>%
-    rowwise(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE, MAX_EXTENT_ACTIVE_DISEASE) %>%
-    mutate(MAYO_ENDOSCOPY_SCORE = max(Rectum, `Sigmoid colon`, `Right colon`, `Descending colon`, `Transverse colon`),
-           MODIFIED_MAYO_SCORE = sum(Rectum, `Sigmoid colon`, `Right colon`, `Descending colon`, `Transverse colon`),
-           EXTENDED_MODIFIED_MAYO_SCORE = MODIFIED_MAYO_SCORE*(as.numeric(MAX_EXTENT_ACTIVE_DISEASE)/10),
-           MODIFIED_MAYO_ENDOSCOPIC_SCORE = ifelse(sum(Rectum > 0, `Sigmoid colon` > 0, `Right colon` > 0, `Descending colon` > 0, `Transverse colon` >0) == 0, 0, EXTENDED_MODIFIED_MAYO_SCORE/sum(Rectum > 0, `Sigmoid colon` > 0, `Right colon` > 0, `Descending colon` > 0, `Transverse colon` >0))) %>%
-    distinct_all() %>%
-    mutate(mes.date = dmy(PROC_START_DATE)) %>%
+    calculate_mes() %>%
     right_join(cohort) %>%
     mutate(datediff = abs(mes.date - index_date)) %>%
     filter(Diagnosis == "Ulcerative Colitis" & datediff <= t) %>%
