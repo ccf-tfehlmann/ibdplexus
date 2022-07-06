@@ -1,0 +1,139 @@
+#' calculate_location
+#'
+#' Calculates disease locations from SPARC data
+#'
+#' @param observations observations table usually generated using load_data
+#' @param encounter encounter table usually generated using load_data
+#' @param window Time window (in days) in which observations labeled "unknown" can be carried over.
+#'
+#' @return A dataframe with all CD locations could be calculated regardless of IBD diagnosis.
+#'
+#'@details Contradictions and ambiguities in a location's involvement are resolved as follows:
+#' If more than one record for a location exists for the same patient on the same date, any record of a "yes" is taken as evidence for this location showing diease activity.
+#' In absence of any "yes", any record of a "no" is taken of evidence of absence of evidence.
+#' Otherwise, any occurrence of "unknown" among the records is collapsed to a single "unknown".
+#' Any remaining combination of values is considered "INVALID".
+#'
+#' The window variable can be used to leverage the relative stability of the involvement of locations in Crohn's disease.
+#' Missing (i.e. "Unknown") values will be replaced if other observations exist in the specified time window.
+#' Observations in the future of the visit with missing records are given precedence over values in the past.
+#'
+#' The columns colonic involvement and upper GI are constructed assuming that explicit records of the absence of involvement of a location may have been omitted.
+#' Any record of an "no" in relevant sub-locations are considered sufficient to assume "unknown" in related locations imply "no" as long as a "yes" is located anywhere else.
+#' For instance, if records indicate "no" for left colonic involvement, and all other records for colonic sites are unkown. This "no" will be considered sufficient to assume no colonic involvement if
+#' involvement of the ileum or upper GI tract is recorded.
+#' @export
+calculate_location <- function(observations,encounter,window = 90)
+{
+  cd_phenotypes <- observations %>%
+    filter(DATA_SOURCE == "SF_SPARC") %>%
+    left_join(encounter,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")) %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
+    drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+    mutate(Phenotype = case_when(
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Yes" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Anal inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Duodenal inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Esophageal inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Gastric inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Ileal inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Jejunal inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Left colonic inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Rectal inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Right colonic inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Transverse colonic inflammatory crohn's disease" ~ "Yes",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No anal involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No rectal involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No right colonic involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No transverse colonic involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No duodenal involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No esophageal involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No gastric involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No ileal involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No jejunal involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "No left colonic involvement" ~ "No",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown anal involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown rectal involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown right colonic involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown transverse colonic involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown duodenal involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown esophageal involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown gastric involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown ileal involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown jejunal involvement" ~ "Unknown",
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown left colonic involvement" ~ "Unknown",
+      TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS
+    ))
+
+
+  id_cols <- c("DEIDENTIFIED_MASTER_PATIENT_ID","VISIT_ENCOUNTER_ID","VISIT_ENCOUNTER_START_DATE")
+
+  cd_phenotypes_wide <- cd_phenotypes %>%
+    pivot_wider(all_of(id_cols),names_from = "OBS_TEST_CONCEPT_NAME",values_from = "DESCRIPTIVE_SYMP_TEST_RESULTS",
+                values_fill = "Unknown",
+                values_fn = function(x) { case_when("Yes" %in% x ~ "Yes",
+                                                    "No" %in% x ~ "No",
+                                                    "Unknown" %in% x ~ "Unknown",
+                                                    TRUE ~ "INVALID")  }
+    )
+
+  pt_names <- setdiff(colnames(cd_phenotypes_wide),id_cols)
+
+  cd_phenotypes_wide <- cd_phenotypes_wide %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(date = as.Date(VISIT_ENCOUNTER_START_DATE,format = "%d-%b-%Y")) %>%
+    arrange(date) %>%
+    mutate(lag_dif = date - lag(date)) %>%
+    mutate(lead_dif = lead(date) - date) %>%
+    mutate(across(all_of(pt_names),  ~ if_else(.x == "Unkown" & lead_dif <= window, true = lead(.x), false = .x, missing = .x ) ) ) %>% # carry backward to unknown
+    mutate(across(all_of(pt_names),  ~ if_else(.x == "Unkown" & lag_dif <= window, true = lag(.x), false = .x, missing = .x ) ) ) %>% # carry forward to unknown
+    select(-c("lag_dif","lead_dif","date"))
+
+  cd_phenotypes_wide %>%
+    mutate(any_yes = if_else(`Right Colonic Phenotype` == "Yes" |
+                               `Left Colonic Phenotype` == "Yes" |
+                               `Transverse Colonic Phenotype` == "Yes"  |
+                               `Rectal Phenotype` == "Yes" |
+                               `Anal Phenotype` == "Yes" |
+                               `Esophageal Phenotype` == "Yes" |
+                               `Duodenal Phenotype` == "Yes" |
+                               `Jejunal Phenotype` == "Yes"  |
+                               `Gastric Phenotype` == "Yes" |
+                               `Ileal Phenotype` == "Yes","Yes","No" )) %>%
+    mutate("Colonic involvement" = if_else(`Right Colonic Phenotype` == "Yes" |
+                                             `Left Colonic Phenotype` == "Yes" |
+                                             `Transverse Colonic Phenotype` == "Yes"  |
+                                             `Rectal Phenotype` == "Yes" |
+                                             `Anal Phenotype` == "Yes", "Yes",
+                                           if_else(`Right Colonic Phenotype` == "No" |
+                                                     `Left Colonic Phenotype` == "No" |
+                                                     `Transverse Colonic Phenotype` == "No"  |
+                                                     `Rectal Phenotype` == "No" |
+                                                     `Anal Phenotype` == "No" & any_yes == "Yes", "No","Unknown" )  )) %>%
+    mutate("Upper GI" = if_else(`Esophageal Phenotype` == "Yes" |
+                                  `Duodenal Phenotype` == "Yes" |
+                                  `Jejunal Phenotype` == "Yes"  |
+                                  `Gastric Phenotype` == "Yes","Yes",
+                                if_else( `Esophageal Phenotype` == "No" |
+                                           `Duodenal Phenotype` == "No" |
+                                           `Jejunal Phenotype` == "No"  |
+                                           `Gastric Phenotype` == "No" & any_yes == "Yes","No","Unknown")  )) %>%
+    mutate("Ilealcolonic Phenotype"  = if_else( `Ileal Phenotype` == "Yes" & `Colonic involvement` == "Yes","Yes",
+                                                if_else(`Colonic involvement` == "Unknown" |  `Ileal Phenotype` == "Unknown" ,"Unknown","No") ) ) %>%
+    mutate("Colonic Phenotype" = if_else(`Colonic involvement` == "Yes" &  `Ileal Phenotype` == "No","Yes",
+                                         if_else(`Colonic involvement` == "Unknown" |  `Ileal Phenotype` == "Unknown", "Unknown",  "No"  ) )  ) %>%
+    mutate("Pure Ileal Phenotype" = if_else(`Colonic involvement` == "No" &  `Ileal Phenotype` == "Yes","Yes",
+                                            if_else(`Colonic involvement` == "Unknown" |  `Ileal Phenotype` == "Unknown", "Unknown",  "No"  ) )  ) %>%
+    ungroup()  %>%
+    mutate("CD Location" = case_when(`Ilealcolonic Phenotype` == "Yes" & `Colonic Phenotype` == "No" & `Pure Ileal Phenotype` == "No" ~  "Ilealcolonic",
+                                     `Ilealcolonic Phenotype` == "No" & `Colonic Phenotype` == "Yes" & `Pure Ileal Phenotype` == "No" ~  "Colonic",
+                                     `Ilealcolonic Phenotype` == "No" & `Colonic Phenotype` == "No" & `Pure Ileal Phenotype` == "Yes" ~  "Ileal",
+                                     `Ilealcolonic Phenotype` == "Unknown" & `Colonic Phenotype` == "Unknown" & `Pure Ileal Phenotype` == "Unknown" ~  "Unknown",
+                                     `Ilealcolonic Phenotype` == "No" & `Colonic Phenotype` == "No" & `Pure Ileal Phenotype` == "No" & `Upper GI` == "Yes" ~  "Upper GI only",
+                                     `Ilealcolonic Phenotype` == "No" & `Colonic Phenotype` == "No" & `Pure Ileal Phenotype` == "No" & `Upper GI` == "No"~ "No Location",
+                                     `Upper GI` == "Unknown" ~ "Unknown",
+                                     TRUE ~ "THIS IS AN INCONSISTENCY")) %>%
+  select(-c("any_yes","Ilealcolonic Phenotype","Colonic Phenotype","Pure Ileal Phenotype") )
+}
