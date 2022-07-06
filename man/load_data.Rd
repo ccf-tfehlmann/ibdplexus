@@ -16,7 +16,7 @@ load_data(
 
 \item{cohort}{The cohort to load. Either RISK, QORUS, or SPARC.}
 
-\item{domains}{The domains to load. Default is "All". Must be a character string.}
+\item{domains}{The domains to load. Default is "ALL". Must be a character string. Other valid values are patterns matching input file names common examples are:  "demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions".}
 
 \item{data_type}{The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.}
 }

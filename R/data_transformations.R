@@ -164,8 +164,13 @@ extract_race <- function(demographics, study) {
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, RACE, ETHNICITY) %>%
     ungroup()
 
-  race <- data.table::as.data.table(race)
-  race <- race[, lapply(.SD, function(x) {
-    paste0(unique(x[!is.na(x)]), collapse = "; ")
-  }), by = DEIDENTIFIED_MASTER_PATIENT_ID]
+  # combine multipe entries per subject into a single line.
+  race <- race %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    summarise(across(everything(),~ paste0(sort(unique(.x[!is.na(.x)])), collapse = "; "))) %>%
+    ungroup()
+  # race <- data.table::as.data.table(race)
+  # race <- race[, lapply(.SD, function(x) {
+  #   paste0(unique(x[!is.na(x)]), collapse = "; ")
+  # }), by = DEIDENTIFIED_MASTER_PATIENT_ID]
 }
