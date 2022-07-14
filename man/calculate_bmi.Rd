@@ -13,8 +13,8 @@ calculate_bmi(observations)
 A long dataframe with the deidentified_master_patient_id, date of bmi measurement and bmi.
 }
 \description{
-Calculate BMI from electronic medical record data for SPARC & QORUS.
+Calculate BMI from electronic medical record (EMR) data for SPARC & QORUS.
 }
 \details{
-For patients with more than 1 bmi, outliers are removed.
+For patients with more than 1 bmi, outliers are removed. Weight is converted to kg and height is convereted to meters.
 }

@@ -43,18 +43,18 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   cohorts <- cohorts %>%
     distinct(df, DATA_SOURCE) %>%
     mutate(
-      Date = ymd(gsub(".*_", "", df)),
+      Date = lubridate::ymd(gsub(".*_", "", df)),
       Cohort = gsub("ECRF_", "", DATA_SOURCE)
     ) %>%
     distinct(Cohort, Date, df) %>%
     mutate(df = gsub("_.*", "", df)) %>%
     group_by(Cohort) %>%
-    filter(Date == max(ymd(Date)))
+    filter(Date == max(lubridate::ymd(Date)))
 
 
 
   folderinfo <- file.info(paste0(datadir, folders)) %>%
-    rownames_to_column()
+    tibble::rownames_to_column()
 
   files <- folderinfo %>%
     filter(grepl(".txt|.csv", rowname)) %>%
@@ -103,7 +103,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
 
   # LOAD DATA ----
-  data <- lapply(files, function(x) fread(x))
+  data <- lapply(files, function(x) data.table::fread(x))
 
   # Assign Names
   names(data) <- gsub(paste0(datadir, "|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
@@ -130,7 +130,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
     nums <- grep(paste0(ii), names(data))
 
-    assign(paste0(ii), (rbindlist(data[nums], fill = TRUE)) %>% distinct())
+    assign(paste0(ii), (data.table::rbindlist(data[nums], fill = TRUE)) %>% distinct())
     gc()
   }
 
@@ -159,7 +159,7 @@ if("observations" %in% names(data)){
   data$observations <- data$observations %>%
     mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
     mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-    mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE))}
+    mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
 
 
   rm(list = c("files", "folderinfo"))
@@ -181,6 +181,7 @@ if("observations" %in% names(data)){
 #' @param domains The domains to load. Default is "All". Must be a character string.
 #' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
 #' @param exdir The file to save the files once unzipped. If left blank will be the working directory. Do not include backslash at the end of the file location.
+#'
 #'
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
@@ -335,7 +336,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     data$observations <- data$observations %>%
       mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
       mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-      mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE))}
+      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
 
   return(data)
 }

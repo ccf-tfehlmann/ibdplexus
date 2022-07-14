@@ -1,6 +1,6 @@
-#' calculate_location
+#' calculate_location_az
 #'
-#' Calculates disease locations from SPARC data
+#' Calculates disease locations from SPARC data with criteria specific to AZ
 #'
 #' @param observations observations table usually generated using load_data
 #' @param encounter encounter table usually generated using load_data
@@ -9,21 +9,29 @@
 #' @return A dataframe with all CD locations could be calculated regardless of IBD diagnosis.
 #'
 #'@details Contradictions and ambiguities in a location's involvement are resolved as follows:
-#' If more than one record for a location exists for the same patient on the same date, any record of a "yes" is taken as evidence for this location showing diease activity.
-#' In absence of any "yes", any record of a "no" is taken of evidence of absence of evidence.
-#' Otherwise, any occurrence of "unknown" among the records is collapsed to a single "unknown".
-#' Any remaining combination of values is considered "INVALID".
+#' If more than one record for a location exists for the same patient on the
+#' same date, any record of a "yes" is taken as evidence for this location
+#' showing disease activity. In absence of any "yes", any record of a "no" is
+#' taken of evidence of absence of evidence. Otherwise, any occurrence of
+#' "unknown" among the records is collapsed to a single "unknown". Any remaining
+#' combination of values is considered "INVALID".
 #'
-#' The window variable can be used to leverage the relative stability of the involvement of locations in Crohn's disease.
-#' Missing (i.e. "Unknown") values will be replaced if other observations exist in the specified time window.
-#' Observations in the future of the visit with missing records are given precedence over values in the past.
+#' The window variable can be used to leverage the relative stability of the
+#' involvement of locations in Crohn's disease. Missing (i.e. "Unknown") values
+#' will be replaced if other observations exist in the specified time window.
+#' Observations in the future of the visit with missing records are given
+#' precedence over values in the past.
 #'
-#' The columns colonic involvement and upper GI are constructed assuming that explicit records of the absence of involvement of a location may have been omitted.
-#' Any record of an "no" in relevant sub-locations are considered sufficient to assume "unknown" in related locations imply "no" as long as a "yes" is located anywhere else.
-#' For instance, if records indicate "no" for left colonic involvement, and all other records for colonic sites are unkown. This "no" will be considered sufficient to assume no colonic involvement if
+#' The columns colonic involvement and upper GI are constructed assuming that
+#' explicit records of the absence of involvement of a location may have been
+#' omitted. Any record of an "no" in relevant sub-locations are considered
+#' sufficient to assume "unknown" in related locations imply "no" as long as a
+#' "yes" is located anywhere else. For instance, if records indicate "no" for
+#' left colonic involvement, and all other records for colonic sites are unknown.
+#' This "no" will be considered sufficient to assume no colonic involvement if
 #' involvement of the ileum or upper GI tract is recorded.
 #' @export
-calculate_location <- function(observations,encounter,window = 90)
+calculate_location_az <- function(observations,encounter,window = 90)
 {
   cd_phenotypes <- observations %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
@@ -91,7 +99,7 @@ calculate_location <- function(observations,encounter,window = 90)
     mutate(across(all_of(pt_names),  ~ if_else(.x == "Unkown" & lag_dif <= window, true = lag(.x), false = .x, missing = .x ) ) ) %>% # carry forward to unknown
     select(-c("lag_dif","lead_dif","date"))
 
-  cd_phenotypes_wide %>%
+ cd_phenotypes_wide %>%
     mutate(any_yes = if_else(`Right Colonic Phenotype` == "Yes" |
                                `Left Colonic Phenotype` == "Yes" |
                                `Transverse Colonic Phenotype` == "Yes"  |
@@ -106,7 +114,7 @@ calculate_location <- function(observations,encounter,window = 90)
                                              `Left Colonic Phenotype` == "Yes" |
                                              `Transverse Colonic Phenotype` == "Yes"  |
                                              `Rectal Phenotype` == "Yes" |
-                                             `Anal Phenotype` == "Yes", "Yes",
+                                             `Anal Phenotype` == "Yes", "Yes", #az clinician wants it here, CCF does not do this - includes as perianal modifer
                                            if_else(`Right Colonic Phenotype` == "No" |
                                                      `Left Colonic Phenotype` == "No" |
                                                      `Transverse Colonic Phenotype` == "No"  |

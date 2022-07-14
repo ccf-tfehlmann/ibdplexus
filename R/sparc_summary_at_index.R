@@ -1127,24 +1127,24 @@ sparc_summary <- function(data,
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(
       ileal = ifelse(`ILEAL PHENOTYPE` == "Yes", 1, 0),
-      colonic = ifelse(`LEFT COLONIC PHENOTYPE` == "Yes" | `ILEAL PHENOTYPE` == "Yes" &
+      colonic = ifelse(`LEFT COLONIC PHENOTYPE` == "Yes"| `RECTAL PHENOTYPE` == "Yes"|
         `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes", 1, 0),
       ilealcolonic = ifelse(ileal == 1 & colonic == 1, 1, 0)
     ) %>%
     mutate(
       Location = case_when(
         `ILEAL PHENOTYPE` == "Yes" &
-          `LEFT COLONIC PHENOTYPE` == "No" & `ILEAL PHENOTYPE` == "No" &
-          `RIGHT COLONIC PHENOTYPE` == "No" & `TRANSVERSE COLONIC PHENOTYPE` == "No" ~ "ILEAL",
+          `LEFT COLONIC PHENOTYPE` == "No" & `RECTAL PHENOTYPE` == "No" &
+          `RIGHT COLONIC PHENOTYPE` == "No" & `TRANSVERSE COLONIC PHENOTYPE` == "No" ~ "Ileal",
         `ILEAL PHENOTYPE` == "No" &
-          (`LEFT COLONIC PHENOTYPE` == "Yes" | `ILEAL PHENOTYPE` == "Yes" &
+          (`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
             `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes") ~ "Colonic",
         `ILEAL PHENOTYPE` == "Yes" &
-          (`LEFT COLONIC PHENOTYPE` == "Yes" | `ILEAL PHENOTYPE` == "Yes" &
+          (`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
             `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes") ~ "Ileocolonic",
-        `ILEAL PHENOTYPE` == "Unknown" |
-          `LEFT COLONIC PHENOTYPE` == "Unknown" | `ILEAL PHENOTYPE` == "Unknown" |
-          `RIGHT COLONIC PHENOTYPE` == "Unknown" | `TRANSVERSE COLONIC PHENOTYPE` == "Unknown" ~ "Unknown"
+        `ILEAL PHENOTYPE` == "Unknown" &
+          `LEFT COLONIC PHENOTYPE` == "Unknown" & `RECTAL PHENOTYPE` == "Unknown" &
+          `RIGHT COLONIC PHENOTYPE` == "Unknown" & `TRANSVERSE COLONIC PHENOTYPE` == "Unknown" ~ "Unknown"
       ),
       UpperGI = case_when(
         `DUODENAL PHENOTYPE` == "Yes" | `ESOPHAGEAL PHENOTYPE` == "Yes" | `GASTRIC PHENOTYPE` == "Yes" | `JEJUNAL PHENOTYPE` == "Yes" ~ "Yes",

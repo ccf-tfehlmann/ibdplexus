@@ -11,14 +11,17 @@ LazyData: true
 Depends: 
     R (>= 3.50)
 Imports:
-    dplyr,
+    tidyverse,
     lubridate,
+    dplyr,
     magrittr,
     tibble,
     reshape2,
     openxlsx,
     readxl,
-    DT
+    DT,
+    data.table,
+    readr
 RoxygenNote: 7.2.0
 URL: https://github.com/ccf-tfehlmann/ibdplexus
 BugReports: https://github.com/ccf-tfehlmann/ibdplexus/issues
