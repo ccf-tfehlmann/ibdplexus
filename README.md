@@ -43,11 +43,11 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 -   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_medication_at_index_userguide_updated_102721.pdf">`sparc_medication()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/sparc_medication_at_index_userguide_updated_102721.pdf">`sparc_medication()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
 
 -   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>
 
@@ -62,27 +62,10 @@ library(ibdplexus)
 
 ## sparc medication at the time of endoscopy (+/- 30 days) with indication ----
 # 
-#   data = load_data(datadir = "~/r_input/",cohort = "SPARC", domains = c("Procedures", "Encounter"), data_type = "BOTH")
+#   data = load_data(datadir = "~/r_input/",cohort = "SPARC", domains = c("ALL"), data_type = "BOTH")
 # 
-#   endoscopy = data$procedures %>% 
-#     filter(PROC_CONCEPT_NAME %in% c("Colonoscopy/Sigmoidoscopy")) %>%
-#     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, PROC_START_DATE, LOCATION, INDICATION) %>%
-#     left_join(data$encounter) %>%
-#     mutate(PROC_START_DATE = dmy(PROC_START_DATE), 
-#            VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
-#     rename(endoscopy_date = PROC_START_DATE) %>%
-#     drop_na(endoscopy_date) %>%
-#     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, endoscopy_date, LOCATION, INDICATION) %>%
-#     rename(index_date = endoscopy_date) %>%
-#     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, INDICATION) %>%
-#     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-#     fill(INDICATION, .direction = "downup") %>%
-#     slice(1) %>%
-#     ungroup() %>%
-#     distinct()
 #   
-#   medication_at_endo = sparc_medication(datadir = "~/r_input/",
-#                              index_info = endoscopy,
-#                              filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx",
-#                              index_range = "30")
+#   medication_at_endo = sparc_medication(data = data,
+#                              index_info = "endoscopy",
+#                              filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx")
 ```
