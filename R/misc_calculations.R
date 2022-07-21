@@ -26,10 +26,10 @@
 calculate_location <- function(observations,encounter,window = 90)
 {
   cd_phenotypes <- observations %>%
-    filter(DATA_SOURCE == "SF_SPARC") %>%
+    filter(.data$DATA_SOURCE == "SF_SPARC") %>%
     left_join(encounter,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")) %>%
-    filter(OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
-    drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+    filter(.data$OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
+    drop_na(.data$DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     mutate(Phenotype = case_when(
       DESCRIPTIVE_SYMP_TEST_RESULTS == "Yes" ~ "Yes",
       DESCRIPTIVE_SYMP_TEST_RESULTS == "Anal inflammatory crohn's disease" ~ "Yes",
@@ -136,4 +136,61 @@ calculate_location <- function(observations,encounter,window = 90)
                                      `Upper GI` == "Unknown" ~ "Unknown",
                                      TRUE ~ "THIS IS AN INCONSISTENCY")) %>%
   select(-c("any_yes","Ilealcolonic Phenotype","Colonic Phenotype","Pure Ileal Phenotype") )
+}
+
+#' calculate_uc_phenotype
+#'
+#' Calculates ulcerative colitis phenotypes from SPARC data
+#'
+#' @param observations observations table usually generated using load_data
+#' @param worsening a logical indicating whether the worst extend of ulcerative colitis up to a specific date should be returned.
+#'
+#' @return A dataframe with all ulcerative colitis phenotypes that could be
+#' derived from the data regardless of IBD disgnosis.
+#'
+#'@details If two or more records of ulcerative colitis phenotypes are available
+#' for a patient on a single day the record showing the larger extend of
+#' ulcerative colitis is chosen, with Pancolitis > Extensive ulcerative colitis >
+#' Left-sided ulcerative colitis > Ulcerative proctitis > Unknown.
+
+calculate_uc_phenotype <- function(observations, worsening = FALSE)
+{
+  priority_map <- tibble(term = c(
+    "Pancolitis (E4)",
+    "Extensive ulcerative colitis (extends proximal to the splenic flexure) (E3)",
+    "Left-sided ulcerative colitis (distal to the splenic flexure only) (E2)",
+    "Ulcerative proctitis (rectum only) (E1)",
+    "Unknown"
+  ), priority = 1:5)
+
+ucp <- observations %>%
+    filter(.data$DATA_SOURCE == "SF_SPARC") %>%
+    filter(.data$OBS_TEST_CONCEPT_NAME %in% "Extent of Macroscopic Ulcerative Colitis" & (!is.na(.data$DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
+  mutate(DESCRIPTIVE_SYMP_TEST_RESULTS = case_when(
+    DESCRIPTIVE_SYMP_TEST_RESULTS == "Ulcerative proctitis (rectum only)" ~ "Ulcerative proctitis (rectum only) (E1)",
+    DESCRIPTIVE_SYMP_TEST_RESULTS == "Left-sided ulcerative colitis (distal to the splenic flexure only)" ~ "Left-sided ulcerative colitis (distal to the splenic flexure only) (E2)",
+    DESCRIPTIVE_SYMP_TEST_RESULTS == "Extensive ulcerative colitis (extends proximal to the splenic flexure)" ~ "Extensive ulcerative colitis (extends proximal to the splenic flexure) (E3)",
+    DESCRIPTIVE_SYMP_TEST_RESULTS == "Pancolitis" ~ "Pancolitis (E4)",
+    TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS
+  )) %>%
+  left_join(priority_map, by = c("DESCRIPTIVE_SYMP_TEST_RESULTS" = "term") ) %>%
+  replace_na(list(priority = 5)) %>% # map anything not defined in priority_map to "Unknown"
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID,OBS_TEST_RESULT_DATE) %>%
+    slice_min(priority, with_ties = FALSE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID,OBS_TEST_RESULT_DATE,`Extent of Macroscopic Ulcerative Colitis` = DESCRIPTIVE_SYMP_TEST_RESULTS,priority)
+
+
+  if (worsening)
+  {
+    ucp <- ucp %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      mutate(worst = cummin (priority)) %>%
+      left_join(priority_map, by = c("worst" =  "priority")) %>%
+      select(-"worst") %>%
+      rename("Worst Extent of Macroscopic Ulcerative Colitis" = term)
+  }
+
+
+return(ucp %>% select(-priority))
 }
