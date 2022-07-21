@@ -16,6 +16,7 @@ Imports:
     dplyr,
     magrittr,
     tibble,
+    tidyr,
     reshape2,
     openxlsx,
     readxl,
