@@ -15,6 +15,7 @@ Imports:
     lubridate,
     magrittr,
     tibble,
+    tidyr,
     reshape2,
     openxlsx,
     readxl,
