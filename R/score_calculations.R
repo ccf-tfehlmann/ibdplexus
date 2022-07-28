@@ -39,6 +39,8 @@ calculate_ses <- function(procedures) {
       SES_Score > 15 ~ "Severe"
     )) %>%
     ungroup() %>%
+    rename_with( .fn = function(x) {paste("SES_SUBSCORE_",x,sep="" )},
+                 .cols = c("Rectum", "Transverse colon", "Right colon", "Ileum", "Left colon") ) %>%
     setNames(toupper(names(.))) %>%
     setNames(gsub("\\.", "_", names(.))) %>%
     setNames(gsub(" ", "_", names(.)))
