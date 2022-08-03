@@ -12,11 +12,11 @@
 #' @param observations a dataframe with observation data usually generated using load_data.
 #' @param demographics A dataframe with demographic data usually generated using load_data.
 #' @param encounter a dataframe with encounter data usually generated using load_data.
-#' @param med_groups A character string that filters the med_grp dataframe. Options are Aminosalicylates, Antibiotics, Antidiarrheals, Biologic,  Corticosteroids, Immunomodulators, Other, Probiotic. Default does not use any filtering.
+#' @param med_groups A character string that filters the \code{\link{med_grp}} dataframe. Options are Aminosalicylates, Antibiotics, Antidiarrheals, Biologic,  Corticosteroids, Immunomodulators, Other, Probiotic. Default does not use any filtering.
 #'
 #' @return table with medications of interest from eCRF and EMR data
 #' @details Medication data is pulled forward if a patient answers "No" to the question "Are you currently taking any medication for your IBD?" on the quarterly survey.
-#' The med_grp dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
+#' The \code{\link{med_grp}} dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
 #'@export
 sparc_med_filter <- function(prescriptions, observations, demographics, encounter, med_groups = c("Aminosalicylates", "Antibiotics", "Antidiarrheals", "Biologic", "Corticosteroids", "Immunomodulators", "Other", "Probiotic")) {
 
