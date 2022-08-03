@@ -36,7 +36,7 @@ extract_endoscopy <- function(procedures) {
 #' @param encounter A dataframe with encounter data.
 #'
 #' @return A dataframe with  date and type of most recent encounter.
-
+#' @export
 extract_latest <- function(encounter) {
   latest <- encounter %>%
     filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC")) %>%
