@@ -7,6 +7,7 @@
 sparc_medication(
   data,
   index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
+  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
   filename = "SPARC_MEDICATION.xlsx"
 )
 }
@@ -15,10 +16,12 @@ sparc_medication(
 
 \item{index_info}{A dataframe  with DEIDENTIFIED_MASTER_PATIENT_ID and a variable index_date.  Other options include, enrollment, latest, endoscopy, omics, biosample collection.}
 
-\item{filename}{the name of the output file. Must be .xlsx.}
+\item{med_groups}{A list of medication groups of interest. For details, refer to \code{\link{sparc_med_filter}}.}
+
+\item{filename}{the name of the output file. Must be .xlsx. If filename is NULL no output file will be written.}
 }
 \value{
-A dataframe with medication predictions and an excel file.
+A dataframe with medication predictions.
 }
 \description{
 Finds the medications the participant is prescribed from the
@@ -29,4 +32,5 @@ specific (“index”) date.
 When the index date is the date of consent, only the patient reported data is used.
 
 If two medications of the same MOA overlap, the start of the 2nd medication is used as the end date of the previous medication.
+If a filename is specified, an excel file will be written as a side effect.
 }

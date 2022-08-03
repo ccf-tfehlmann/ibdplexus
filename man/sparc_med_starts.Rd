@@ -9,6 +9,7 @@ sparc_med_starts(
   demographics,
   observations,
   encounter,
+  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
   export = FALSE
 )
 }
@@ -19,7 +20,9 @@ sparc_med_starts(
 
 \item{observations}{a dataframe with observations data usually generated using load_data.}
 
-\item{encounter}{a dataframe with encounter data usually generated using load_data.}
+\item{encounter}{A dataframe with encounter data usually generated using load_data.}
+
+\item{med_groups}{A list of medication groups of interest. For details, refer to \code{\link{sparc_med_filter}}.}
 
 \item{export}{if excel spreadsheet should be exported. FALSE is default.}
 }
@@ -39,4 +42,7 @@ Bionaive is 1 if a patient has no prior reported biologics (including JAK inhibi
 
 If a patient has medication information for the same drug from eCRF and EMR, the eCRF data is preferred and used to generate MED_START_DATE and MED_END_DATE. If only EMR data is available for that medication, then EMR data is used.
 Any overlap between medications is reported along with the number of days the medications overlap.
+If no end date is given for a prescription, the duration of the overlap is calculated assuming an ongoing prescription. The effective end date
+is set using a database wide cutoff based on the the date of the latest encounter any patient had (as returned by \code{\link{extract_latest}}).
+Patient level cutoffs are not used because the last recorded encounter of a specific patient may precede the latest available EMR by years.
 }

@@ -10,7 +10,8 @@
 #' @param prescriptions A dataframe with prescriptions data usually generated using load_data.
 #' @param demographics a dataframe with demographic data usually generated using load_data.
 #' @param observations a dataframe with observations data usually generated using load_data.
-#' @param encounter a dataframe with encounter data usually generated using load_data.
+#' @param encounter A dataframe with encounter data usually generated using load_data.
+#' @param med_groups A list of medication groups of interest. For details, refer to \code{\link{sparc_med_filter}}.
 #' @param export if excel spreadsheet should be exported. FALSE is default.
 #'
 #' @return A dataframe with the first medication start date for each drug.
@@ -22,14 +23,17 @@
 #'
 #' If a patient has medication information for the same drug from eCRF and EMR, the eCRF data is preferred and used to generate MED_START_DATE and MED_END_DATE. If only EMR data is available for that medication, then EMR data is used.
 #' Any overlap between medications is reported along with the number of days the medications overlap.
+#' If no end date is given for a prescription, the duration of the overlap is calculated assuming an ongoing prescription. The effective end date
+#' is set using a database wide cutoff based on the the date of the latest encounter any patient had (as returned by \code{\link{extract_latest}}).
+#' Patient level cutoffs are not used because the last recorded encounter of a specific patient may precede the latest available EMR by years.
 #'
 #' @export
 #'
-sparc_med_starts <- function(prescriptions, demographics, observations, encounter,export = FALSE) {
+sparc_med_starts <- function(prescriptions, demographics, observations, encounter,med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"), export = FALSE) {
 
   # Get medications of interest
 
-  medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"))
+  medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups )
 
 
   # ECRF DATA ----
@@ -207,7 +211,7 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
     rowwise() %>%
     unite(col = "REASON_STOPPED_ECRF", starts_with("STOP"), na.rm = T, sep = "; ") %>%
     rename(MEDICATION = new_med_name) %>%
-    mutate(across(everything(), ~ ifelse(. == "", NA, as.character(.))))
+    mutate(across(-"DEIDENTIFIED_MASTER_PATIENT_ID", ~ ifelse(. == "", NA, as.character(.))))
 
 
   # Add dose, frequency and reason stopped to med_ecrf ----
@@ -502,12 +506,12 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
 
 
   # Flag if medications overlap START HERE ----
-
+  last_encounter_date <- extract_latest(encounter) %>% pull("index_date") %>% max(na.rm = TRUE)
 
   overlap <- med %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(int = case_when(!is.na(MED_START_DATE) & !is.na(MED_END_DATE) ~ MED_START_DATE %--% MED_END_DATE,
-                           !is.na(MED_START_DATE) & is.na(MED_END_DATE) ~  MED_START_DATE %--% today())) %>%
+    mutate(int = case_when(!is.na(MED_START_DATE) & !is.na(MED_END_DATE) ~ interval(MED_START_DATE, MED_END_DATE, tz = "UTC"),
+                           !is.na(MED_START_DATE) & is.na(MED_END_DATE) ~  interval(MED_START_DATE ,last_encounter_date, tz = "UTC" ) ) )  %>%
     drop_na(int) %>%
     arrange(int_start(int), .by_group = TRUE) %>%
     # mutate(overlap = map_int(int, ~ ifelse(sum(int_overlaps(.x, int)) > 1, nrow(.x), NA))) %>%
