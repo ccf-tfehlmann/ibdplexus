@@ -16,7 +16,7 @@
 #'
 #' @return A dataframe with the first medication start date for each drug.
 #'
-#' @details Medication start and stop dates are chosen independtly from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
+#' @details Medication start and stop dates are chosen independently from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
 #' For EMR data, if a medication start date is missing, the visit encounter start date is used. These records are flagged in the column VISIT_ENCOUNTER_MED_START.
 #'
 #' If a patient has medication information for the same drug from eCRF and EMR, the eCRF data is preferred and used to generate MED_START_DATE and MED_END_DATE. If only EMR data is available for that medication, then EMR data is used.
