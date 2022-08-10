@@ -22,7 +22,7 @@ sparc_med_filter(
 
 \item{encounter}{a dataframe with encounter data usually generated using load_data.}
 
-\item{med_groups}{A character string that filters the med_grp dataframe. Options are Aminosalicylates, Antibiotics, Antidiarrheals, Biologic,  Corticosteroids, Immunomodulators, Other, Probiotic. Default does not use any filtering.}
+\item{med_groups}{A character string that filters the \code{\link{med_grp}} dataframe. Options are Aminosalicylates, Antibiotics, Antidiarrheals, Biologic,  Corticosteroids, Immunomodulators, Other, Probiotic. Default does not use any filtering.}
 }
 \value{
 table with medications of interest from eCRF and EMR data
@@ -32,5 +32,5 @@ Logic to filter prescriptions table for medications of interest from the EMR and
 }
 \details{
 Medication data is pulled forward if a patient answers "No" to the question "Are you currently taking any medication for your IBD?" on the quarterly survey.
-The med_grp dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
+The \code{\link{med_grp}} dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
 }
