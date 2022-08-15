@@ -14,7 +14,7 @@
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
 load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
-  memory.limit(size = 80000)
+
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
