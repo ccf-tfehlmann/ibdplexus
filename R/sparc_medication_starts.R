@@ -15,7 +15,7 @@
 #'
 #' @return A dataframe with the first medication start date for each drug.
 #'
-#' @details Medication start and stop dates are chosen independtly from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
+#' @details Medication start and stop dates are chosen independently from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
 #' For EMR data, if a medication start date is missing, the visit encounter start date is used. These records are flagged in the column VISIT_ENCOUNTER_MED_START.
 #'
 #' Bionaive is 1 if a patient has no prior reported biologics (including JAK inhibitors and Tofacitinib). Started after enrollment is 1 if the medication start date is after the date of consent.
