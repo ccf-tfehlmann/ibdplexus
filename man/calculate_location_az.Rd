@@ -14,7 +14,7 @@ calculate_location_az(observations, encounter, window = 90)
 \item{window}{Time window (in days) in which observations labeled "unknown" can be carried over.}
 }
 \value{
-A dataframe with all CD locations could be calculated regardless of IBD diagnosis.
+A dataframe with all CD locations that could be calculated regardless of IBD diagnosis.
 }
 \description{
 Calculates disease locations from SPARC data with criteria specific to AZ
@@ -29,17 +29,26 @@ taken of evidence of absence of evidence. Otherwise, any occurrence of
 combination of values is considered "INVALID".
 
 The window variable can be used to leverage the relative stability of the
-involvement of locations in Crohn's disease. Missing (i.e. "Unknown") values
+involvement of locations in Crohn's disease. Unknown values
 will be replaced if other observations exist in the specified time window.
-Observations in the future of the visit with missing records are given
-precedence over values in the past.
+Only Observations in the future of the visit with missing records will be
+considered.
 
-The columns colonic involvement and upper GI are constructed assuming that
-explicit records of the absence of involvement of a location may have been
-omitted. Any record of an "no" in relevant sub-locations are considered
-sufficient to assume "unknown" in related locations imply "no" as long as a
-"yes" is located anywhere else. For instance, if records indicate "no" for
-left colonic involvement, and all other records for colonic sites are unknown.
-This "no" will be considered sufficient to assume no colonic involvement if
-involvement of the ileum or upper GI tract is recorded.
+Anal involvement is considered as contributing to a colonic phenotype and not as a perianal modifier.
+
+In addition of the recorded CD locations in SF observations, we can use records of strictures to
+add certainty to "unknown" disease activities or even correct records of absence of disease activity.
+Any record of strictures within seven days of the date of the record of the CD location will be considered.
+\itemize{
+ \item{If there is a record of "Phenotype - Ileal Stricture" = "Yes"
+ it's considered as evidence of disease activity in the Ileum.}
+ \item{Any records of "Phenotype - Left Colonic Stricture",
+ "Phenotype - Rectal Stricture", "Phenotype - Right Colonic Stricture" or
+ "Phenotype - Transverse Colonic Stricture" equaling "Yes" are
+ considered evidence of disease activity in the colon.}
+ \item{ Any record of Phenotype - Esophageal Stricture",
+ "Phenotype - Jejunal Stricture", "Phenotype - Duodenal Stricture" or
+ "Phenotype - Gastric Stricture " equal to "Yes" will be considered evidence
+ of disease activity in the upper GI tract.}
+ }
 }

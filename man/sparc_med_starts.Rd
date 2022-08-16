@@ -9,6 +9,7 @@ sparc_med_starts(
   demographics,
   observations,
   encounter,
+  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
   export = FALSE
 )
 }
@@ -19,7 +20,9 @@ sparc_med_starts(
 
 \item{observations}{a dataframe with observations data usually generated using load_data.}
 
-\item{encounter}{a dataframe with encounter data usually generated using load_data.}
+\item{encounter}{A dataframe with encounter data usually generated using load_data.}
+
+\item{med_groups}{A list of medication groups of interest. For details, refer to \code{\link{sparc_med_filter}}.}
 
 \item{export}{if excel spreadsheet should be exported. FALSE is default.}
 }
@@ -32,11 +35,23 @@ is only for long term medications including Biologics, Aminosalicylates, and
 Immunomodulators.
 }
 \details{
-Medication start and stop dates are chosen independtly from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
+Medication start and stop dates are chosen independently from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
 For EMR data, if a medication start date is missing, the visit encounter start date is used. These records are flagged in the column VISIT_ENCOUNTER_MED_START.
-
-Bionaive is 1 if a patient has no prior reported biologics (including JAK inhibitors and Tofacitinib). Started after enrollment is 1 if the medication start date is after the date of consent.
 
 If a patient has medication information for the same drug from eCRF and EMR, the eCRF data is preferred and used to generate MED_START_DATE and MED_END_DATE. If only EMR data is available for that medication, then EMR data is used.
 Any overlap between medications is reported along with the number of days the medications overlap.
+If no end date is given for a prescription, the duration of the overlap is calculated assuming an ongoing prescription. The effective end date
+is set using a database wide cutoff based on the the date of the latest encounter any patient had (as returned by \code{\link{extract_latest}}).
+Patient level cutoffs are not used because the last recorded encounter of a specific patient may precede the latest available EMR by years.
+
+The following columns are convenience flags and indices to facilitate easy filtering of the data:
+
+\describe{
+  \item{MEDICATION_NUMBER}{counts the number of different medications in a patients' journey. Only medications in the selected med_groups are considered.
+The medication with with earliest start date will have MEDICATION_NUMBER = 1.}
+  \item{BIONAIVE}{is 1 if a patient has no prior reported biologics.}
+  \item{FIRST_BIOLOGIC}{is 1 if a medication record is the first biologic a patient receives. If a record is the first biologic a patient receives, FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.}
+  \item{STARTED_AFTER_ENROLLMENT}{is 1 if the medication start date is after the date of consent.}
+  \item{BIOLOGIC}{is 1 if the record is for a biologic}
+}
 }
