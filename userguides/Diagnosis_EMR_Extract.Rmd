@@ -1,8 +1,6 @@
 ---
 title: "diagnosis_emr_extract User Guide"
-output:
-  html_document: default
-  pdf_document: default
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
