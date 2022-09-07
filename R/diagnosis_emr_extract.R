@@ -14,6 +14,16 @@
 #'
 #' @return A list of dataframes with all relevant EMR ICD10 diagnosis and/or patient problem records
 #' @export
+#'
+#' @examples
+#'
+#' #example with predefined category (all cancer diagnoses excluding skin carcinomas)
+#'
+#' #cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
+#'
+#' #example with custom category (all cancer diagnoses excluding cervical carcinomas)
+#'
+#' #cancerdx_woutcervical=emr_extract_diagnosis(data,inclusion="CUSTOM", exclusion = "CUSTOM",custominc="c|d0|d1|d2|d3|d4",customexc="d06")
 
 
 emr_extract_diagnosis <- function(data,
