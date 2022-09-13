@@ -1,6 +1,6 @@
 #' emr_extract_diagnosis
 #'
-#' This file contains a function to extract relevant diagnosis codes from
+#' A function to extract relevant diagnosis codes from
 #' diagnosis and/or patient problem EMR data for a specific condition of
 #' interest.
 #'
