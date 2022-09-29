@@ -1009,7 +1009,7 @@ gc()
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, `Date.Sample.Collected`) %>%
       mutate(`Date.Sample.Collected` = dmy(`Date.Sample.Collected`)) %>%
       left_join(cohort_index_info) %>%
-      mutate(diff = (`Date.Sample.Collected`) - index_date) %>%
+      mutate(diff = abs((`Date.Sample.Collected`) - index_date)) %>%
       filter(diff <= t) %>%
       mutate(c = 1) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, BIOSAMPLE_CONCEPT_NAME, c) %>%
@@ -1035,7 +1035,7 @@ gc()
     omics_t <- data$omics_patient_mapping %>%
       mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
       left_join(cohort_index_info) %>%
-      mutate(diff = (SAMPLE_COLLECTED_DATE) - index_date) %>%
+      mutate(diff = abs((SAMPLE_COLLECTED_DATE) - index_date)) %>%
       mutate(keep = case_when(
         `ASSAY NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing") ~ 1,
         !(`ASSAY NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing")) & diff <= t ~ 1,
