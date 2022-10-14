@@ -32,8 +32,7 @@ sparc_medication <- function(data,
 
   # CONSENT INFORMATION ----
 
-  consent <- med %>%
-    ungroup() %>%
+  consent <- extract_consent(data$demographics, study = "SPARC") %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN)
 
 
@@ -193,46 +192,48 @@ sparc_medication <- function(data,
 
   # REORDER COLUMNS & FORMAT SPREADSHEET ----
 
+#
+#   bionames <- med_grp %>%
+#     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
+#     arrange(new_med_name) %>%
+#     distinct(new_med_name) %>%
+#     rename(name = new_med_name) %>%
+#     add_row(name = c("MEDICATION_AT_INDEX")) %>%
+#     add_row(name = c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT")) %>%
+#     add_row(name = c("BIONAIVE")) %>%
+#     arrange(match(name, c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT", "MEDICATION_AT_INDEX", "BIONAIVE")))
+#
+#   if ("LATEST" %in% index_info) {
+#     names <- bind_rows(data.frame(name = names(cohort[1:9])), bionames) %>%
+#       distinct() %>%
+#       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
+#       filter(name != "DIAGNOSIS_DATE")
+#   } else {
+#     names <- bind_rows(data.frame(name = names(cohort[1:8])), bionames) %>%
+#       distinct() %>%
+#       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
+#       filter(name != "DIAGNOSIS_DATE")
+#   }
 
-  bionames <- med_grp %>%
-    filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
-    arrange(new_med_name) %>%
-    distinct(new_med_name) %>%
-    rename(name = new_med_name) %>%
-    add_row(name = c("MEDICATION_AT_INDEX")) %>%
-    add_row(name = c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT")) %>%
-    add_row(name = c("BIONAIVE")) %>%
-    arrange(match(name, c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT", "MEDICATION_AT_INDEX", "BIONAIVE")))
+  #cohort <- cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
 
-  if ("LATEST" %in% index_info) {
-    names <- bind_rows(data.frame(name = names(cohort[1:9])), bionames) %>%
-      distinct() %>%
-      filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-      filter(name != "DIAGNOSIS_DATE")
-  } else {
-    names <- bind_rows(data.frame(name = names(cohort[1:8])), bionames) %>%
-      distinct() %>%
-      filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-      filter(name != "DIAGNOSIS_DATE")
-  }
-
-  cohort <- cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
-
-
-  names(cohort) <- toupper(names(cohort))
 
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
 
 
   if ("OMICS" %in% index_info) {
-    cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
+    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
+
+    final_cohort <- omics %>% left_join(table) %>% left_join(cohort)
   } else if ("BIOSAMPLE" %in% index_info) {
-    cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
+    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
+
+    final_cohort <- biosample %>% left_join(table) %>% left_join(cohort)
   } else {
-    cohort <- cohort
+    final_cohort <- cohort
   }
 
-  names(cohort) <- toupper(names(cohort))
+  names(final_cohort) <- toupper(names(final_cohort))
 
   # CREATE HEADER STYLES----
 
@@ -246,18 +247,18 @@ sparc_medication <- function(data,
 
     wb <- createWorkbook()
     addWorksheet(wb, "med_at_index")
-    writeData(wb, "med_at_index", x = cohort, startCol = 1, startRow = 1, colNames = TRUE, rowNames = FALSE)
+    writeData(wb, "med_at_index", x = final_cohort, startCol = 1, startRow = 1, colNames = TRUE, rowNames = FALSE)
 
 
     # FORMAT CELLS ----
 
 
-    democoln <- max(which(colnames(cohort) %in% c("DIAGNOSIS")))
+    democoln <- max(which(colnames(final_cohort) %in% c("DIAGNOSIS")))
 
-    rown <- dim(cohort)[1]
-    coln <- dim(cohort)[2]
+    rown <- dim(final_cohort)[1]
+    coln <- dim(final_cohort)[2]
 
-    conf <- max(which(colnames(cohort) %in% toupper("MEDICATION_AT_INDEX")))
+    conf <- max(which(colnames(final_cohort) %in% toupper("MEDICATION_AT_INDEX")))
 
     # column headers
     conditionalFormatting(wb, "med_at_index", cols = 1:democoln, rows = 1, rule = "!=0", style = style2)
