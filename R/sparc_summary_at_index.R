@@ -20,7 +20,7 @@ sparc_summary <- function(data,
                           index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
                           filename = "SPARC_SUMMARY.xlsx",
                           index_range = "30") {
-  if (class(index_info) == "character") {
+  if ("character" %in% class(index_info)) {
     index_info <- toupper(index_info)
   } else {
     index_info <- index_info
@@ -46,7 +46,7 @@ sparc_summary <- function(data,
 
   # ADD RACE/ETHNICITY ----
 
-  race <- extract_race(data$demographics, "SPARC")
+   race <- extract_race(data$demographics, "SPARC")
 
 
   # CREATE TABLE ----
@@ -154,7 +154,7 @@ sparc_summary <- function(data,
     biosample_index <- biosample %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date)
 
-    cohort <- biosample %>% left_join(table)
+    cohort <- biosample_index %>% left_join(table)
   } else if ("LATEST" %in% index_info) {
     latest <- extract_latest(data$encounter)
 
@@ -168,6 +168,9 @@ sparc_summary <- function(data,
 
   gc()
 
+  #create subset of cohort table with diagnosis and index date
+  cohort_index_info <- cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, index_date)
+
   # PHENOTYPES: ----
   #  Crohn's Disease - just closest no date constraint if multiple before index date then keep worst one - don't make a call
 
@@ -176,7 +179,7 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% c("Crohn's Disease Phenotype", "IBD Manifestations - Abdominal Abscess, Fistula, or Other Penetrating Complication") | str_detect(OBS_TEST_CONCEPT_NAME, "^Phenotype")) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
     mutate(keep = case_when(
@@ -210,7 +213,7 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% "Extent of Macroscopic Ulcerative Colitis" & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
     mutate(keep = case_when(
@@ -253,7 +256,7 @@ sparc_summary <- function(data,
     filter(OBS_TEST_CONCEPT_CODE %in% c("EPIC#31000125051", "EPIC#31000125052", "EPIC#31000125053", "EPIC#31000125054", "EPIC#31000125055", "SMART_Q61__C") & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
 
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "IBD Unclassified") %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
     mutate(keep = case_when(
@@ -280,7 +283,7 @@ sparc_summary <- function(data,
     filter(OBS_TEST_CONCEPT_CODE %in% c("EPIC#41201", "EPIC#41202", "11337-3", "SMART_Q60__C") & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_CODE, desc(OBS_TEST_RESULT_DATE)) %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
@@ -308,7 +311,7 @@ sparc_summary <- function(data,
     filter(OBS_TEST_CONCEPT_CODE %in% c("EPIC#31000125062", "EPIC#31000125063", "SMART_Q62__C") & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_CODE, desc(OBS_TEST_RESULT_DATE)) %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "IBD Unclassified") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
@@ -332,7 +335,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
 
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
     # mutate(keep = case_when(diff <= t ~ "keep")) %>%
@@ -340,43 +343,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
     slice(which.min(abs(diff))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    mutate(Phenotype = case_when(
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Yes" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Anal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Duodenal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Esophageal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Gastric inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Ileal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Jejunal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Left colonic inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Rectal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Right colonic inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Transverse colonic inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No anal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No rectal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No right colonic involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No transverse colonic involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No duodenal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No esophageal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No gastric involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No ileal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No jejunal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No left colonic involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown anal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown rectal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown right colonic involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown transverse colonic involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown duodenal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown esophageal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown gastric involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown ileal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown jejunal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown left colonic involvement" ~ "Unknown",
-      TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS
-    )) %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = Phenotype) %>%
+       pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     ungroup()
 
 
@@ -402,7 +369,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
 
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
     mutate(keep = case_when(diff <= t ~ "keep")) %>%
@@ -430,7 +397,7 @@ sparc_summary <- function(data,
     mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = VISIT_ENCOUNTER_START_DATE - index_date) %>%
     # mutate(keep = case_when(diff <= t ~ "keep",
     #                         `Number of IBD Surgeries` == "0" & diff > t ~ "keep")) %>%
@@ -492,7 +459,7 @@ sparc_summary <- function(data,
     mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     mutate(diff = VISIT_ENCOUNTER_START_DATE - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, index_date) %>%
@@ -516,7 +483,7 @@ sparc_summary <- function(data,
       DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, PROC_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -547,7 +514,7 @@ sparc_summary <- function(data,
       DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, PROC_STATUS_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -573,7 +540,7 @@ sparc_summary <- function(data,
       DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, PROC_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -607,7 +574,7 @@ sparc_summary <- function(data,
       DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, PROC_STATUS_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -640,7 +607,7 @@ sparc_summary <- function(data,
       PROC_STATUS_CONCEPT_NAME == "No" ~ "Not Performed",
       TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
     )) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
@@ -669,7 +636,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME) %>%
     mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     select(-DIAGNOSIS) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, index_date) %>%
@@ -701,7 +668,7 @@ sparc_summary <- function(data,
     filter(!is.na(DIAG_STATUS_CONCEPT_NAME)) %>%
     mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     select(-DIAGNOSIS_DATE) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, index_date) %>%
@@ -720,7 +687,7 @@ sparc_summary <- function(data,
     #filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(grepl("Tobacco", OBS_TEST_CONCEPT_NAME)) %>%
     filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, index_date) %>%
@@ -756,7 +723,7 @@ sparc_summary <- function(data,
     filter(grepl("narcotic", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
     filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
 
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, index_date) %>%
@@ -777,7 +744,7 @@ sparc_summary <- function(data,
     left_join(data$encounter) %>%
     filter(DIAG_CONCEPT_NAME %in% eim_codes$EIM_DX | SRC_DIAG_CONCEPT_CODE %in% eim_codes$DIAG_CONCEPT_CODE | DIAG_CONCEPT_CODE %in% eim_codes$DIAG_CONCEPT_CODE) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_CODE, DIAG_CONCEPT_NAME, DIAG_STATUS_CONCEPT_NAME, VISIT_ENCOUNTER_START_DATE, SRC_DIAG_CONCEPT_CODE) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -811,7 +778,7 @@ sparc_summary <- function(data,
     drop_na(DIAG_STATUS_CONCEPT_NAME) %>%
     left_join(data$encounter) %>%
     select(-DIAGNOSIS_DATE) %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -823,7 +790,7 @@ sparc_summary <- function(data,
 
 
 
-
+gc()
 
 
   # MEDICATION EXPOSURE UP UNTIL INDEX DATE FROM SMARTFORM ----
@@ -833,23 +800,23 @@ sparc_summary <- function(data,
 
   sf_med <- data$prescriptions %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
-    left_join(data$encounter) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME, MEDICATION_ADMINISTRATED) %>%
+    left_join(data$encounter %>% filter(DATA_SOURCE == "SF_SPARC") %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     drop_na(index_date) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, index_date) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE - index_date)) %>%
-    # mutate(keep = case_when(MEDICATION_ADMINISTRATED == "Never" & diff > t ~ "keep",
-    #                         diff <= t ~ "keep")) %>%
-    # filter(keep == "keep") %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, index_date) %>%
+    arrange(MEDICATION_ADMINISTRATED, .by_group = "TRUE") %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = MEDICATION_NAME, values_from = MEDICATION_ADMINISTRATED) %>%
     select(sort(names(.))) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, everything())
 
-
   cohort <- left_join(cohort, sf_med)
+
+  gc()
 
   # STEROIDS USE IN PAST 60 DAYS ----
 
@@ -857,7 +824,7 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(grepl("Current Steroid Treatment", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
     filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(int = (OBS_TEST_RESULT_DATE - 60) %--% (OBS_TEST_RESULT_DATE + 60)) %>%
     filter(index_date %within% int) %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
@@ -876,7 +843,7 @@ sparc_summary <- function(data,
 
   #scdai
   scdai <- scores$scdai %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(SCDAI_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(SCDAI_SCORE) %>%
@@ -895,7 +862,7 @@ sparc_summary <- function(data,
 
   #pro2
   pro2 <- scores$pro2 %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(PRO2_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(PRO2_SCORE) %>%
@@ -913,7 +880,7 @@ sparc_summary <- function(data,
   #pr03
 
   pro3 <- scores$pro3 %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(PRO3_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(PRO3_SCORE) %>%
@@ -932,7 +899,7 @@ sparc_summary <- function(data,
   #6pt mayo
 
   mayo <- scores$mayo %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(MAYO_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
     drop_na(MAYO_6_SCORE) %>%
@@ -952,7 +919,7 @@ sparc_summary <- function(data,
 
 
   pga <- scores$pga %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(PGA_DATE - index_date)) %>%
     filter(datediff <= t) %>%
     drop_na(PGA) %>%
@@ -973,7 +940,7 @@ sparc_summary <- function(data,
 
 
   ses <- scores$ses %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(SES_SCORE) %>%
@@ -994,7 +961,7 @@ sparc_summary <- function(data,
   # Mayo Endocscopy Score - source: https://academic.oup.com/ecco-jcc/article/9/10/846/425061
 
   mes  <- scores$mes %>%
-    left_join(cohort) %>%
+    left_join(cohort_index_info) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
     drop_na(MAYO_ENDOSCOPY_SCORE) %>%
@@ -1041,8 +1008,8 @@ sparc_summary <- function(data,
       filter(`Sample.Status` %in% c("In Lab", "Stored")) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, `Date.Sample.Collected`) %>%
       mutate(`Date.Sample.Collected` = dmy(`Date.Sample.Collected`)) %>%
-      left_join(cohort) %>%
-      mutate(diff = (`Date.Sample.Collected`) - index_date) %>%
+      left_join(cohort_index_info) %>%
+      mutate(diff = abs((`Date.Sample.Collected`) - index_date)) %>%
       filter(diff <= t) %>%
       mutate(c = 1) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, BIOSAMPLE_CONCEPT_NAME, c) %>%
@@ -1067,8 +1034,8 @@ sparc_summary <- function(data,
   if (!("OMICS" %in% index_info)) {
     omics_t <- data$omics_patient_mapping %>%
       mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
-      left_join(cohort) %>%
-      mutate(diff = (SAMPLE_COLLECTED_DATE) - index_date) %>%
+      left_join(cohort_index_info) %>%
+      mutate(diff = abs((SAMPLE_COLLECTED_DATE) - index_date)) %>%
       mutate(keep = case_when(
         `ASSAY NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing") ~ 1,
         !(`ASSAY NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing")) & diff <= t ~ 1,
@@ -1095,7 +1062,7 @@ sparc_summary <- function(data,
   bmi <- calculate_bmi(data$observations)
 
   bmi <- bmi %>%
-    right_join(cohort) %>%
+    right_join(cohort_index_info) %>%
     mutate(diff = index_date - bmi_date) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
@@ -1199,6 +1166,7 @@ sparc_summary <- function(data,
 
 
   cohort <- cohort %>%
+    distinct() %>%
     setNames((gsub("\\(|\\)|\\-|\\'|\\.", " ", names(.)))) %>%
     setNames((gsub("  ", " ", names(.)))) %>%
     setNames((gsub("^ *| *$", "", names(.)))) %>%
@@ -1208,27 +1176,12 @@ sparc_summary <- function(data,
 
 
 
-
+gc()
 
   # CREATE HEADER STYLES ----
 
   # blue
   style1 <- createStyle(bgFill = "#BDD7EE", textDecoration = "bold")
-
-  # orange
-  style2 <- createStyle(bgFill = "#F8CBAD", textDecoration = "bold")
-
-  # yellow
-  style3 <- createStyle(bgFill = "#FFE699", textDecoration = "bold")
-
-  # green
-  style4 <- createStyle(bgFill = "#C6E0B4")
-
-  # grey
-  style5 <- createStyle(bgFill = "#D9D9D9")
-
-  # red
-  style6 <- createStyle(bgFill = "#e84135")
 
 
   # CREATE WORKBOOK ----
