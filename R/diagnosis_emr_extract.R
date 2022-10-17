@@ -44,81 +44,81 @@ emr_extract_diagnosis <- function(data,
   exclusion1 <- toupper(exclusion)
   index_range <- as.numeric(index_range)
   if ("CANCER" %in% inclusion1) {
-    inc <- "c|d0|d1|d2|d3|d4"
+    inc <- "c|d0|d1|d2|d3|d4|\\b14|\\b15|\\b16|\\b17|\\b18|\\b19|\\b2"
   } else if ("WEIGHT LOSS" %in% inclusion1) {
-    inc <- "R63.4"
+    inc <- "R63.4|\\b783.1|\\b783.2"
   } else if ("ABDOMINAL PAIN" %in% inclusion1) {
-    inc <- "R10"
+    inc <- "R10|\\b789.0"
   } else if ("STOMA" %in% inclusion1) {
-    inc <- "L24.B0|L24.B1|L24.B3|Z93.3|Z93.2"
+    inc <- "L24.B0|L24.B1|L24.B3|Z93.3|Z93.2|V44.2|V44.3"
   } else if ("PSC" %in% inclusion1) {
-    inc <- "K83.01"
+    inc <- "K83.01|\\b576.1"
   } else if ("GI BLEEDING" %in% inclusion1) {
-    inc <- "K92.1"
+    inc <- "K92.1|\\b569.3|\\b578.1|\\b599.70|\\b777.3|\\b792.1"
   } else if ("GI ULCER" %in% inclusion1) {
-    inc <- "K25|K27|K28|K26|K63.3|K62.6"
+    inc <- "K25|K27|K28|K26|K63.3|K62.6|\\b531|\\b532|\\b533|\\b534"
   } else if ("PERIANAL ABSCESS OR FISTULA" %in% inclusion1) {
-    inc <- "K50.913|K50.914|K50.813|K50.814|K50.013|K50.014|K50.113|K50.114|K51.013|K51.014|K51.213|K51.214|K51.313|K51.314|K51.413|K51.414|K51.513|K51.514|K51.813|K51.814|K51.913|K51.914|K60|K61"
+    inc <- "K50.913|K50.914|K50.813|K50.814|K50.013|K50.014|K50.113|K50.114|K51.013|K51.014|K51.213|K51.214|K51.313|K51.314|K51.413|K51.414|K51.513|K51.514|K51.813|K51.814|K51.913|K51.914|K60|K61|\\b565.1|\\b566"
   } else if ("SYSTEMIC FUNGAL INFECTION" %in% inclusion1) {
-    inc <- "B39|B45|B38|B40|B46|B44|B37|B59"
+    inc <- "B39|B45|B38|B40|B46|B44|B37|B59|\\b110|\\b111|\\b112|\\b113|\\b114|\\b115|\\b116|\\b117|\\b118"
   } else if ("DEMYELINATING DISORDER" %in% inclusion1) {
-    inc <- "G35|G36|G37"
+    inc <- "G35|G36|G37|\\b340|\\b341"
   } else if ("CELIAC" %in% inclusion1) {
-    inc <- "K90.0"
+    inc <- "K90.0|\\b579.0"
   } else if ("B2 OR B3" %in% inclusion1) {
-    inc <- "K50.912|K50.112|K50.012|K50.812"
+    inc <- "K50.912|K50.112|K50.012|K50.812|\\b560.89|\\b560.9"
   } else if ("MALNOURISHMENT" %in% inclusion1) {
-    inc <- "E4"
+    inc <- "E4|\\b263.9|\\b269.9"
   } else if ("ANEMIA" %in% inclusion1) {
-    inc <- "D50|D51|D52|D53"
+    inc <- "D50|D51|D52|D53|\\b280|\\b281"
   } else if ("DIARRHEA" %in% inclusion1) {
-    inc <- "R19.7|K59.1|K58.0"
+    inc <- "R19.7|K59.1|K58.0|\\b564.5|\\b787.91"
   } else if ("NAUSEA OR VOMITING" %in% inclusion1) {
-    inc <- "R11"
+    inc <- "R11|\\b787.0"
   } else if ("FEVER" %in% inclusion1) {
-    inc <- "R50.9|R61"
+    inc <- "R50.9|R61|\\b780.6"
   } else if ("CDI" %in% inclusion1) {
-    inc <- "A04.7"
+    inc <- "A04.7|\\b008.45"
   } else if ("ARTHRITIS OR LOW BACK PAIN" %in% inclusion1) {
-    inc <- "M13|M05|M06|M07|M08|M10|M11|M12|M14|M1A"
+    inc <- "M13|M05|M06|M07|M08|M10|M11|M12|M14|M1A|M54.5|\\b710|\\b711|\\b712|\\b713|\\b714|\\b715|\\b716|\\b724.2"
   } else if ("DACTYLITIS" %in% inclusion1) {
-    inc <- "L08.9"
+    inc <- "L08.9|\\b686.9"
   } else if ("HYPOALBUMINEMIA" %in% inclusion1) {
-    inc <- "E88.09"
+    inc <- "E88.09|\\b273.8"
   } else if ("NON UC IBD DIAGNOSIS" %in% inclusion1) {
-    inc <- "K50|K52.3|K52.83|K55.9"
+    inc <- "K50|K52.3|K52.83|K55.9|\\b555|\\b558.9"
   } else if ("TOXIC MEGACOLON" %in% inclusion1) {
-    inc <- "K59.31"
+    inc <- "K59.31|\\b564.7"
   } else if ("FULMINANT COLITIS" %in% inclusion1) {
-    inc <- "K55.03"
+    inc <- "K55.03|\\b557.0"
   } else if ("INTRAABDOMINAL ABSCESS" %in% inclusion1) {
-    inc <- "L02.211|K65.1"
+    inc <- "L02.211|K65.1|\\b567.22|\\b682.2"
   } else if ("STRICTURE STENOSIS" %in% inclusion1) {
-    inc <- "K56.69"
+    inc <- "K56.69|\\b560.89"
   } else if ("COLON ADENOMA" %in% inclusion1) {
-    inc <- "D12.2|D12.3|D12.4|D12.5|D12.6|K31.A2|K55.20"
+    inc <- "D12.2|D12.3|D12.4|D12.5|D12.6|K31.A2|K55.20|\\b211.3|\\b235.2"
   } else if ("INFECTION" %in% inclusion1) {
-    inc <- "L0|A49|A0"
+    inc <- "L0|A49|A0|\\b00|\\b130|\\b131|\\b132|\\b133|\\b134|\\b135|\\b136"
   } else if ("TUBERCULOSIS" %in% inclusion1) {
-    inc <- "A15|A17|A18|A19"
+    inc <- "A15|A17|A18|A19|\\b010|\\b011|\\b012|\\b013|\\b014|\\b015|\\b016|\\b017|\\b018"
   } else if ("DIABETES" %in% inclusion1) {
-    inc <- "E08|E09|E10|E11|E13"
+    inc <- "E08|E09|E10|E11|E13|\\b250"
   } else if ("HYPERTENSION" %in% inclusion1) {
-    inc <- "I10|I11|I12|I13|I15|I16"
+    inc <- "I10|I11|I12|I13|I15|I16|\\b401|\\b402|\\b403|\\b404|\\b405"
   } else if ("COPD" %in% inclusion1) {
-    inc <- "J44"
+    inc <- "J44|\\b491.21|\\b493.2|\\b496"
   } else if ("CKD STAGE IIB OR MORE" %in% inclusion1) {
-    inc <- "N18.32|N18.4|N18.5"
+    inc <- "N18.32|N18.4|N18.5|\\b585.2|\\b585.3|\\b585.4|\\b585.5"
   } else if ("UNSTABLE ANGINA OR MYOCARDIAL INFARCTION" %in% inclusion1) {
-    inc <- "I20|I21"
+    inc <- "I20|I21|\\b410|\\b412|\\b413"
   } else if ("AUTOIMMUNE INFLAMMATORY DISEASE" %in% inclusion1) {
-    inc <- "M05|M06|M3|M04"
+    inc <- "M05|M06|M3|M04|\\b714|\\b710"
   } else if ("HEPATITIS B" %in% inclusion1) {
-    inc <- "B16|B18.0|B18.1|B19.1"
+    inc <- "B16|B18.0|B18.1|B19.1|\\b070.2|\\b070.3"
   } else if ("HEPATITIS C" %in% inclusion1) {
-    inc <- "B17.1|B18.2|B19.2"
+    inc <- "B17.1|B18.2|B19.2|\\b070.41|\\b070.44|\\b070.51|\\b070.54|\\b070.7"
   } else if ("INHERITED AUTOIMMUNE DISORDER" %in% inclusion1) {
-    inc <- "D80.0|D82.0|D80.4|D82.3|N41.4|Q82.8|D81.0|D81.1|D81.2|D81.3|E70.330|D76.1|D82.4|D82.2|D81.6|D81.7|D83|D80.2|D84.1|G11.3|Q82.8|D81.5|D81.8"
+    inc <- "D80.0|D82.0|D80.4|D82.3|N41.4|Q82.8|D81.0|D81.1|D81.2|D81.3|E70.330|D76.1|D82.4|D82.2|D81.6|D81.7|D83|D80.2|D84.1|G11.3|Q82.8|D81.5|D81.8|\\b279.04|\\b279.12|\\b279.02|\\b279.8|\\b601.8|\\b757.2|\\b757.39|\\b279.2|\\b270.2|\\b288.4|\\b279.8|\\b279.06|\\b279.01|\\b277.6|\\b334.8|\\b277.2|\\b266.2"
   } else if ("CUSTOM" %in% inclusion1) {
     inc <- custominc
   }
@@ -127,13 +127,13 @@ emr_extract_diagnosis <- function(data,
       filter(DIAG_SYSTEM_NAME != "Local" & DATA_SOURCE == "EMR") %>%
       filter(grepl(inc, SRC_DIAG_CONCEPT_CODE, ignore.case = TRUE))
     if ("SKIN CARCINOMA" %in% exclusion1) {
-      exc <- "C44.01|C44.02|C44.11|C44.12|C44.21|C44.22|C44.31|C44.32|C44.41|C44.42|C44.51|C44.52|C44.61|C44.62|C44.71|C44.72|C44.81|C44.82|C44.91|C44.92"
+      exc <- "C44.01|C44.02|C44.11|C44.12|C44.21|C44.22|C44.31|C44.32|C44.41|C44.42|C44.51|C44.52|C44.61|C44.62|C44.71|C44.72|C44.81|C44.82|C44.91|C44.92|232"
       dxemricd1 <- dxemricd
       dxemricd <- dxemricd1 %>%
         filter(!grepl(exc, SRC_DIAG_CONCEPT_CODE, ignore.case = TRUE))
     }
     if ("CERVIX CARCINOMA" %in% exclusion1) {
-      exc <- "d06"
+      exc <- "d06|233.1"
       dxemricd1 <- dxemricd
       dxemricd <- dxemricd1 %>%
         filter(!grepl(exc, SRC_DIAG_CONCEPT_CODE, ignore.case = TRUE))
