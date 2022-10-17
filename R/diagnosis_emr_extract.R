@@ -22,6 +22,13 @@
 #' #cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
 #'
 #' #example with custom category (all cancer diagnoses excluding cervical carcinomas)
+
+#' #example with predefined category
+#'
+#' #cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
+#'
+#' #example with custom category
+
 #'
 #' #cancerdx_woutcervical=emr_extract_diagnosis(data,inclusion="CUSTOM", exclusion = "CUSTOM",custominc="c|d0|d1|d2|d3|d4",customexc="d06")
 
