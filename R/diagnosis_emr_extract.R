@@ -45,6 +45,8 @@ emr_extract_diagnosis <- function(data,
   index_range <- as.numeric(index_range)
   if ("CANCER" %in% inclusion1) {
     inc <- "c|d0|d1|d2|d3|d4|\\b14|\\b15|\\b16|\\b17|\\b18|\\b19|\\b2"
+  } else if ("COLORECTAL CANCER" %in% inclusion1) {
+    inc <- "C18|C19|C20|\\b153|\\b154.0|\\b154.1"
   } else if ("WEIGHT LOSS" %in% inclusion1) {
     inc <- "R63.4|\\b783.1|\\b783.2"
   } else if ("ABDOMINAL PAIN" %in% inclusion1) {
