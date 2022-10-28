@@ -126,6 +126,8 @@ emr_extract_diagnosis <- function(data,
   }
   if ("diagnosis" %in% names(data)) {
     dxemricd <- data$diagnosis %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,DIAG_CONCEPT_CODE,DIAGNOSIS_DATE) %>%
+      filter(row_number()==1) %>%
       filter(DIAG_SYSTEM_NAME != "Local" & DATA_SOURCE == "EMR") %>%
       filter(grepl(inc, SRC_DIAG_CONCEPT_CODE, ignore.case = TRUE))
     if ("SKIN CARCINOMA" %in% exclusion1) {
@@ -146,9 +148,22 @@ emr_extract_diagnosis <- function(data,
       dxemricd <- dxemricd1 %>%
         filter(!grepl(exc, SRC_DIAG_CONCEPT_CODE, ignore.case = TRUE))
     }
+    if ("ENROLLMENT" %in% datecutoff) {
+      dxemricd2 <- dxemricd
+      dxemricd <- data$demographics %>%
+        extract_consent("SPARC") %>%
+        mutate(dateconsentcalc = as.Date(DATE_OF_CONSENT, format = "%d-%B-%Y")) %>%
+        mutate(earliestemr = dateconsentcalc - index_range) %>%
+        # merge(encemr,by="DEIDENTIFIED_MASTER_PATIENT_ID")%>%
+        merge(dxemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
+        mutate(dateforfilter = as.Date(DIAGNOSIS_DATE, format = "%d-%B-%Y")) %>%
+        filter(earliestemr <= dateforfilter & dateforfilter <= dateconsentcalc)
+    }
   }
   if ("patient_problem" %in% names(data)) {
-    ppemricd <- data$patient_problem %>%
+    ppemricd <- data$patient_problem  %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,SOURCE_PROB_CODE,PROBLEM_START_DATE) %>%
+      filter(row_number()==1) %>%
       filter(SOURCE_PROB_CODE_SYSTEM_NAME != "Local" & DATA_SOURCE == "EMR") %>%
       filter(grepl(inc, SOURCE_PROB_CODE, ignore.case = TRUE))
     if ("SKIN CARCINOMA" %in% exclusion1) {
@@ -169,63 +184,83 @@ emr_extract_diagnosis <- function(data,
       ppemricd <- ppemricd1 %>%
         filter(!grepl(exc, SOURCE_PROB_CODE, ignore.case = TRUE))
     }
-  }
-
-
-  if ("diagnosis" %in% names(data) & !"patient_problem" %in% names(data)) {
     if ("ENROLLMENT" %in% datecutoff) {
-      dxemricd2 <- dxemricd
-      dxemricd <- data$demographics %>%
+      ppemricd2 <- ppemricd
+      ppemricd <- data$demographics %>%
         extract_consent("SPARC") %>%
         mutate(dateconsentcalc = as.Date(DATE_OF_CONSENT, format = "%d-%B-%Y")) %>%
         mutate(earliestemr = dateconsentcalc - index_range) %>%
         # merge(encemr,by="DEIDENTIFIED_MASTER_PATIENT_ID")%>%
-        merge(dxemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
-        mutate(dateforfilter = as.Date(DIAGNOSIS_DATE, format = "%d-%B-%Y")) %>%
+        merge(ppemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
+        mutate(dateforfilter = as.Date(PROBLEM_START_DATE, format = "%d-%B-%Y")) %>%
         filter(earliestemr <= dateforfilter & dateforfilter <= dateconsentcalc)
     }
+  }
+  if ("patient_history" %in% names(data)) {
+    phemricd <- data$patient_history  %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,SRC_HISTORY_CONCEPT_CODE,EVENT_ONSET_DATE) %>%
+      filter(row_number()==1) %>%
+      filter(HISTORY_TYPE=="Medical_HX"&DATA_SOURCE=="EMR") %>%
+      filter(grepl(inc,SRC_HISTORY_CONCEPT_CODE,ignore.case=TRUE))
+    if ("SKIN CARCINOMA" %in% exclusion1) {
+      exc <- "C44.01|C44.02|C44.11|C44.12|C44.21|C44.22|C44.31|C44.32|C44.41|C44.42|C44.51|C44.52|C44.61|C44.62|C44.71|C44.72|C44.81|C44.82|C44.91|C44.92"
+      phemricd1 <- phemricd
+      phemricd <- phemricd1 %>%
+        filter(!grepl(exc, SRC_HISTORY_CONCEPT_CODE, ignore.case = TRUE))
+    }
+    if ("CERVIX CARCINOMA" %in% exclusion1) {
+      exc <- "d06"
+      phemricd1 <- phemricd
+      phemricd <- phemricd1 %>%
+        filter(!grepl(exc, SRC_HISTORY_CONCEPT_CODE, ignore.case = TRUE))
+    }
+    if ("CUSTOM" %in% exclusion1) {
+      exc <- customexc
+      phemricd1 <- phemricd
+      phemricd <- phemricd1 %>%
+        filter(!grepl(exc, SRC_HISTORY_CONCEPT_CODE, ignore.case = TRUE))
+    }
+    if ("ENROLLMENT" %in% datecutoff) {
+      phemricd2 <- phemricd
+      phemricd <- data$demographics %>%
+        extract_consent("SPARC") %>%
+        mutate(dateconsentcalc = as.Date(DATE_OF_CONSENT, format = "%d-%B-%Y")) %>%
+        mutate(earliestemr = dateconsentcalc - index_range) %>%
+        # merge(encemr,by="DEIDENTIFIED_MASTER_PATIENT_ID")%>%
+        merge(phemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
+        mutate(dateforfilter = as.Date(EVENT_ONSET_DATE, format = "%d-%B-%Y")) %>%
+        filter(earliestemr <= dateforfilter & dateforfilter <= dateconsentcalc)
+    }
+  }
+
+#format lists of output depending on input file(s)
+  if ("diagnosis" %in% names(data) & !"patient_problem" %in% names(data) & !"patient_history" %in% names(data)) {
     result <- list(dxemricd)
     names(result) <- c("diagnosis")
   }
-  if ("patient_problem" %in% names(data) & !"diagnosis" %in% names(data)) {
-    if ("ENROLLMENT" %in% datecutoff) {
-      ppemricd2 <- ppemricd
-      ppemricd <- data$demographics %>%
-        extract_consent("SPARC") %>%
-        mutate(dateconsentcalc = as.Date(DATE_OF_CONSENT, format = "%d-%B-%Y")) %>%
-        mutate(earliestemr = dateconsentcalc - index_range) %>%
-        # merge(encemr,by="DEIDENTIFIED_MASTER_PATIENT_ID")%>%
-        merge(ppemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
-        mutate(dateforfilter = as.Date(PROBLEM_START_DATE, format = "%d-%B-%Y")) %>%
-        filter(earliestemr <= dateforfilter & dateforfilter <= dateconsentcalc)
-    }
+  if ("patient_problem" %in% names(data) & !"diagnosis" %in% names(data) & !"patient_history" %in% names(data)) {
     result <- list(ppemricd)
     names(result) <- c("patient_problem")
   }
-  if ("patient_problem" %in% names(data) & "diagnosis" %in% names(data)) {
-    if ("ENROLLMENT" %in% datecutoff) {
-      dxemricd2 <- dxemricd
-      dxemricd <- data$demographics %>%
-        extract_consent("SPARC") %>%
-        mutate(dateconsentcalc = as.Date(DATE_OF_CONSENT, format = "%d-%B-%Y")) %>%
-        mutate(earliestemr = dateconsentcalc - index_range) %>%
-        # merge(encemr,by="DEIDENTIFIED_MASTER_PATIENT_ID")%>%
-        merge(dxemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
-        mutate(dateforfilter = as.Date(DIAGNOSIS_DATE, format = "%d-%B-%Y")) %>%
-        filter(earliestemr <= dateforfilter & dateforfilter <= dateconsentcalc)
-      ppemricd2 <- ppemricd
-      ppemricd <- data$demographics %>%
-        extract_consent("SPARC") %>%
-        mutate(dateconsentcalc = as.Date(DATE_OF_CONSENT, format = "%d-%B-%Y")) %>%
-        mutate(earliestemr = dateconsentcalc - index_range) %>%
-        # merge(encemr,by="DEIDENTIFIED_MASTER_PATIENT_ID")%>%
-        merge(ppemricd2, by = "DEIDENTIFIED_MASTER_PATIENT_ID", allow.cartesian = TRUE) %>%
-        mutate(dateforfilter = as.Date(PROBLEM_START_DATE, format = "%d-%B-%Y")) %>%
-        filter(earliestemr <= dateforfilter & dateforfilter <= dateconsentcalc)
-    }
+  if ("patient_problem" %in% names(data) & "diagnosis" %in% names(data) & !"patient_history" %in% names(data)) {
     result <- list(dxemricd, ppemricd)
     names(result) <- c("diagnosis", "patient_problem")
   }
-
+  if ("diagnosis" %in% names(data) & !"patient_problem" %in% names(data) & "patient_history" %in% names(data)) {
+    result <- list(dxemricd, phemricd)
+    names(result) <- c("diagnosis", "patient_history")
+  }
+  if ("patient_problem" %in% names(data) & !"diagnosis" %in% names(data) & "patient_history" %in% names(data)) {
+    result <- list(ppemricd, phemricd)
+    names(result) <- c("patient_problem", "patient_history")
+  }
+  if ("patient_problem" %in% names(data) & "diagnosis" %in% names(data) & "patient_history" %in% names(data)) {
+    result <- list(dxemricd, ppemricd, phemricd)
+    names(result) <- c("diagnosis", "patient_problem", "patient_history")
+  }
+  if (!"patient_problem" %in% names(data) & !"diagnosis" %in% names(data) & "patient_history" %in% names(data)) {
+    result <- list(phemricd)
+    names(result) <- c("patient_history")
+  }
   return(result)
 }
