@@ -87,7 +87,7 @@ sparc_medication <- function(data,
     biosample_index <- biosample %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date)
 
-    cohort <- biosample %>% left_join(table)
+    cohort <- biosample_index %>% left_join(table)
   } else if ("LATEST" %in% index_info) {
     latest <- extract_latest(data$encounter)
 
