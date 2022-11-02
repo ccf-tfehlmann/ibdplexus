@@ -33,12 +33,17 @@ emr_extract_diagnosis(
 A list of dataframes with all relevant EMR ICD10 diagnosis and/or patient problem records
 }
 \description{
-This file contains a function to extract relevant diagnosis codes from
+A function to extract relevant diagnosis codes from
 diagnosis and/or patient problem EMR data for a specific condition of
 interest.
 }
 \examples{
 
+#example with predefined category (all cancer diagnoses excluding skin carcinomas)
+
+#cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
+
+#example with custom category (all cancer diagnoses excluding cervical carcinomas)
 #example with predefined category
 
 #cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
