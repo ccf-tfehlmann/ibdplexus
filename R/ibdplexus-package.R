@@ -10,5 +10,6 @@
 #' @importFrom tidyr drop_na pivot_wider
 #' @importFrom data.table fread
 #' @importFrom data.table rbindlist
+#' @importFrom stats setNames
 NULL
 #> NULL
