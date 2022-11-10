@@ -5,3 +5,5 @@
 NAMESPACE
 inst/doc
 /Meta/
+/doc/
+row_issue.R
