@@ -120,7 +120,7 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
     mutate(DOSE_OF_MEDICATION = readr::parse_number(DOSE_OF_MEDICATION)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, DOSE_OF_MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,MED_START_DATE) %>%
+    arrange(MED_START_DATE, .by_group = TRUE) %>%
     mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name),
@@ -165,8 +165,8 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
     ) %>%
     mutate(MEDICATION_FREQUENCE = paste0(MEDICATION_FREQUENCE, "; ", FREQUENCY_IN_DAYS)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, MEDICATION_FREQUENCE) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name),
@@ -208,8 +208,8 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
     ) %>%
     mutate(REASON_STOPPED = toupper(REASON_STOPPED)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, REASON_STOPPED) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name),
