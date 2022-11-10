@@ -9,9 +9,8 @@
 ## Overview
 
 ibdplexus is designed to work with data downloaded from the [IBD Plexus
-Portal](https://ibdplexus.org) from the Crohn’s & Colitis Foundation. It
-includes functions for the cohorts RISK, SPARC and QORUS. More
-information on Plexus and the cohorts can be found
+Portal](https://ibdplexus.org) from the Crohn’s & Colitis Foundation.
+More information on Plexus and the cohorts can be found
 [here](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/ibd-plexus).
 Functions include:
 
@@ -40,31 +39,52 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 ## User Guides
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/userguides/Diagnosis_EMR_Extract.md">`Diagnosis_EMR_Extract`</a>
+-   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/inst/userguides/Diagnosis_EMR_Extract.md">`Diagnosis_EMR_Extract`</a>
 
 ## Example
 
 ``` r
+
 library(ibdplexus)
-# 
-# loading unzipped SPARC Encounter, Demographics and Prescriptions CRF data only ----
-# data = load_data(datadir = ".",cohort = "SPARC", domains = c("Demographics", "Prescriptions", "Encounter"), data_type = "CRF")
+
+# Load in all data in IBD Plexus for the SPARC cohort ----
+data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = "ALL", data_type = "BOTH")
 
 
-## sparc sumamary at the time of endoscopy (+/- 30 days) with indication ----
-#
-#   data = load_data(datadir = "~/r_input/",cohort = "SPARC", domains = c("ALL"), data_type = "BOTH")
-#
-#
-#   summary_at_endo = sparc_summary(data = data,
-#                              index_info = "endoscopy",
-#                              filename = "SPARC_SUMMARY_AT_ENDOSCOPY.xlsx")
+# Get Excel Tables and Data.Frames with Data Summarised within 60 days of the Enrollment Time Point ----
+
+# SPARC Summary Table 
+e_sum <- sparc_summary(
+  data = data,
+  index_info = "ENROLLMENT",
+  filename = "SPARC_SUMMARY_ENROLLMENT.xlsx")),
+  index_range = "60"
+)
+
+
+# SPARC Scores
+
+e_scores <- sparc_scores(
+  data = data,
+  index_info = "ENROLLMENT",
+  filename = "SPARC_SCORES_ENROLLMENT.xlsx")),
+  index_range = "60"
+)
+
+
+# SPARC Medication
+
+e_med <- sparc_medication(
+  data = data,
+  index_info = "ENROLLMENT",
+  filename = "SPARC_MEDICATION_ENROLLMENT.xlsx")),
+)
 ```
