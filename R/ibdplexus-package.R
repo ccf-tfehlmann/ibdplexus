@@ -11,5 +11,6 @@
 #' @importFrom data.table fread
 #' @importFrom data.table rbindlist
 #' @importFrom stats setNames
+#' @importFrom rlang .data
 NULL
 #> NULL

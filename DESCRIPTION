@@ -23,7 +23,8 @@ Imports:
     DT,
     data.table,
     readr,
-    DiagrammeR
+    DiagrammeR,
+    rlang
 RoxygenNote: 7.2.1
 URL: https://github.com/ccf-tfehlmann/ibdplexus
 BugReports: https://github.com/ccf-tfehlmann/ibdplexus/issues
