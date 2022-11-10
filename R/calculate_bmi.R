@@ -19,7 +19,7 @@ calculate_bmi <- function(observations) {
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, weight_kg, date)
 
 
-  height <- data$observations %>%
+  height <- observations %>%
     filter(DATA_SOURCE == "EMR") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% c("Height")) %>%
     drop_na(TEST_RESULT_NUMERIC) %>%
