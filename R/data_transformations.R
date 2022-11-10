@@ -175,3 +175,37 @@ extract_race <- function(demographics, study) {
   #   paste0(unique(x[!is.na(x)]), collapse = "; ")
   # }), by = DEIDENTIFIED_MASTER_PATIENT_ID]
 }
+
+
+#' extract_labs
+#'
+#' Filter lab crf data for the hsCRP or fecal calprotectin lab results performed by the Crohn's & Colitis Foundation on biosamples collected for SPARC.
+#'
+#' @description
+#' For the hsCRP analysis done by the central lab, the Beckman Coulter analyzer and calibration kit was used (https://mms.mckesson.com/product/727502/Beckman-Coulter-ODR3021). For the
+#' fecal calprotectin analysis we used the Buhlmann fCAL ELISA (https://buhlmannlabs.com/buhlmann-fcal-elisa/#laboratory).
+#'
+#'
+#' @param labs A dataframe with the labartory results in it. This can be loaded using load_data(datadir = "data/", cohort = "SPARC", domains = c("labs"), data_type = "CRF")
+#' @param test The test of interest - either fcal for fecal calprotectin or hscrp for High-sensitivity C-reactive Protein.
+#'
+#' @return A dataframe with the master patient id, lab result, units and date of specimen collection
+#' @export
+#'
+extract_labs <- function(labs, test){
+
+  if (test == "hscrp") {
+    result <- labs %>%
+      filter(LAB_TEST_CONCEPT_NAME == "HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)")
+  } else {
+    result <- labs %>%
+      filter(LAB_TEST_CONCEPT_NAME %in% c("FECAL CALPROTECTIN (30-1800 ÂµG/G)", "FECAL CALPROTECTIN (10-600 ÂµG/G)"))
+  }
+
+  result <- result %>%
+    mutate(SPECIMEN_COLLECTION_DATE = dmy(SPECIMEN_COLLECTION_DATE)) %>%
+    mutate(LAB_RESULTS = ifelse(is.na(LAB_RESULTS), TEST_RESULT_NUMERIC, LAB_RESULTS)) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID,LAB_TEST_CONCEPT_NAME,SPECIMEN_COLLECTION_DATE, LAB_RESULTS, TEST_UNIT)
+
+
+}

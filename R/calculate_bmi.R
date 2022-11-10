@@ -11,27 +11,27 @@
 #' @export
 calculate_bmi <- function(observations) {
   weight <- observations %>%
-    filter(.data&DATA_SOURCE == "EMR") %>%
-    filter(.data&OBS_TEST_CONCEPT_NAME %in% c("Weight/Scale", "Weight")) %>%
-    drop_na(.data&TEST_RESULT_NUMERIC) %>%
-    mutate(weight_kg = as.numeric(.data&TEST_RESULT_NUMERIC) / 35.274) %>%
-    mutate(date = (.data&OBS_TEST_RESULT_DATE)) %>%
+    filter(DATA_SOURCE == "EMR") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Weight/Scale", "Weight")) %>%
+    drop_na(TEST_RESULT_NUMERIC) %>%
+    mutate(weight_kg = as.numeric(TEST_RESULT_NUMERIC) / 35.274) %>%
+    mutate(date = (OBS_TEST_RESULT_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, weight_kg, date)
 
 
   height <- observations %>%
-    filter(.data&DATA_SOURCE == "EMR") %>%
-    filter(.data&OBS_TEST_CONCEPT_NAME %in% c("Height")) %>%
-    drop_na(.data&TEST_RESULT_NUMERIC) %>%
-    mutate(height_m = as.numeric(.data&TEST_RESULT_NUMERIC) / 39.37) %>%
-    mutate(date = (.data&OBS_TEST_RESULT_DATE)) %>%
+    filter(DATA_SOURCE == "EMR") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Height")) %>%
+    drop_na(TEST_RESULT_NUMERIC) %>%
+    mutate(height_m = as.numeric(TEST_RESULT_NUMERIC) / 39.37) %>%
+    mutate(date = (OBS_TEST_RESULT_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, height_m, date)
 
 
   bmi <- full_join(weight, height,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "date")) %>%
     mutate(bmi = weight_kg / (height_m^2)) %>%
     drop_na(bmi) %>%
-    group_by(.data&DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(new = remove_outliers(bmi)) %>%
     drop_na(new) %>%
     ungroup() %>%
