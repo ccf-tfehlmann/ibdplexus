@@ -25,7 +25,7 @@ Imports:
     readr,
     DiagrammeR,
     rlang
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2
 URL: https://github.com/ccf-tfehlmann/ibdplexus
 BugReports: https://github.com/ccf-tfehlmann/ibdplexus/issues
 Suggests: 

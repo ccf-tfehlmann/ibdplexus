@@ -15,7 +15,7 @@
 #'
 #' #famhist = familyibdhist_emr_extract(data)
 
-#' #example for first degree family member history
+#' #example for only first degree family member history
 #'
 #' #famhist1stdeg = familyibdhist_emr_extract(data,relation="FIRST_DEG")
 
