@@ -835,11 +835,11 @@ gc()
 
   cohort <- left_join(cohort, steroids)
 
-  # hsCRP RESULT WITHIN 60 DAYS ----
+  # hsCRP RESULT WITHIN t DAYS ----
 
   hscrp <- extract_labs(data$labs, "hscrp") %>%
     left_join(cohort_index_info) %>%
-    mutate(int = (index_date - 60) %--% (index_date + 60)) %>%
+    mutate(int = (index_date - t) %--% (index_date + t)) %>%
     filter(SPECIMEN_COLLECTION_DATE %within% int) %>%
     mutate(diff = (SPECIMEN_COLLECTION_DATE) - index_date) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
@@ -851,12 +851,12 @@ gc()
 
 
 
-  # FECAL CALPROTECTIN RESULT WITHIN 60 DAYS ----
+  # FECAL CALPROTECTIN RESULT WITHIN t DAYS ----
 
 
   fcal <- extract_labs(data$labs, "fcal") %>%
     left_join(cohort_index_info) %>%
-    mutate(int = (index_date - 60) %--% (index_date + 60)) %>%
+    mutate(int = (index_date - t) %--% (index_date + t)) %>%
     filter(SPECIMEN_COLLECTION_DATE %within% int) %>%
     mutate(diff = (SPECIMEN_COLLECTION_DATE) - index_date) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, LAB_TEST_CONCEPT_NAME,index_date) %>%
@@ -865,6 +865,30 @@ gc()
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = LAB_TEST_CONCEPT_NAME, values_from = c(LAB_RESULTS, TEST_UNIT))
 
   cohort <- left_join(cohort, fcal)
+
+
+
+
+
+  # FECAL URGENCY ANSWERED WITHIN t DAYS ----
+  #if multiple entries on one day take most severe
+
+
+fecal_urgency <- data$observations %>%
+  filter(DATA_SOURCE == "ECRF_SPARC") %>%
+  filter(OBS_TEST_CONCEPT_NAME == "Fecal Urgency") %>%
+  left_join(cohort_index_info) %>%
+  mutate(int = (index_date - t) %--% (index_date + t)) %>%
+  filter(OBS_TEST_RESULT_DATE %within% int) %>%
+  mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
+  arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(DESCRIPTIVE_SYMP_TEST_RESULTS, c("Severe. sometimes I am unable to make it to the bathroom in time", "Moderately severe. I need to get to the bathroom in less than 2 minutes", "Moderate. I need to get to the bathroom within 2-5 minutes", "Mild. I need to get to the bathroom within 5-15 minutes", "None. I can wait 15 minutes or longer to have bowel movement", "Not applicable, I have an ostomy"))) %>%
+  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, index_date) %>%
+  slice(which.min(abs(diff))) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = c(DESCRIPTIVE_SYMP_TEST_RESULTS))
+
+  cohort <- left_join(cohort, fecal_urgency)
+
 
 
   # SCORES ----
