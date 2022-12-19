@@ -105,93 +105,6 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
     ) %>%
     rename(MEDICATION = med)
 
-  # Number of Dose Changes in eCRF ----
-
-  dose_ecrf <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    mutate(DOSE_OF_MEDICATION = readr::parse_number(DOSE_OF_MEDICATION)) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, DOSE_OF_MEDICATION, MED_START_DATE, MED_END_DATE) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    arrange(MED_START_DATE, .by_group = TRUE) %>%
-    mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-    pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name),
-      names_from = c,
-      values_from = c(DOSE_OF_MEDICATION),
-      names_prefix = "DOSE_"
-    ) %>%
-    drop_na(DOSE_2) %>%
-    rowwise() %>%
-    mutate(
-      NEW_DOSE_1 = ifelse(is.na(DOSE_1), DOSE_2, DOSE_1),
-      DOSE_2 = ifelse(is.na(DOSE_1), as.numeric(NA), DOSE_2)
-    ) %>%
-    select(-DOSE_1) %>%
-    rename(DOSE_1 = NEW_DOSE_1) %>%
-    mutate(NUMBER_OF_DOSE_CHANGES = sum(!is.na(c_across(DOSE_2:DOSE_6)), na.rm = T)) %>%
-    ungroup() %>%
-    mutate(DATA_SOURCE = gsub("_SPARC", "", DATA_SOURCE)) %>%
-    pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name),
-      names_from = DATA_SOURCE,
-      values_from = c(NUMBER_OF_DOSE_CHANGES),
-      names_prefix = "NUMBER_OF_DOSE_CHANGES_"
-    ) %>%
-    rename(MEDICATION = new_med_name)
-
-  # Frequency Change in eCRF ----
-
-  freq_ecrf <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    mutate(
-      MEDICATION_FREQUENCE = toupper(MEDICATION_FREQUENCE),
-      FREQUENCY_IN_DAYS = toupper(FREQUENCY_IN_DAYS)
-    ) %>%
-    mutate(MEDICATION_FREQUENCE = paste0(MEDICATION_FREQUENCE, "; ", FREQUENCY_IN_DAYS)) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, MEDICATION_FREQUENCE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-    pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name),
-      names_from = c,
-      values_from = c(MEDICATION_FREQUENCE),
-      names_prefix = "FREQ_"
-    ) %>%
-    drop_na(FREQ_2) %>%
-    rowwise() %>%
-    mutate(
-      NEW_FREQ_1 = ifelse(is.na(FREQ_1), FREQ_2, FREQ_1),
-      FREQ_2 = ifelse(is.na(FREQ_1), NA, FREQ_2)
-    ) %>%
-    select(-FREQ_1) %>%
-    rename(FREQ_1 = NEW_FREQ_1) %>%
-    mutate(NUMBER_OF_FREQ_CHANGES = sum(!is.na(c_across(FREQ_2:FREQ_5)), na.rm = T)) %>%
-    ungroup() %>%
-    mutate(DATA_SOURCE = gsub("_SPARC", "", DATA_SOURCE)) %>%
-    pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name),
-      names_from = DATA_SOURCE,
-      values_from = c(NUMBER_OF_FREQ_CHANGES),
-      names_prefix = "NUMBER_OF_FREQ_CHANGES_"
-    ) %>%
-    rename(MEDICATION = new_med_name)
 
 
   # Reason Stopped in eCRF ----
@@ -226,8 +139,8 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
   # Add dose, frequency and reason stopped to med_ecrf ----
 
   med_ecrf <- med_ecrf %>%
-    left_join(dose_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    left_join(freq_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+    #left_join(dose_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+    #left_join(freq_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
     left_join(stop_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
     select(-DATA_SOURCE)
 
@@ -496,6 +409,32 @@ sparc_med_starts <- function(prescriptions, demographics, observations, encounte
   med <- med %>% left_join(moa, by = "MEDICATION")
 
 
+
+  # Flags a Dose Escalation ----
+
+
+  dose_escalation <- dose_escalation(medication) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION) %>%
+    right_join(moa) %>%
+    filter(!(MOA %in% c("Aminosalicylates","Immunomodulators"))) %>%
+    distinct() %>%
+    filter(DOSE_ESCALATION == 1) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION)
+
+  med <- med %>% left_join(dose_escalation, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
+
+# Flags a Frequency Change ----
+
+  frequency_change <- frequency_change(medication) %>%
+    ungroup() %>%
+    filter(DECREASE_IN_FREQUENCY == 1) %>%
+    left_join(moa) %>%
+    filter(!(MOA %in% c("Aminosalicylates","Immunomodulators"))) %>%
+    distinct() %>%
+    filter(DECREASE_IN_FREQUENCY == 1) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DECREASE_IN_FREQUENCY)
+
+  med <- med %>% left_join(frequency_change, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
 
   # Create order of medications ----
