@@ -1,6 +1,6 @@
 ---
-title: "medication-in-SPARC"
-output: rmarkdown::github_document
+title: "Medication Data in SPARC IBD"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{medication-in-SPARC}
   %\VignetteEngine{knitr::rmarkdown}
