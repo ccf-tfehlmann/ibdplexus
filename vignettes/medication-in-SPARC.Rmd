@@ -14,6 +14,9 @@ knitr::opts_chunk$set(
   eval = FALSE
 )
 
+options(rmarkdown.html_vignette.check_title = FALSE)
+
+
 ```
 
 A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD) is a longitudinal study following adult IBD patients as they receive care at 17 different sites across the United States. To learn more about SPARC IBD and it's development please see [The Development and Initial Findings of A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD)] (<https://doi.org/10.1093/ibd/izab071>).
