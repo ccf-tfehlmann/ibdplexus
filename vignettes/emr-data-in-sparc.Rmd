@@ -1,0 +1,19 @@
+---
+title: "emr-data-in-sparc"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{emr-data-in-sparc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ibdplexus )
+```
