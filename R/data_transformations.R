@@ -199,7 +199,7 @@ extract_labs <- function(labs, test){
       filter(LAB_TEST_CONCEPT_NAME == "HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)")
   } else {
     result <- labs %>%
-      filter(LAB_TEST_CONCEPT_NAME %in% c("FECAL CALPROTECTIN (30-1800 ÂµG/G)", "FECAL CALPROTECTIN (10-600 ÂµG/G)"))
+      filter(grepl("FECAL CALPROTECTIN", LAB_TEST_CONCEPT_NAME))
   }
 
   result <- result %>%
