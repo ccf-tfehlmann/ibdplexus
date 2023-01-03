@@ -87,7 +87,7 @@ remove_outliers <- function(x, na.rm = TRUE, ...) {
 #'
 #' filters prescription tables for medications of interest
 #'
-#' @param sf scripts data frame to filter through
+#' @param df scripts data frame to filter through
 #' @param med_name list of medication names to search for
 #' @param med_string column of medication to search through
 #'
