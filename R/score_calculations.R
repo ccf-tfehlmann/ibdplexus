@@ -2,7 +2,7 @@
 
 #' calculate_ses
 #'
-#' Calculates SES-CD score from SPARC data
+#' Calculates SES-CD score from SPARC data. If two subscores are available for the same location on the same date, then the max score is chosen.
 #'
 #' @param procedures procedures table usually uploaded using load_data
 #'
@@ -12,6 +12,7 @@
 #'
 calculate_ses <- function(procedures) {
   ses <- procedures %>%
+    filter(DEIDENTIFIED_MASTER_PATIENT_ID == "27158555") %>%
     rename(SES.CD_Subscore = `SES-CD_Subscore`) %>%
     filter(!is.na(SES.CD_Subscore)) %>%
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
@@ -23,7 +24,8 @@ calculate_ses <- function(procedures) {
     pivot_wider(
       id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "PROC_START_DATE"),
       names_from = LOCATION,
-      values_from = SES.CD_Subscore
+      values_from = SES.CD_Subscore,
+      values_fn = ~max(.x)
     ) %>%
     mutate(SES_Score = `Ileum` + `Left colon` + Rectum + `Right colon` + `Transverse colon`) %>%
     drop_na(SES_Score) %>%

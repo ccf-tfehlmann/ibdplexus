@@ -13,5 +13,5 @@ calculate_ses(procedures)
 A dataframe with all ses scores that could be calculated regardless of IBD diagnosis.
 }
 \description{
-Calculates SES-CD score from SPARC data
+Calculates SES-CD score from SPARC data. If two subscores are available for the same location on the same date, then the max score is chosen.
 }
