@@ -29,7 +29,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
 
   cohorts <- lapply(paste0(datadir, list_names), function(x) {
-    read.csv(x, header = T, nrows = 2)
+    read.csv(x, header = T, nrows = 3)
   })
 
   names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
@@ -205,7 +205,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
 
   cohorts <- lapply(list_names, function(x) {
-    read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 2)
+    read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 3)
   })
 
   names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
