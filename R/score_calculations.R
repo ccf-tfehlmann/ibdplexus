@@ -12,7 +12,6 @@
 #'
 calculate_ses <- function(procedures) {
   ses <- procedures %>%
-    filter(DEIDENTIFIED_MASTER_PATIENT_ID == "27158555") %>%
     rename(SES.CD_Subscore = `SES-CD_Subscore`) %>%
     filter(!is.na(SES.CD_Subscore)) %>%
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
