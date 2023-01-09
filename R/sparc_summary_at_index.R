@@ -906,7 +906,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
+    select(-datediff)
 
 
   cohort <- cohort %>% left_join(scdai)
@@ -925,7 +925,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
+    select(-datediff)
 
   cohort <- cohort %>% left_join(pro2)
 
@@ -942,7 +942,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
+    select(-datediff)
 
   cohort <- cohort %>% left_join(pro3)
 
@@ -960,7 +960,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
+    select(-datediff)
 
   cohort <- cohort %>% left_join(mayo)
 
@@ -979,7 +979,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
+    select(-datediff)
 
   cohort <- cohort %>% left_join(pga)
 
@@ -999,7 +999,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff) %>%
+    select(-datediff) %>%
     rename(ENDO_DATE = SCORE_DATE,
            ENDO_CATEGORY = SES_CATEGORY)
 
@@ -1019,8 +1019,8 @@ fecal_urgency <- data$observations %>%
     filter(datediff == min(abs(datediff))) %>%
     slice(1) %>%
     distinct() %>%
-    ungroup() %%
-  select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff) %>%
+    ungroup() %>%
+    select(-datediff) %>%
     rename(ENDO_DATE = SCORE_DATE,
            ENDO_CATEGORY = MES_CATGORY)
 
@@ -1101,10 +1101,6 @@ fecal_urgency <- data$observations %>%
     cohort <- left_join(cohort, omics_t)
 
 
-  cohort <- cohort %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", "NA;NA", "NA;NA;NA"), NA)))
-
   # ADD BMI FROM EMR ----
 
   bmi <- calculate_bmi(data$observations)
@@ -1117,9 +1113,11 @@ fecal_urgency <- data$observations %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, bmi, bmi_date) %>%
     ungroup()
 
-  gc()
 
   cohort <- cohort %>% left_join(bmi)
+
+
+  gc()
 
   # FORMAT COLUMNS ----
 
@@ -1167,6 +1165,7 @@ fecal_urgency <- data$observations %>%
         `DUODENAL PHENOTYPE` == "No" & `ESOPHAGEAL PHENOTYPE` == "No" & `GASTRIC PHENOTYPE` == "No" & `JEJUNAL PHENOTYPE` == "No" ~ "No"
       ),
       Perianal = case_when(
+        `PHENOTYPE - ANAL STRICTURE` == "Yes"|
         `ANAL PHENOTYPE` == "Yes" |
           `ANAL CANAL STRICTURE` == "Yes" |
           `ANAL CANAL ULCER` == "Yes" |
@@ -1176,7 +1175,8 @@ fecal_urgency <- data$observations %>%
           `PERIANAL FISTULA` == "Yes" |
           `LARGE SKIN TAGS` == "Yes" |
           `RECTOVAGINAL FISTULA` == "Yes"   ~ "Yes",
-        (`ANAL PHENOTYPE` == "No" &
+        (`PHENOTYPE - ANAL STRICTURE` == "No" &
+          `ANAL PHENOTYPE` == "No" &
           `ANAL CANAL STRICTURE` == "No" &
           `ANAL CANAL ULCER` == "No" &
           `ANAL FISSURE` == "No" &
@@ -1230,7 +1230,7 @@ fecal_urgency <- data$observations %>%
 gc()
 
   # CREATE HEADER STYLES ----
-
+#
   # blue
   style1 <- createStyle(bgFill = "#BDD7EE", textDecoration = "bold")
 
@@ -1250,8 +1250,6 @@ gc()
 
   # column headers
   conditionalFormatting(wb, "sparc_summary", cols = 1:coln, rows = 1, rule = "!=0", style = style1)
-
-
 
 
 
