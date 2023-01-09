@@ -893,11 +893,9 @@ fecal_urgency <- data$observations %>%
 
   # SCORES ----
 
-  scores <- calculate_disease_scores(data$demographics, data$diagnosis, data$procedures, data$encounter, data$observations, export = FALSE)
-
 
   #scdai
-  scdai <- scores$scdai %>%
+  scdai <- calculate_scdai(data$observations) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(SCDAI_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -908,7 +906,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$scdai)))
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
 
 
   cohort <- cohort %>% left_join(scdai)
@@ -916,7 +914,7 @@ fecal_urgency <- data$observations %>%
 
 
   #pro2
-  pro2 <- scores$pro2 %>%
+  pro2 <- calculate_pro2(data$observations) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(PRO2_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -927,14 +925,13 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$pro2)))
-
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
 
   cohort <- cohort %>% left_join(pro2)
 
   #pr03
 
-  pro3 <- scores$pro3 %>%
+  pro3 <- calculate_pro3(data$observations) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(PRO3_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -945,15 +942,14 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$pro3)))
-
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
 
   cohort <- cohort %>% left_join(pro3)
 
 
   #6pt mayo
 
-  mayo <- scores$mayo %>%
+  mayo <- calculate_mayo(data$observations) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(MAYO_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
@@ -964,8 +960,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$mayo)))
-
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
 
   cohort <- cohort %>% left_join(mayo)
 
@@ -973,7 +968,7 @@ fecal_urgency <- data$observations %>%
 
 
 
-  pga <- scores$pga %>%
+  pga <- calculate_pga(data$observations) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(PGA_DATE - index_date)) %>%
     filter(datediff <= t) %>%
@@ -984,8 +979,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$pga)))
-
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff)
 
   cohort <- cohort %>% left_join(pga)
 
@@ -994,7 +988,7 @@ fecal_urgency <- data$observations %>%
   # SES CD
 
 
-  ses <- scores$ses %>%
+  ses <- calculate_ses(data$procedures) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -1005,7 +999,7 @@ fecal_urgency <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  intersect(names(.), names(scores$ses))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff) %>%
     rename(ENDO_DATE = SCORE_DATE,
            ENDO_CATEGORY = SES_CATEGORY)
 
@@ -1015,7 +1009,7 @@ fecal_urgency <- data$observations %>%
 
   # Mayo Endocscopy Score - source: https://academic.oup.com/ecco-jcc/article/9/10/846/425061
 
-  mes  <- scores$mes %>%
+  mes  <- calculate_mes(data$procedures) %>%
     left_join(cohort_index_info) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
@@ -1025,8 +1019,8 @@ fecal_urgency <- data$observations %>%
     filter(datediff == min(abs(datediff))) %>%
     slice(1) %>%
     distinct() %>%
-    ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  intersect(names(.), names(scores$mes))) %>%
+    ungroup() %%
+  select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, -datediff) %>%
     rename(ENDO_DATE = SCORE_DATE,
            ENDO_CATEGORY = MES_CATGORY)
 
