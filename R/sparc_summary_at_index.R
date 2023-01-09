@@ -1178,17 +1178,20 @@ fecal_urgency <- data$observations %>%
           `ANAL CANAL ULCER` == "Yes" |
           `ANAL FISSURE` == "Yes" |
           `PERIANAL ABCESS` == "Yes" |
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "Yes" ~ "Yes",
-        `ANAL PHENOTYPE` == "Unknown" & `ANAL CANAL STRICTURE` == "Unknown" &
-          `ANAL CANAL ULCER` == "Unknown" &
-          `ANAL FISSURE` == "Unknown" &
-          `PERIANAL ABCESS` == "Unknown" &
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "Unknown" ~ "Unknown",
-        `ANAL PHENOTYPE` == "No" & `ANAL CANAL STRICTURE` == "No" &
+          `PERIANAL FISTULA - COMPLEX FISTULA` == "Yes"|
+          `PERIANAL FISTULA` == "Yes" |
+          `LARGE SKIN TAGS` == "Yes" |
+          `RECTOVAGINAL FISTULA` == "Yes"   ~ "Yes",
+        (`ANAL PHENOTYPE` == "No" &
+          `ANAL CANAL STRICTURE` == "No" &
           `ANAL CANAL ULCER` == "No" &
           `ANAL FISSURE` == "No" &
           `PERIANAL ABCESS` == "No" &
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "No" ~ "No"
+          `PERIANAL FISTULA - COMPLEX FISTULA` == "No"&
+          `LARGE SKIN TAGS` == "No" &
+          `RECTOVAGINAL FISTULA` == "No" ) |
+          `PERIANAL FISTULA` == "No" ~ "No",
+        TRUE ~ "Unknown"
       ),
       PHENOTYPE_Data = "Yes"
     ) %>%
