@@ -164,5 +164,9 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     drop_na(new_med_name) %>%
     select(-drug) %>%
     distinct() %>%
-    full_join(no_med_enroll)
+    full_join(no_med_enroll) %>%
+    mutate(
+      MED_START_DATE = dmy(MED_START_DATE),
+      MED_END_DATE = dmy(MED_END_DATE)
+    )
 }
