@@ -44,67 +44,19 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups )
 
+  # Find medication start date ----
 
-  # ECRF DATA ----
+  med_start <- sparc_med_starts(medication, encounter)
 
-  # Find Start Date in eCRF Data ----
 
-  start_ecrf <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    drop_na(MED_START_DATE) %>%
-    pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
-    slice(which.min(date)) %>%
-    pivot_wider(names_from = type, values_from = date) %>%
-    ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, MED_START_DATE) %>%
-    rename(med = new_med_name)
+  # Find medication end/discontinuation date ----
 
-  # Find End Date in eCRF Data ----
-  end_ecrf <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE, match(type, c("MED_END_DATE", "MED_START_DATE"))) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
-    slice(which.max(date)) %>%
-    pivot_wider(names_from = type, values_from = date) %>%
-    ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, MED_START_DATE, MED_END_DATE, CURRENT_MEDICATION) %>%
-    rename(MED_START_DATE_2 = MED_START_DATE) %>%
-    rename(med = new_med_name)
+  med_end <- sparc_med_ends(medication, encounter)
 
-  # Combine start and stop for eCRF ----
-  med_ecrf <- full_join(start_ecrf, end_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DATA_SOURCE", "med")) %>%
-    mutate(CURRENT_MEDICATION = case_when(
-      is.na(MED_END_DATE) ~ "YES",
-      !is.na(MED_END_DATE) ~ "NO",
-      TRUE ~ CURRENT_MEDICATION
-    )) %>%
-    select(-MED_START_DATE_2) %>%
-    mutate(DATA_SOURCE = gsub("_SPARC", "", DATA_SOURCE)) %>%
-    pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med),
-      names_from = DATA_SOURCE,
-      values_from = c(MED_START_DATE, MED_END_DATE, CURRENT_MEDICATION)
-    ) %>%
-    rename(MEDICATION = med)
+  # Combine start & stop date START HERE ----
 
+  med <- full_join(med_start, med_end, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+    filter(MED_END_DATE < MED_START_DATE)
 
 
   # Reason Stopped in eCRF ----
@@ -145,77 +97,6 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     select(-DATA_SOURCE)
 
 
-
-  # EMR Data ----
-
-
-  # Find Start Date in EMR Data ----
-
-  start_emr <- medication %>%
-    left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
-    mutate(VISIT_ENCOUNTER_MED_START = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", 1, 0),
-           MED_START_DATE = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
-    filter(DATA_SOURCE == "EMR") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(drop = case_when(
-      (!is.na(MED_END_DATE) & !is.na(MED_START_DATE)) & MED_END_DATE < MED_START_DATE ~ 1,
-      TRUE ~ 0
-    )) %>%
-    filter(drop == 0) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
-    drop_na(date) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE, match(type, c("MED_START_DATE", "MED_END_DATE")), date) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
-    slice(which.min(date)) %>%
-    pivot_wider(names_from = type, values_from = date) %>%
-    ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, MED_START_DATE,VISIT_ENCOUNTER_MED_START) %>%
-    rename(med = new_med_name)
-
-  # Find End Date in EMR Data ----
-  end_emr <- medication %>%
-    left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
-    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE) & DATA_SOURCE == "EMR", MED_DISCONT_START_DATE, MED_END_DATE)) %>%
-    filter(DATA_SOURCE == "EMR") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(drop = case_when(
-      (!is.na(MED_END_DATE) & !is.na(MED_START_DATE)) & MED_END_DATE < MED_START_DATE ~ 1,
-      TRUE ~ 0
-    )) %>%
-    filter(drop == 0) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
-    drop_na(date) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE, match(type, c("MED_END_DATE", "MED_START_DATE"))) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
-    slice(which.max(date)) %>%
-    pivot_wider(names_from = type, values_from = date) %>%
-    ungroup() %>%
-    drop_na(MED_END_DATE) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, MED_END_DATE) %>%
-    rename(med = new_med_name)
-
-  # Combine start and stop for EMR ----
-  med_emr <- full_join(start_emr, end_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DATA_SOURCE", "med")) %>%
-     pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, med,VISIT_ENCOUNTER_MED_START),
-      names_from = DATA_SOURCE,
-      values_from = c(MED_START_DATE, MED_END_DATE)
-    ) %>%
-    rename(MEDICATION = med)
 
   # Loading Dose Pattern in EMR ----
   # does prescription pattern in EMR follow the loading dose of the biologic
