@@ -17,7 +17,6 @@
 #'   particular medication, the earliest start date is chosen. If the visit
 #'   encounter start date is used for EMR and eCRF data is available, then the
 #'   eCRF data source is used.
-#' @export
 #'
 sparc_med_starts <- function(medication, encounter) {
 
@@ -81,7 +80,8 @@ sparc_med_starts <- function(medication, encounter) {
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, VISIT_ENCOUNTER_MED_START, MED_START_DATE_EMR, MED_START_DATE_ECRF) %>%
     rowwise() %>%
     mutate(MED_START_DATE = case_when((VISIT_ENCOUNTER_MED_START == 0 | is.na(VISIT_ENCOUNTER_MED_START)) ~ min(c_across(MED_START_DATE_EMR:MED_START_DATE_ECRF), na.rm = T),
-                                      VISIT_ENCOUNTER_MED_START == 1 & !is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_ECRF)) %>%
+                                      VISIT_ENCOUNTER_MED_START == 1 & !is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_ECRF,
+                                      VISIT_ENCOUNTER_MED_START == 1 & is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_EMR)) %>%
     ungroup()
 
 

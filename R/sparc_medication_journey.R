@@ -51,42 +51,36 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Find medication end/discontinuation date ----
 
-  med_end <- sparc_med_ends(medication, encounter)
+  med_end <- sparc_med_ends(medication)
 
-  # Combine start & stop date START HERE ----
+  # Combine start & stop date ----
 
   med <- full_join(med_start, med_end, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    filter(MED_END_DATE < MED_START_DATE)
+    mutate(MED_START_SOURCE = case_when(MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE != MED_START_DATE_EMR ~ "ECRF",
+                                        MED_START_DATE != MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "EMR",
+                                        MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "BOTH",
+                                        MED_START_DATE == MED_START_DATE_ECRF & is.na(MED_START_DATE_EMR) ~ "ECRF",
+                                        MED_START_DATE == MED_START_DATE_EMR & is.na(MED_START_DATE_ECRF) ~ "EMR",
+                                        TRUE  ~ NA_character_),
+           MED_END_SOURCE =  case_when(MED_END_DATE == MED_END_DATE_ECRF & (MED_END_DATE != MED_END_DATE_EMR & MED_END_DATE != MED_DISCONT_START_DATE_EMR) ~ "ECRF",
+                                       MED_END_DATE != MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "EMR",
+                                       MED_END_DATE == MED_END_DATE_ECRF  & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "BOTH",
+                                       MED_END_DATE == MED_END_DATE_ECRF & (is.na(MED_END_DATE_EMR) & is.na(MED_DISCONT_START_DATE_EMR))~ "ECRF",
+                                       (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) & is.na(MED_END_DATE_ECRF) ~ "EMR",
+                                       TRUE  ~ NA_character_))
 
 
-  # Reason Stopped in eCRF ----
+  # Add if medication is current ----
 
-  stop_ecrf <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    mutate(REASON_STOPPED = toupper(REASON_STOPPED)) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, REASON_STOPPED) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-    pivot_wider(
-      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name),
-      names_from = c,
-      values_from = c(REASON_STOPPED),
-      names_prefix = "STOP_"
-    ) %>%
-    rowwise() %>%
-    unite(col = "REASON_STOPPED_ECRF", starts_with("STOP"), na.rm = T, sep = "; ") %>%
-    rename(MEDICATION = new_med_name) %>%
-    mutate(across(-"DEIDENTIFIED_MASTER_PATIENT_ID", ~ ifelse(. == "", NA, as.character(.))))
+  current <- current_med(medication)
 
+  med <- med  %>% left_join(current, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_ECRF"))
+
+  # Reason Stopped in Smartform or eCRF ----
+
+  stop_crf <- reason_stopped(prescriptions)
+
+  med <- med %>% left_join(stop_crf,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
   # Add dose, frequency and reason stopped to med_ecrf ----
 
@@ -187,88 +181,6 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   med_emr <- med_emr %>%
     left_join(first_use_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_EMR"))
 
-  # Number of prescriptions ----
-
-  pres_emr <- medication %>%
-    filter(DATA_SOURCE == "EMR") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(drop = case_when(
-      (!is.na(MED_END_DATE) & !is.na(MED_START_DATE)) & MED_END_DATE < MED_START_DATE ~ 1,
-      TRUE ~ 0
-    )) %>%
-    filter(drop == 0) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    rename(MEDICATION = new_med_name) %>%
-    distinct() %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION) %>%
-    summarise(PRESCRIPTION_NUMBER_EMR = n())
-
-
-  med_emr <- med_emr %>%
-    left_join(pres_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
-
-  # Number of refils at most recent prescription ----
-
-  refills_emr <- medication %>%
-    filter(DATA_SOURCE == "EMR") %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    ) %>%
-    mutate(drop = case_when(
-      (!is.na(MED_END_DATE) & !is.na(MED_START_DATE)) & MED_END_DATE < MED_START_DATE ~ 1,
-      TRUE ~ 0
-    )) %>%
-    filter(drop == 0) %>%
-    mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
-    ) %>%
-    pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
-    drop_na(date) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE, match(type, c("MED_END_DATE", "MED_START_DATE"))) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
-    slice(which.max(date)) %>%
-    pivot_wider(names_from = type, values_from = date) %>%
-    ungroup() %>%
-    drop_na(MED_END_DATE) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_END_DATE, MEDICATION_REFILLS) %>%
-    rename(
-      MEDICATION = new_med_name,
-      MED_END_DATE_EMR = MED_END_DATE,
-      MEDICATION_REFILLS_EMR = MEDICATION_REFILLS
-    )
-
-
-  med_emr <- med_emr %>%
-    left_join(refills_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_END_DATE_EMR"))
-
-  # Combine eCRF and EMR data ----
-
-  # Use start date from eCRF otherwise use EMR data
-
-  med <- full_join(med_ecrf, med_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    mutate(ECRF_DATA = case_when(!is.na(MED_START_DATE_ECRF) | !is.na(MED_END_DATE_ECRF) ~ 1, TRUE ~ 0)) %>%
-    mutate(
-      MED_START_DATE = MED_START_DATE_ECRF,
-      MED_END_DATE = MED_END_DATE_ECRF
-    ) %>%
-    mutate(
-      MED_START_DATE = case_when(
-        ECRF_DATA == 0 & is.na(MED_START_DATE) & is.na(MED_END_DATE) ~ MED_START_DATE_EMR,
-        TRUE ~ MED_START_DATE
-      ),
-      MED_END_DATE = case_when(
-        ECRF_DATA == 0 & is.na(MED_END_DATE)  ~ MED_END_DATE_EMR,
-        TRUE ~ MED_END_DATE
-      )
-    )
 
 
   # Create Mode of Action ----

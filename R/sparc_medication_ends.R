@@ -20,8 +20,6 @@
 #'
 #'
 #'
-#' @export
-#'
 sparc_med_ends <- function(medication){
 
   # ECRF DATA ----
