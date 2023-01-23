@@ -34,12 +34,13 @@ extract_endoscopy <- function(procedures) {
 #'
 #'
 #' @param encounter A dataframe with encounter data.
+#' @param datasource the data source(s) of interest in a character string. Default is c("SF_SPARC", "ECRF_SPARC").
 #'
 #' @return A dataframe with  date and type of most recent encounter.
 #' @export
-extract_latest <- function(encounter) {
+extract_latest <- function(encounter, datasource = c("SF_SPARC", "ECRF_SPARC")) {
   latest <- encounter %>%
-    filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC")) %>%
+    filter(DATA_SOURCE %in% datasource) %>%
     filter(grepl("Smartform|Survey", TYPE_OF_ENCOUNTER, ignore.case = T)) %>%
     mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(DATA_SOURCE), desc(VISIT_ENCOUNTER_START_DATE)) %>%
