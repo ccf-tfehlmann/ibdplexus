@@ -60,6 +60,12 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       dplyr::mutate(keep = ifelse(DATA_SOURCE == "SF_SPARC" & is.na(DIAG_STATUS_CONCEPT_NAME), 0, 1)) %>% # Smartform Data should have a DIAG_STATUS_CONCEPT_NAME equal to yes
       filter(keep == 1) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(DATA_SOURCE, c("SF_SPARC", "ECRF_SPARC")), desc(dmy(VISIT_ENCOUNTER_START_DATE))) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE,VISIT_ENCOUNTER_START_DATE) %>%
+      mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
+      ungroup() %>%
+      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
+                  names_from = c,
+                  values_from = DIAGNOSIS) %>%
       slice(1) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS) %>%
       ungroup()
