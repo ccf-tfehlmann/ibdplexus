@@ -74,7 +74,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   current <- current_med(medication)
 
-  med <- med  %>% left_join(current, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_ECRF"))
+  med <- med  %>% left_join(current, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+    mutate(CURRENT_MEDICATION = ifelse(is.na(MED_END_DATE), "YES", CURRENT_MEDICATION))
 
   # Reason Stopped in Smartform or eCRF ----
 
