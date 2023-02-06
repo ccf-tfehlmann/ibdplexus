@@ -8,7 +8,6 @@
 #'
 #' @return A dataframe with the reason stopped
 #'
-#' @export
 #'
 
 reason_stopped <- function(prescriptions){
@@ -49,7 +48,6 @@ reason_stopped <- function(prescriptions){
 #'
 #' @return A dataframe with all current medications in eCRF (excludes not current)
 #'
-#' @export
 #'
 
 current_med <- function(medication){
@@ -67,8 +65,7 @@ current_med <- function(medication){
     slice(which.max(date)) %>%
     pivot_wider(names_from = type, values_from = date) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,MED_START_DATE,  CURRENT_MEDICATION) %>%
-    rename(MEDICATION = new_med_name,
-           MED_START_DATE_ECRF = MED_START_DATE)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,CURRENT_MEDICATION) %>%
+    rename(MEDICATION = new_med_name)
 
 }
