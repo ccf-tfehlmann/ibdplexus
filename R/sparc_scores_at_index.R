@@ -21,11 +21,12 @@ sparc_scores <- function(data,
            index_range = "30",
            location_logic = "CCF") {
 
-    if (class(index_info) == "character") {
-      index_info <- toupper(index_info)
-    } else {
-      index_info <- index_info
-    }
+  if ("character" %in% class(index_info)) {
+    index_info <- toupper(index_info)
+  } else {
+    index_info <- index_info
+  }
+
 
   # CONSENT INFORMATION ----
 
