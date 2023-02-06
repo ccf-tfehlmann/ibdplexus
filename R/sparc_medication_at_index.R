@@ -27,7 +27,7 @@ sparc_medication <- function(data,
 
   # Get all medication start dates ----
 
-  med <- sparc_med_starts(data$prescriptions, data$demographics, data$observations, data$encounter,med_groups, export = FALSE)
+  med <- sparc_med_journey(data$prescriptions, data$demographics, data$observations, data$encounter,med_groups, export = FALSE)
 
 
   # CONSENT INFORMATION ----
