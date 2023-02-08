@@ -51,23 +51,72 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
   study <- toupper(study)
 
   if (study == "SPARC") {
-    dx <- diagnosis %>%
-      filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC")) %>%
+    dx_sf <- diagnosis %>%
+      filter(DATA_SOURCE %in% c("SF_SPARC")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
       left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
       dplyr::mutate(keep = ifelse(DATA_SOURCE == "SF_SPARC" & is.na(DIAG_STATUS_CONCEPT_NAME), 0, 1)) %>% # Smartform Data should have a DIAG_STATUS_CONCEPT_NAME equal to yes
       filter(keep == 1) %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, match(DATA_SOURCE, c("SF_SPARC", "ECRF_SPARC")), desc(dmy(VISIT_ENCOUNTER_START_DATE))) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE,VISIT_ENCOUNTER_START_DATE) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE,DATA_SOURCE, DIAGNOSIS) %>%
+      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>%
       mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
       ungroup() %>%
       pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
                   names_from = c,
-                  values_from = DIAGNOSIS) %>%
-      slice(1) %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS) %>%
+                  values_from = DIAGNOSIS)
+
+    dx_ecrf <-  diagnosis %>%
+      filter(DATA_SOURCE %in% c( "ECRF_SPARC")) %>%
+      filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
+      left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE,DATA_SOURCE, DIAGNOSIS, DIAGNOSIS_DATE) %>%
+      arrange(DEIDENTIFIED_MASTER_PATIENT_ID,  desc(VISIT_ENCOUNTER_START_DATE)) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
+      filter(case_when(!is.na(DIAGNOSIS_DATE) ~ dmy(DIAGNOSIS_DATE) == max(dmy(DIAGNOSIS_DATE)), TRUE ~ is.na(DIAGNOSIS_DATE))) %>%
+      mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
+      ungroup() %>%
+      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
+                  names_from = c,
+                  values_from = DIAGNOSIS)
+
+
+    dx <- full_join(dx_sf, dx_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_START_DATE")) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) #%>%
+      #rowwise() %>%
+      #mutate(`Crohn's Disease` = sum(c_across(contains("SPARC")) == "Crohn's Disease", na.rm = T),
+      #       `Ulcerative Colitis` = sum(c_across(contains("SPARC")) == "Ulcerative Colitis", na.rm = T),
+      #       `IBD Unclassified` = sum(c_across(contains("SPARC")) == "IBD Unclassified", na.rm = T))
+
+    #START HERE ----
+    # n <- grep("Crohn's Disease|Ulcerative Colitis|IBD Unclassified", names(dx))
+    # dx$DIAGNOSIS <- names(dx)[n][max.col(dx[n], 'last')*NA^(rowSums(dx[n])==0)]
+
+    if("SF_SPARC_2" %in% colnames(dx))
+    {
+      dx <- dx %>%
+        mutate(DIAGNOSIS = case_when(SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_1 == ECRF_SPARC_1 ~ SF_SPARC_1,
+                                     SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_2 == ECRF_SPARC_1 ~ SF_SPARC_2,
+                                     SF_SPARC_1 == SF_SPARC_2 ~ SF_SPARC_1,
+                                     !is.na(SF_SPARC_1) & is.na(SF_SPARC_2) ~ SF_SPARC_1,
+                                     TRUE ~ as.character(NA))) %>%
+        mutate(DIAGNOSIS = ifelse(is.na(DIAGNOSIS), ECRF_SPARC_1, DIAGNOSIS))
+    } else
+    {
+      dx <- dx %>%  mutate(DIAGNOSIS = ifelse(is.na(SF_SPARC_1), ECRF_SPARC_1, SF_SPARC_1))
+    }
+
+
+     dx <- dx %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS) %>%
       ungroup()
 
 
