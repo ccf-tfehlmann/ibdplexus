@@ -161,6 +161,10 @@ if("observations" %in% names(data)){
     mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
     mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
 
+  if("encounter" %in% names(data)){
+    data$encounter <- data$encounter %>%
+      mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
+             VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
 
   rm(list = c("files", "folderinfo"))
 
@@ -337,6 +341,12 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
       mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
       mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
       mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
+
+  if("encounter" %in% names(data)){
+    data$encounter <- data$encounter %>%
+      mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
+             VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
+
 
   return(data)
 }
