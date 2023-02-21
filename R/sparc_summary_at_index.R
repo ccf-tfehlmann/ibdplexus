@@ -394,7 +394,7 @@ sparc_summary <- function(data,
     filter(PROC_CONCEPT_NAME %in% c("IBD Surgeries")) %>%
     left_join(data$encounter) %>%
     drop_na(PHYSICIAN_NOTES_PROC_AVAIL) %>%
-    mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
     left_join(cohort_index_info) %>%
@@ -456,7 +456,7 @@ sparc_summary <- function(data,
     filter(PROC_CONCEPT_NAME %in% c("Esophageal Surgery", "Gastroduodenal Surgery")) %>%
     left_join(data$encounter) %>%
     drop_na(PHYSICIAN_NOTES_PROC_AVAIL) %>%
-    mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
     right_join(cohort_index_info) %>%
@@ -634,7 +634,7 @@ sparc_summary <- function(data,
     left_join(data$encounter) %>%
     filter(!is.na(PHYSICIAN_NOTES_PROC_AVAIL) | !is.na(PROC_STATUS_CONCEPT_NAME)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME) %>%
-    mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     select(-DIAGNOSIS) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
@@ -666,7 +666,7 @@ sparc_summary <- function(data,
     filter(DIAG_CONCEPT_NAME %in% c("Physiological Short Gut Syndrome")) %>%
     left_join(data$encounter) %>%
     filter(!is.na(DIAG_STATUS_CONCEPT_NAME)) %>%
-    mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     select(-DIAGNOSIS_DATE) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
@@ -802,7 +802,7 @@ gc()
     filter(DATA_SOURCE == "SF_SPARC") %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME, MEDICATION_ADMINISTRATED) %>%
     left_join(data$encounter %>% filter(DATA_SOURCE == "SF_SPARC") %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
-    mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     left_join(cohort_index_info) %>%
     drop_na(index_date) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE - index_date)) %>%
