@@ -111,3 +111,17 @@ med_search <- function(df, med_name, med_string) {
   k <- bind_rows(k) %>% distinct()
 }
 
+#' folder_fix
+#'
+#' add "/" to end of folder name for functions
+#'
+#' @param folder The folder specified for the function
+#'
+#' @return the folder name in the correct format
+folder_fix <- function(folder) {
+  folder <- if (endsWith(folder, "/")) {
+    folder
+  } else {
+    paste0(folder, "/")
+  }
+}

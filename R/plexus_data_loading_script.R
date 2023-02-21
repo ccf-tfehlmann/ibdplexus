@@ -6,7 +6,7 @@
 #'
 #' Load unzipped DDM txt or csv files.If multiple cohorts are unzipped in one directory from different times, only the most recent one will load.
 #'
-#' @param datadir The directory where data is saved.Need the backslash at the end of the file location.
+#' @param datadir The directory where data is saved.
 #' @param cohort The cohort to load. Either RISK, QORUS, or SPARC.
 #' @param domains The domains to load. Default is "ALL". Must be a character string. Other valid values are patterns matching input file names common examples are:  "demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions".
 #' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
@@ -18,6 +18,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
+  datadir = folder_fix(datadir)
 
   # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 
@@ -180,7 +181,7 @@ if("observations" %in% names(data)){
 #'
 #' Load compressed files extracted from IBD Plexus.
 #'
-#' @param datadir The directory where data is saved.Need the backslash at the end of the file location.
+#' @param datadir The directory where data is saved.
 #' @param cohort The cohort to load. Either RISK, QORUS, or SPARC.
 #' @param domains The domains to load. Default is "All". Must be a character string.
 #' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
@@ -193,6 +194,8 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
+  datadir = folder_fix(datadir)
+
 
   # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 

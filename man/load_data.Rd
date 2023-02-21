@@ -12,7 +12,7 @@ load_data(
 )
 }
 \arguments{
-\item{datadir}{The directory where data is saved.Need the backslash at the end of the file location.}
+\item{datadir}{The directory where data is saved.}
 
 \item{cohort}{The cohort to load. Either RISK, QORUS, or SPARC.}
 
