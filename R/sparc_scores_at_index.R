@@ -211,7 +211,7 @@ if ("AZ" %in% location_logic) {
   location <- calculate_location_az(data$observations, data$encounter, window = t) %>%
     left_join(cohort) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
-    mutate(diff = abs(dmy(VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
+    mutate(diff = abs((VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(diff)) %>%
     ungroup() %>%
@@ -538,7 +538,7 @@ if ("AZ" %in% location_logic) {
     left_join(data$encounter) %>%
     left_join(cohort) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, ostomy, index_date, diff)
@@ -557,7 +557,7 @@ if ("AZ" %in% location_logic) {
     left_join(data$encounter) %>%
     left_join(cohort) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     drop_na(ostomy) %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
