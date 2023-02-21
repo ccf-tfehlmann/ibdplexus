@@ -85,11 +85,11 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Add dose, frequency and reason stopped to med_ecrf ----
 
-  med_ecrf <- med_ecrf %>%
-    #left_join(dose_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    #left_join(freq_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    left_join(stop_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    select(-DATA_SOURCE)
+  # med_ecrf <- med_ecrf %>%
+  #   #left_join(dose_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+  #   #left_join(freq_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+  #   left_join(stop_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+  #   select(-DATA_SOURCE)
 
 
 
