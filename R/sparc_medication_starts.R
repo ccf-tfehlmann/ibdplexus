@@ -50,7 +50,7 @@ sparc_med_starts <- function(medication, encounter) {
   start_emr <- medication %>%
     left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
     mutate(VISIT_ENCOUNTER_MED_START = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", 1, 0),
-           MED_START_DATE = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", dmy(VISIT_ENCOUNTER_START_DATE), MED_START_DATE)) %>%
+           MED_START_DATE = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", (VISIT_ENCOUNTER_START_DATE), MED_START_DATE)) %>%
     filter(DATA_SOURCE == "EMR") %>%
       mutate(drop = case_when(
       (!is.na(MED_END_DATE) & !is.na(MED_START_DATE)) & MED_END_DATE < MED_START_DATE ~ 1,

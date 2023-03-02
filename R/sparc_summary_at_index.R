@@ -394,7 +394,7 @@ sparc_summary <- function(data,
     filter(PROC_CONCEPT_NAME %in% c("IBD Surgeries")) %>%
     left_join(data$encounter) %>%
     drop_na(PHYSICIAN_NOTES_PROC_AVAIL) %>%
-    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
     left_join(cohort_index_info) %>%
@@ -456,7 +456,7 @@ sparc_summary <- function(data,
     filter(PROC_CONCEPT_NAME %in% c("Esophageal Surgery", "Gastroduodenal Surgery")) %>%
     left_join(data$encounter) %>%
     drop_na(PHYSICIAN_NOTES_PROC_AVAIL) %>%
-    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
     mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
     right_join(cohort_index_info) %>%
@@ -484,7 +484,7 @@ sparc_summary <- function(data,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
     left_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, PROC_CONCEPT_NAME) %>%
@@ -515,7 +515,7 @@ sparc_summary <- function(data,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
     left_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, PROC_CONCEPT_NAME) %>%
@@ -541,7 +541,7 @@ sparc_summary <- function(data,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
     left_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, PROC_CONCEPT_NAME) %>%
@@ -575,7 +575,7 @@ sparc_summary <- function(data,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
     ) %>%
     left_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, PROC_CONCEPT_NAME) %>%
@@ -608,7 +608,7 @@ sparc_summary <- function(data,
       TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
     )) %>%
     left_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
@@ -634,7 +634,7 @@ sparc_summary <- function(data,
     left_join(data$encounter) %>%
     filter(!is.na(PHYSICIAN_NOTES_PROC_AVAIL) | !is.na(PROC_STATUS_CONCEPT_NAME)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME) %>%
-    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
     select(-DIAGNOSIS) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
@@ -666,7 +666,7 @@ sparc_summary <- function(data,
     filter(DIAG_CONCEPT_NAME %in% c("Physiological Short Gut Syndrome")) %>%
     left_join(data$encounter) %>%
     filter(!is.na(DIAG_STATUS_CONCEPT_NAME)) %>%
-    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
     select(-DIAGNOSIS_DATE) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
@@ -706,7 +706,7 @@ sparc_summary <- function(data,
     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, CURRENT_SMOKER) %>%
     left_join(data$encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_ID")) %>%
     left_join(cohort, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
-    mutate(diff = (dmy(VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
+    mutate(diff = ((VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID,  index_date) %>%
     slice(which.min(abs(diff))) %>%
@@ -745,7 +745,7 @@ sparc_summary <- function(data,
     filter(DIAG_CONCEPT_NAME %in% eim_codes$EIM_DX | SRC_DIAG_CONCEPT_CODE %in% eim_codes$DIAG_CONCEPT_CODE | DIAG_CONCEPT_CODE %in% eim_codes$DIAG_CONCEPT_CODE) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_CODE, DIAG_CONCEPT_NAME, DIAG_STATUS_CONCEPT_NAME, VISIT_ENCOUNTER_START_DATE, SRC_DIAG_CONCEPT_CODE) %>%
     left_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, index_date) %>%
@@ -779,7 +779,7 @@ sparc_summary <- function(data,
     left_join(data$encounter) %>%
     select(-DIAGNOSIS_DATE) %>%
     right_join(cohort_index_info) %>%
-    mutate(diff = dmy(VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, desc(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_NAME, index_date) %>%
@@ -802,7 +802,7 @@ gc()
     filter(DATA_SOURCE == "SF_SPARC") %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME, MEDICATION_ADMINISTRATED) %>%
     left_join(data$encounter %>% filter(DATA_SOURCE == "SF_SPARC") %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
-    #mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
     left_join(cohort_index_info) %>%
     drop_na(index_date) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE - index_date)) %>%
