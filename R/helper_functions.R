@@ -30,20 +30,21 @@ remove_empty_cols <- function(df) {
 
 #' to_wide
 #'
-#' Function to reshape table into a wide format. From rancho.
+#' Function to reshape table into a wide format.
 #'
 #' @param df dataframe
 #' @param y.var column names to be transposed
 #' @param value.var values to be transposed
 #'
 #' @return transposed data
-to_wide <- function(df, y.var, value.var) {
+to_wide <- function(df, y.var, value.var){
   x.vars <- c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")
   x.var <- names(df)[names(df) %in% x.vars]
-  if (y.var == value.var) {
-    df %>% select(x.var, y.var)
-  } else {
-    d <- reshape2::dcast(df, paste0(paste(x.var, collapse = " + "), "~", y.var), value.var = value.var, fun.aggregate = function(x) paste(unique(x), collapse = "; "))
+  all.var <- c(x.var, y.var)
+  if(y.var == value.var) {df %>% select(all_of(all.var))}else{
+
+    d <- pivot_wider(df, id_cols = all_of(x.var), names_from = all_of(y.var),
+                     values_from = all_of(value.var),  values_fn = ~paste0(.x, collapse = "; "))
   }
 }
 
