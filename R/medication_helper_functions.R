@@ -69,3 +69,70 @@ current_med <- function(medication){
     rename(MEDICATION = new_med_name)
 
 }
+
+
+#' risk_medication_at_visit
+#'
+#' create table with column for RISK patients that lists the medications they were on at a visit
+#'
+#'
+#' @param data RISK data loaded using the ibdplexus::load_data function
+#'
+#' @return A dataframe of RISK patients with a column MEDICATIONS_AT_VISIT, deidentified patient and encounter ID's, and date columns
+#' @export
+#'
+#'
+
+risk_meds_at_visit <- function(data){
+
+  names_req = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE",
+                "MED_ID", "VISIT_ENCOUNTER_ID", "VISIT_ENCOUNTER_START_DATE", "MEDICATION_NAME",
+                "DRUG_CODE", "DRUG_CODE_SYS_NM",
+                "MED_START_DATE", "MED_END_DATE", "TYPE_OF_ENCOUNTER")
+
+  meds <- data$prescriptions %>%
+    filter(DATA_SOURCE == "RISK") %>%
+    left_join(dat$encounter) %>%
+    mutate(MED_START_DATE = dmy(MED_START_DATE),
+           MED_END_DATE = dmy(MED_END_DATE)) %>%
+    # if medication has been administered but no start date, assume start date is visit encounter date
+    mutate(MED_START_DATE = ifelse(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes",
+                                   VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
+    select(all_of(names_req)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(med_start = MED_START_DATE,
+           med_end = MED_END_DATE) %>%
+    # encounter_date = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, VISIT_ENCOUNTER_ID) %>%
+    slice(which.max(med_start)) %>%
+    ungroup() %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    pivot_wider(id_cols = "DEIDENTIFIED_MASTER_PATIENT_ID", names_from = "TYPE_OF_ENCOUNTER",
+                values_from = "MEDICATION_NAME",  values_fn = ~paste0(.x, collapse = "; ")) %>%
+    pivot_longer(cols = -"DEIDENTIFIED_MASTER_PATIENT_ID", names_to = "TYPE_OF_ENCOUNTER", values_to = "MEDICATIONS_AT_VISIT") %>%
+    right_join(data$encounter) %>%
+    ungroup() %>%
+    filter(DATA_SOURCE == "RISK") %>% filter(
+      TYPE_OF_ENCOUNTER  %in%  c("Enrollment Visit",
+                                 "6-Month Follow-up Visit",
+                                 "12-Month Follow-up Visit",
+                                 "18-Month Follow-up Visit",
+                                 "24-Month Follow-up Visit",
+                                 "30-Month Follow-up Visit",
+                                 "36-Month Follow-up Visit",
+                                 "42-Month Follow-up Visit",
+                                 "48-Month Follow-up Visit",
+                                 "54-Month Follow-up Visit",
+                                 "60-Month Follow-up Visit",
+                                 "66-Month Follow-up Visit",
+                                 "72-Month Follow-up Visit",
+                                 "78-Month Follow-up Visit",
+                                 "84-Month Follow-up Visit",
+                                 "90-Month Follow-up Visit",
+                                 "96-Month Follow-up Visit")) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE,
+           VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER, MEDICATIONS_AT_VISIT, VISIT_ENCOUNTER_START_DATE,
+           VISIT_ENCOUNTER_END_DATE)
+}
+
