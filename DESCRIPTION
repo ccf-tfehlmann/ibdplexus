@@ -11,7 +11,7 @@ LazyData: true
 Depends: 
     R (>= 3.50)
 Imports:
-    tidyverse,
+    stringr,
     lubridate,
     dplyr,
     magrittr,
