@@ -76,7 +76,7 @@ current_med <- function(medication){
 #' create table with column for RISK patients that lists the medications they were on at a visit
 #'
 #'
-#' @param data RISK data loaded using the ibdplexus::load_data function
+#' @param data RISK data loaded using the ibdplexus::load_data function with all domains
 #'
 #' @return A dataframe of RISK patients with a column MEDICATIONS_AT_VISIT, deidentified patient and encounter ID's, and date columns
 #' @export
@@ -92,7 +92,8 @@ risk_meds_at_visit <- function(data){
 
   meds <- data$prescriptions %>%
     filter(DATA_SOURCE == "RISK") %>%
-    left_join(dat$encounter) %>%
+    left_join(dat$encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE, VISIT_ENCOUNTER_ID,
+                                         ADMISSION_TYPE, SOURCE_OF_ADMISSION)) %>%
     mutate(MED_START_DATE = dmy(MED_START_DATE),
            MED_END_DATE = dmy(MED_END_DATE)) %>%
     # if medication has been administered but no start date, assume start date is visit encounter date
@@ -111,7 +112,7 @@ risk_meds_at_visit <- function(data){
     pivot_wider(id_cols = "DEIDENTIFIED_MASTER_PATIENT_ID", names_from = "TYPE_OF_ENCOUNTER",
                 values_from = "MEDICATION_NAME",  values_fn = ~paste0(.x, collapse = "; ")) %>%
     pivot_longer(cols = -"DEIDENTIFIED_MASTER_PATIENT_ID", names_to = "TYPE_OF_ENCOUNTER", values_to = "MEDICATIONS_AT_VISIT") %>%
-    right_join(data$encounter) %>%
+    right_join(data$encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, TYPE_OF_ENCOUNTER)) %>%
     ungroup() %>%
     filter(DATA_SOURCE == "RISK") %>% filter(
       TYPE_OF_ENCOUNTER  %in%  c("Enrollment Visit",
