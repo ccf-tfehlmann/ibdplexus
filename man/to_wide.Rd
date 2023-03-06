@@ -17,5 +17,5 @@ to_wide(df, y.var, value.var)
 transposed data
 }
 \description{
-Function to reshape table into a wide format. From rancho.
+Function to reshape table into a wide format.
 }

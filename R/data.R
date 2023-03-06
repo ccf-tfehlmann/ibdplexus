@@ -26,12 +26,6 @@
 "eim_codes"
 
 
-#' header
-#'
-#' A dataframe containing the column names in order for the Risk Summary Table.
-#'
-#' @format A data frame with 202 rows and 1 variables:
-"header"
 
 
 
