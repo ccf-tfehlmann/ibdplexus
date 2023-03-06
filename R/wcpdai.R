@@ -12,8 +12,11 @@
 #' @examples
 #' # upload data
 #' # dat <- load_data(dir, cohort = "RISK", domains = c("ALL"), data_type = "BOTH")
+#' # observations <- dat$observations
+#' # encounter <- dat$encounter
+#' # labs <- dat$labs
 #' # get dataframe with wpcdai
-#' # wpcdai <- wpcdai(dat)
+#' # wpcdai <- wpcdai(observations, encounter, labs)
 #'
 #'
 

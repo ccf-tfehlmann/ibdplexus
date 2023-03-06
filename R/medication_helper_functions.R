@@ -76,23 +76,24 @@ current_med <- function(medication){
 #' create table with column for RISK patients that lists the medications they were on at a visit
 #'
 #'
-#' @param data RISK data loaded using the ibdplexus::load_data function with all domains
+#' @param prescriptions A dataframe with prescriptions data usually generated using load_data.
+#' @param encounter A dataframe with encounter data usually generated using load_data.
 #'
 #' @return A dataframe of RISK patients with a column MEDICATIONS_AT_VISIT, deidentified patient and encounter ID's, and date columns
 #' @export
 #'
 #'
 
-risk_meds_at_visit <- function(data){
+risk_meds_at_visit <- function(prescriptions, encounter){
 
   names_req = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE",
                 "MED_ID", "VISIT_ENCOUNTER_ID", "VISIT_ENCOUNTER_START_DATE", "MEDICATION_NAME",
                 "DRUG_CODE", "DRUG_CODE_SYS_NM",
                 "MED_START_DATE", "MED_END_DATE", "TYPE_OF_ENCOUNTER")
 
-  meds <- data$prescriptions %>%
+  meds <- prescriptions %>%
     filter(DATA_SOURCE == "RISK") %>%
-    left_join(dat$encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE, VISIT_ENCOUNTER_ID,
+    left_join(encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE, VISIT_ENCOUNTER_ID,
                                          ADMISSION_TYPE, SOURCE_OF_ADMISSION)) %>%
     mutate(MED_START_DATE = dmy(MED_START_DATE),
            MED_END_DATE = dmy(MED_END_DATE)) %>%
@@ -112,7 +113,7 @@ risk_meds_at_visit <- function(data){
     pivot_wider(id_cols = "DEIDENTIFIED_MASTER_PATIENT_ID", names_from = "TYPE_OF_ENCOUNTER",
                 values_from = "MEDICATION_NAME",  values_fn = ~paste0(.x, collapse = "; ")) %>%
     pivot_longer(cols = -"DEIDENTIFIED_MASTER_PATIENT_ID", names_to = "TYPE_OF_ENCOUNTER", values_to = "MEDICATIONS_AT_VISIT") %>%
-    right_join(data$encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, TYPE_OF_ENCOUNTER)) %>%
+    right_join(encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, TYPE_OF_ENCOUNTER)) %>%
     ungroup() %>%
     filter(DATA_SOURCE == "RISK") %>% filter(
       TYPE_OF_ENCOUNTER  %in%  c("Enrollment Visit",

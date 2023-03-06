@@ -31,8 +31,10 @@ risk_summary <- function(dir,
   names <- header
   names <- names[,,1]
 
-  # save data for wpcdai calculation
+  # save data for wpcdai calculation and meds_at_visit calculation
   wpcdai_dat <- data
+  prescriptions_med <- data$prescriptions
+  encounter_med <- data$encounter
 
   #rename list elements of data
 
@@ -57,7 +59,7 @@ risk_summary <- function(dir,
   data$procedures <- data$procedures %>% filter(DATA_SOURCE == "RISK")
 
   # CLB: Create medications at visit table
-  meds <- risk_meds_at_visit(data)
+  meds <- risk_meds_at_visit(prescriptions = prescriptions_med, encounter = encounter_med)
 
   #Filter diagnosis for patient's medical conditions (excluding leading question), extra-intestinal manifestations leading question (combining enrollment and follow-up), diagnosis date for IBD diseases at enrollment, and valid status concept name for Ankylising Spondlitis
   data$diagnosis$DIAG_CONCEPT_NAME[data$diagnosis$DIAG_CONCEPT_NAME %in% "Extra-Intestinal Manifestations Follow-up"] <- "Extra-Intestinal Manifestations"
