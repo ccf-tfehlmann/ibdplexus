@@ -65,9 +65,16 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     filter(OBS_TEST_CONCEPT_NAME %in% c("In the last 90 days, have you had any changes in your Medication(s)?")) %>%
     left_join(consent, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
     # filter(DESCRIPTIVE_SYMP_TEST_RESULTS == "No") %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, DESCRIPTIVE_SYMP_TEST_RESULTS)
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
+           VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID)
 
   ecrf_med_encounters <- ecrf_med_encounters %>%
+    ungroup() %>%
+    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
+           VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID) %>%
     full_join(med_changes, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_ID")) %>%
     mutate(nochange = case_when(
       DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & medication_survey_n != 1 ~ "No Change",
@@ -104,6 +111,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
   }
 
   ecrf_med_encounters <- bind_rows(ecrf_med_encounters) %>%
+    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.character(DEIDENTIFIED_MASTER_PATIENT_ID), VISIT_ENCOUNTER_ID = as.character(VISIT_ENCOUNTER_ID)) %>%
     left_join(observations, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_ID")) %>%
     mutate(med_survey_to_pull_forward = ifelse(DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & medication_survey_n == 1, as.numeric(NA), med_survey_to_pull_forward))
 
