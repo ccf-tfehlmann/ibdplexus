@@ -21,11 +21,14 @@ risk_summary <- function(dir,
                          # header,
                          # data from load_data() ibdplexus function
                          data,
-                         select.col = c("DIAG_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "LAB_TEST_CONCEPT_NAME", "ASSAY NAME", "MEDICATION_NAME", "OBS_TEST_CONCEPT_NAME", "ANA_SITE_CONCEPT_NAME", "SRC_BIOSAMPLE_CONCEPT_NAME"),
-                         select.val  = c("DIAG_STATUS_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "TEST_RESULT_NUMERIC", "RAW DATA FILE NAME", "MED_START_DATE", "TEST_RESULT_NUMERIC", "TEST_RESULT_NUMERIC", "SAMPLE_STATUS"),
-                         filter.col  = c("DIAG_CONCEPT_NAME", "OBS_TEST_CONCEPT_NAME"),
-                         filter.val  = c( "Disease Location", "Endoscopic Assessment - Deep Ulceration", "Endoscopic Assessment - Superficial Ulceration", "Endoscopic Assessment - Amount of Surface Ulcerated", "Endoscopic Assessment - Amount of Surface Involved", "Perianal Disease -", "EIM", "Disease Behavior - Stricturing/Fibrostenotic", "Disease Behavior - Internally Pentrating", "PCDAI"),
                          filename    = "RISK_Summary.xlsx"){
+
+  # create values for to_wide function
+  select.col = c("DIAG_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "LAB_TEST_CONCEPT_NAME", "ASSAY NAME", "MEDICATION_NAME", "OBS_TEST_CONCEPT_NAME", "ANA_SITE_CONCEPT_NAME", "SRC_BIOSAMPLE_CONCEPT_NAME")
+  select.val  = c("DIAG_STATUS_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "TEST_RESULT_NUMERIC", "RAW DATA FILE NAME", "MED_START_DATE", "TEST_RESULT_NUMERIC", "TEST_RESULT_NUMERIC", "SAMPLE_STATUS")
+  filter.col  = c("DIAG_CONCEPT_NAME", "OBS_TEST_CONCEPT_NAME")
+  filter.val  = c( "Disease Location", "Endoscopic Assessment - Deep Ulceration", "Endoscopic Assessment - Superficial Ulceration", "Endoscopic Assessment - Amount of Surface Ulcerated", "Endoscopic Assessment - Amount of Surface Involved", "Perianal Disease -", "EIM", "Disease Behavior - Stricturing/Fibrostenotic", "Disease Behavior - Internally Pentrating", "PCDAI")
+
 
   #Read dictionary
   names <- header
