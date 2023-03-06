@@ -55,7 +55,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
 
   ecrf_med_encounters <- encounter %>%
     filter(TYPE_OF_ENCOUNTER == "IBD Medication Survey") %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, dmy(VISIT_ENCOUNTER_START_DATE)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, (VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(medication_survey_n = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     mutate(helper = paste0(DEIDENTIFIED_MASTER_PATIENT_ID, medication_survey_n))
