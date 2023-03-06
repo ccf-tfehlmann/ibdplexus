@@ -137,3 +137,31 @@ risk_meds_at_visit <- function(data){
            VISIT_ENCOUNTER_END_DATE)
 }
 
+
+#' med_search
+#'
+#' filters prescription tables for medications of interest
+#'
+#' @param df scripts data frame to filter through
+#' @param med_name list of medication names to search for
+#' @param med_string column of medication to search through
+#'
+#' @return filtered data frame with medications of interest
+#'
+
+med_search <- function(df, med_name, med_string) {
+
+  k = NULL
+
+  for (i in 1:length(med_name)) {
+    k[[i]] <- df %>%
+      filter(grepl(med_name[i], med_string, ignore.case = T)) %>%
+      mutate(drug = paste0(med_name[i]))
+  }
+
+  names(k) <- med_name
+
+  k <- k[sapply(k, nrow) > 0]
+
+  k <- bind_rows(k) %>% distinct()
+}
