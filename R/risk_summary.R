@@ -28,7 +28,7 @@ risk_summary <- function(dir,
                          filename    = "RISK_Summary.xlsx"){
 
   #Read dictionary
-  names <- ibdplexus:::header
+  names <- header
   names <- names[,,1]
 
   # save data for wpcdai calculation
@@ -227,21 +227,6 @@ risk_summary <- function(dir,
   wide$observations1 <- wide$observations1 %>%
     select(!`NA`)
 
-  # add space between omics data in same row
-  # CLB : replace ";" with "; " in to_wide function, run merge
-  #
-  # wide$omics_patient <- wide$omics_patient %>%
-  #   mutate(`IMMUNOCHIP HIGH-DENSITY ARRAY` = gsub(";", "; ", `IMMUNOCHIP HIGH-DENSITY ARRAY`)) %>%
-  #   mutate(`RNASEQ` = gsub(";", "; ", `RNASEQ`)) %>%
-  #   mutate(`GENOTYPING (GLOBAL SCREENING ARRAY)` = gsub(";", "; ", `GENOTYPING (GLOBAL SCREENING ARRAY)`)) %>%
-  #   mutate(`DNA METHYLATION` = gsub(";", "; ", `DNA METHYLATION`)) %>%
-  #   mutate(`RNASEQ (PAIRED-END 150-BP READS)` = gsub(";", "; ", `RNASEQ (PAIRED-END 150-BP READS)`)) %>%
-  #   mutate(`16S` = gsub(";", "; ", `16S`)) %>%
-  #   mutate(`WHOLE SHOTGUN SEQUENCING (WGS)` = gsub(";", "; ", `WHOLE SHOTGUN SEQUENCING (WGS)`)) %>%
-  #   mutate(`RNASEQ (SINGLE-END 50-BP READS)` = gsub(";", "; ", `RNASEQ (SINGLE-END 50-BP READS)`)) %>%
-  #   mutate(`ITS2 SEQUENCING` = gsub(";", "; ", `ITS2 SEQUENCING`)) %>%
-  #   mutate(`VIRAL METAGENOMICS SEQUENCING (VIROME)` = gsub(";", "; ", `VIRAL METAGENOMICS SEQUENCING (VIROME)`))
-
   #Join all tables together
 
   visit <- Reduce(left_join, wide)
@@ -267,13 +252,15 @@ risk_summary <- function(dir,
   visit <- visit %>% mutate(DIAGNOSIS = paste0(visit$`CROHN'S DISEASE`, visit$`ULCERATIVE COLITIS`, visit$`IBD UNCLASSIFIED`, visit$`NOT IBD`))
   visit[,c("CROHN'S DISEASE", "ULCERATIVE COLITIS", "IBD UNCLASSIFIED", "NOT IBD")] <- list(NULL)
 
-  ## WPCDAI score calculation
-  # calls wpcdai function
-  wpcdai_calc <- wpcdai(wpcdai_dat) %>% select(starts_with("PCDAI"), "DEIDENTIFIED_MASTER_PATIENT_ID",
-                                               "VISIT_ENCOUNTER_ID", "WPCDAI")
+  ## WPCDAI score calculation ----
+  # pull dataframes necessary for wpcdai function
+  obs <- wpcdai_dat$observations
+  enc <- wpcdai_dat$encounter
+  lab <- wpcdai_dat$labs
 
-  # get names from wpcdai function to remove those columns from original visit data
-  names_wpcdai <- names(wpcdai_calc)
+  # calls wpcdai function
+  wpcdai_calc <- wpcdai(observations = obs, encounter = enc, labs = lab) %>% select(starts_with("PCDAI"), "DEIDENTIFIED_MASTER_PATIENT_ID",
+                                               "VISIT_ENCOUNTER_ID", "WPCDAI")
 
   # wont join with all of the pcdai columns
   visit <- visit %>% select(!starts_with("PCDAI"))
