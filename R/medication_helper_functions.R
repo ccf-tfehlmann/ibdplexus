@@ -71,7 +71,7 @@ current_med <- function(medication){
 }
 
 
-#' risk_medication_at_visit
+#' risk_meds_at_visit
 #'
 #' create table with column for RISK patients that lists the medications they were on at a visit
 #'
