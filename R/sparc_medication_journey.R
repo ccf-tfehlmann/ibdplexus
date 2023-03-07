@@ -83,13 +83,6 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   med <- med %>% left_join(stop_crf,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
-  # Add dose, frequency and reason stopped to med_ecrf ----
-
-  # med_ecrf <- med_ecrf %>%
-  #   #left_join(dose_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-  #   #left_join(freq_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-  #   left_join(stop_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-  #   select(-DATA_SOURCE)
 
 
 
@@ -101,14 +94,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     filter(DATA_SOURCE == "EMR") %>%
     filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
     left_join(encounter) %>%
-    mutate(
-      MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE),
-      VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)
-    ) %>%
-    filter(year(MED_START_DATE) > 1900) %>%
+     filter(year(MED_START_DATE) > 1900) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_START_DATE) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, new_med_name, ROUTE_OF_MEDICATION, MEDICATION_DOMAIN, MED_START_DATE,
       MED_END_DATE, DOSE_OF_MEDICATION, CURRENT_MEDICATION, OTHER_MEDICATION, UNIT_OF_MEASURE_FOR_MEDICATION, MEDICATION_FREQUENCE,
@@ -118,6 +105,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
       GENERIC_MEDICINE_FLAG, SUBSTITUTE_MED_INDICATION_FLAG, PLACE_OF_SERVICE, MEDICATION_REFILLS
     ) %>%
     distinct() %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     mutate(weeks_between_med = difftime(MED_START_DATE, lag(MED_START_DATE), units = "weeks")) %>%
     mutate(dose = ifelse(is.na(DOSE_OF_MEDICATION), MEDICATION_STRENGTH, DOSE_OF_MEDICATION)) %>%
     mutate(route = ifelse(is.na(ROUTE_OF_MEDICATION), MED_FORM, ROUTE_OF_MEDICATION)) %>%
@@ -179,7 +167,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     mutate(LOADING_DOSE_EMR = 1) %>%
     select(-first_use_emr)
 
-  med_emr <- med_emr %>%
+  med <- med %>%
     left_join(first_use_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_EMR"))
 
 
