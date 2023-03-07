@@ -224,7 +224,7 @@ if ("AZ" %in% location_logic) {
   location <- data$observations %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
+    #group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     right_join(cohort) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
@@ -233,6 +233,7 @@ if ("AZ" %in% location_logic) {
     # filter(keep == "keep") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
     slice(which.min(abs(diff))) %>%
+      ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     mutate(Phenotype = case_when(
       DESCRIPTIVE_SYMP_TEST_RESULTS == "Yes" ~ "Yes",
@@ -281,7 +282,7 @@ if ("AZ" %in% location_logic) {
   # PERIANAL INVOLVEMENT ----
 
 
-  perianal <- data$observations %>%
+perianal <- data$observations %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% c(
       "Perianal Abcess",
@@ -293,7 +294,6 @@ if ("AZ" %in% location_logic) {
       "Anal Fissure",
       "Large Skin Tags"
     )) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     right_join(cohort) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
