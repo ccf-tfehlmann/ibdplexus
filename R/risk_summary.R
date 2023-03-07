@@ -21,18 +21,23 @@ risk_summary <- function(dir,
                          # header,
                          # data from load_data() ibdplexus function
                          data,
-                         select.col = c("DIAG_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "LAB_TEST_CONCEPT_NAME", "ASSAY NAME", "MEDICATION_NAME", "OBS_TEST_CONCEPT_NAME", "ANA_SITE_CONCEPT_NAME", "SRC_BIOSAMPLE_CONCEPT_NAME"),
-                         select.val  = c("DIAG_STATUS_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "TEST_RESULT_NUMERIC", "RAW DATA FILE NAME", "MED_START_DATE", "TEST_RESULT_NUMERIC", "TEST_RESULT_NUMERIC", "SAMPLE_STATUS"),
-                         filter.col  = c("DIAG_CONCEPT_NAME", "OBS_TEST_CONCEPT_NAME"),
-                         filter.val  = c( "Disease Location", "Endoscopic Assessment - Deep Ulceration", "Endoscopic Assessment - Superficial Ulceration", "Endoscopic Assessment - Amount of Surface Ulcerated", "Endoscopic Assessment - Amount of Surface Involved", "Perianal Disease -", "EIM", "Disease Behavior - Stricturing/Fibrostenotic", "Disease Behavior - Internally Pentrating", "PCDAI"),
                          filename    = "RISK_Summary.xlsx"){
 
+  # create values for to_wide function
+  select.col = c("DIAG_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "LAB_TEST_CONCEPT_NAME", "ASSAY NAME", "MEDICATION_NAME", "OBS_TEST_CONCEPT_NAME", "ANA_SITE_CONCEPT_NAME", "SRC_BIOSAMPLE_CONCEPT_NAME")
+  select.val  = c("DIAG_STATUS_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "TEST_RESULT_NUMERIC", "RAW DATA FILE NAME", "MED_START_DATE", "TEST_RESULT_NUMERIC", "TEST_RESULT_NUMERIC", "SAMPLE_STATUS")
+  filter.col  = c("DIAG_CONCEPT_NAME", "OBS_TEST_CONCEPT_NAME")
+  filter.val  = c( "Disease Location", "Endoscopic Assessment - Deep Ulceration", "Endoscopic Assessment - Superficial Ulceration", "Endoscopic Assessment - Amount of Surface Ulcerated", "Endoscopic Assessment - Amount of Surface Involved", "Perianal Disease -", "EIM", "Disease Behavior - Stricturing/Fibrostenotic", "Disease Behavior - Internally Pentrating", "PCDAI")
+
+
   #Read dictionary
-  names <- ibdplexus:::header
+  names <- header
   names <- names[,,1]
 
-  # save data for wpcdai calculation
+  # save data for wpcdai calculation and meds_at_visit calculation
   wpcdai_dat <- data
+  prescriptions_med <- data$prescriptions
+  encounter_med <- data$encounter
 
   #rename list elements of data
 
@@ -57,7 +62,7 @@ risk_summary <- function(dir,
   data$procedures <- data$procedures %>% filter(DATA_SOURCE == "RISK")
 
   # CLB: Create medications at visit table
-  meds <- risk_meds_at_visit(data)
+  meds <- risk_meds_at_visit(prescriptions = prescriptions_med, encounter = encounter_med)
 
   #Filter diagnosis for patient's medical conditions (excluding leading question), extra-intestinal manifestations leading question (combining enrollment and follow-up), diagnosis date for IBD diseases at enrollment, and valid status concept name for Ankylising Spondlitis
   data$diagnosis$DIAG_CONCEPT_NAME[data$diagnosis$DIAG_CONCEPT_NAME %in% "Extra-Intestinal Manifestations Follow-up"] <- "Extra-Intestinal Manifestations"
@@ -227,21 +232,6 @@ risk_summary <- function(dir,
   wide$observations1 <- wide$observations1 %>%
     select(!`NA`)
 
-  # add space between omics data in same row
-  # CLB : replace ";" with "; " in to_wide function, run merge
-  #
-  # wide$omics_patient <- wide$omics_patient %>%
-  #   mutate(`IMMUNOCHIP HIGH-DENSITY ARRAY` = gsub(";", "; ", `IMMUNOCHIP HIGH-DENSITY ARRAY`)) %>%
-  #   mutate(`RNASEQ` = gsub(";", "; ", `RNASEQ`)) %>%
-  #   mutate(`GENOTYPING (GLOBAL SCREENING ARRAY)` = gsub(";", "; ", `GENOTYPING (GLOBAL SCREENING ARRAY)`)) %>%
-  #   mutate(`DNA METHYLATION` = gsub(";", "; ", `DNA METHYLATION`)) %>%
-  #   mutate(`RNASEQ (PAIRED-END 150-BP READS)` = gsub(";", "; ", `RNASEQ (PAIRED-END 150-BP READS)`)) %>%
-  #   mutate(`16S` = gsub(";", "; ", `16S`)) %>%
-  #   mutate(`WHOLE SHOTGUN SEQUENCING (WGS)` = gsub(";", "; ", `WHOLE SHOTGUN SEQUENCING (WGS)`)) %>%
-  #   mutate(`RNASEQ (SINGLE-END 50-BP READS)` = gsub(";", "; ", `RNASEQ (SINGLE-END 50-BP READS)`)) %>%
-  #   mutate(`ITS2 SEQUENCING` = gsub(";", "; ", `ITS2 SEQUENCING`)) %>%
-  #   mutate(`VIRAL METAGENOMICS SEQUENCING (VIROME)` = gsub(";", "; ", `VIRAL METAGENOMICS SEQUENCING (VIROME)`))
-
   #Join all tables together
 
   visit <- Reduce(left_join, wide)
@@ -267,13 +257,15 @@ risk_summary <- function(dir,
   visit <- visit %>% mutate(DIAGNOSIS = paste0(visit$`CROHN'S DISEASE`, visit$`ULCERATIVE COLITIS`, visit$`IBD UNCLASSIFIED`, visit$`NOT IBD`))
   visit[,c("CROHN'S DISEASE", "ULCERATIVE COLITIS", "IBD UNCLASSIFIED", "NOT IBD")] <- list(NULL)
 
-  ## WPCDAI score calculation
-  # calls wpcdai function
-  wpcdai_calc <- wpcdai(wpcdai_dat) %>% select(starts_with("PCDAI"), "DEIDENTIFIED_MASTER_PATIENT_ID",
-                                               "VISIT_ENCOUNTER_ID", "WPCDAI")
+  ## WPCDAI score calculation ----
+  # pull dataframes necessary for wpcdai function
+  obs <- wpcdai_dat$observations
+  enc <- wpcdai_dat$encounter
+  lab <- wpcdai_dat$labs
 
-  # get names from wpcdai function to remove those columns from original visit data
-  names_wpcdai <- names(wpcdai_calc)
+  # calls wpcdai function
+  wpcdai_calc <- wpcdai(observations = obs, encounter = enc, labs = lab) %>% select(starts_with("PCDAI"), "DEIDENTIFIED_MASTER_PATIENT_ID",
+                                               "VISIT_ENCOUNTER_ID", "WPCDAI")
 
   # wont join with all of the pcdai columns
   visit <- visit %>% select(!starts_with("PCDAI"))
