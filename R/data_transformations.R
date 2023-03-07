@@ -51,7 +51,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
   study <- toupper(study)
 
   if (study == "SPARC") {
-    dx_sf <- diagnosis %>%
+   dx_sf <- diagnosis %>%
       filter(DATA_SOURCE %in% c("SF_SPARC")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
       left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
@@ -69,11 +69,10 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
                   names_from = c,
                   values_from = DIAGNOSIS)
 
-    dx_ecrf <-  diagnosis %>%
+   dx_ecrf <-  diagnosis %>%
       filter(DATA_SOURCE %in% c( "ECRF_SPARC")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
-      left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      left_join(encounter %>% filter(DATA_SOURCE %in% c( "ECRF_SPARC")), by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
       mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE,DATA_SOURCE, DIAGNOSIS, DIAGNOSIS_DATE) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID,  desc(VISIT_ENCOUNTER_START_DATE)) %>%
@@ -88,7 +87,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
                   values_from = DIAGNOSIS)
 
 
-    dx <- full_join(dx_sf, dx_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_START_DATE")) %>%
+  dx <- full_join(dx_sf, dx_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_START_DATE")) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) #%>%
       #rowwise() %>%
@@ -103,6 +102,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
     if("SF_SPARC_2" %in% colnames(dx))
     {
       dx <- dx %>%
+                    ungroup() %>%
         mutate(DIAGNOSIS = case_when(SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_1 == ECRF_SPARC_1 ~ SF_SPARC_1,
                                      SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_2 == ECRF_SPARC_1 ~ SF_SPARC_2,
                                      SF_SPARC_1 == SF_SPARC_2 ~ SF_SPARC_1,
@@ -111,7 +111,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
         mutate(DIAGNOSIS = ifelse(is.na(DIAGNOSIS), ECRF_SPARC_1, DIAGNOSIS))
     } else
     {
-      dx <- dx %>%  mutate(DIAGNOSIS = ifelse(is.na(SF_SPARC_1), ECRF_SPARC_1, SF_SPARC_1))
+      dx <- dx %>%  ungroup() %>% mutate(DIAGNOSIS = ifelse(is.na(SF_SPARC_1), ECRF_SPARC_1, SF_SPARC_1))
     }
 
 
