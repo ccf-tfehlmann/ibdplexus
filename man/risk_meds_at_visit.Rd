@@ -2,12 +2,14 @@
 % Please edit documentation in R/medication_helper_functions.R
 \name{risk_meds_at_visit}
 \alias{risk_meds_at_visit}
-\title{risk_medication_at_visit}
+\title{risk_meds_at_visit}
 \usage{
-risk_meds_at_visit(data)
+risk_meds_at_visit(prescriptions, encounter)
 }
 \arguments{
-\item{data}{RISK data loaded using the ibdplexus::load_data function with all domains}
+\item{prescriptions}{A dataframe with prescriptions data usually generated using load_data.}
+
+\item{encounter}{A dataframe with encounter data usually generated using load_data.}
 }
 \value{
 A dataframe of RISK patients with a column MEDICATIONS_AT_VISIT, deidentified patient and encounter ID's, and date columns
