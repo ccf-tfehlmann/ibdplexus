@@ -209,7 +209,6 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   frequency_change <- frequency_change(medication) %>%
     ungroup() %>%
-    filter(DECREASE_IN_FREQUENCY == 1) %>%
     left_join(moa) %>%
     filter(!(MOA %in% c("Aminosalicylates","Immunomodulators"))) %>%
     distinct() %>%
@@ -235,7 +234,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(med_rank, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
 
-  # Flag if medications overlap START HERE ----
+  # Flag if medications overlap  ----
   last_encounter_date <- extract_latest(encounter) %>% pull("index_date") %>% max(na.rm = TRUE)
 
   overlap <- med %>%
@@ -248,7 +247,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     # ungroup()
     mutate(lag_overlap = case_when(int_overlaps(int, lag(int)) ~ lag(MOA)),
            lead_overlap = case_when(int_overlaps(int, lead(int)) ~ lead(MOA)),
-           lag_overlap_days = day(as.period(intersect(int, lag(int)), "days")),
+           lag_overlap_days = day(as.period(intersect(int, lag(int)), "days")), # check this ----
            lead_overlap_days = day(as.period(intersect(int, lead(int)), "days")),
 
     ) %>%
@@ -312,8 +311,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     rename(BIOLOGIC = b)
 
   med <- med %>%
-    left_join(bionaive)%>%
-    rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
+    left_join(bionaive) #%>%
+    #rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
 
 
   if (export == "TRUE") {
