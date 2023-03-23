@@ -346,6 +346,12 @@ risk_summary <- function(dir,
   #change column order
   data.table::setcolorder(visit, names)
 
+  # drop patients if no DIAGNOSIS at Enrollment
+  visit <- visit %>%
+    mutate(flag = ifelse(TYPE_OF_ENCOUNTER == "Enrollment Visit" & DIAGNOSIS == "", 1, 0)) %>%
+    filter(flag != 1) %>%
+    select(-flag)
+
   # arrange by DEIDENTIFIED_MASTER_PATIENT_ID
   visit <- visit %>% mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
