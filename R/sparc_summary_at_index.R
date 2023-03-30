@@ -20,6 +20,7 @@ sparc_summary <- function(data,
                           index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
                           filename = "SPARC_SUMMARY.xlsx",
                           index_range = "30") {
+
   if ("character" %in% class(index_info)) {
     index_info <- toupper(index_info)
   } else {
@@ -66,6 +67,9 @@ sparc_summary <- function(data,
       filter(DATA_SOURCE == "EMR") %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       mutate(EMR_AVAILABLE = 1)
+
+    table <- table %>% left_join(emr)
+
   }
 
 
@@ -76,6 +80,8 @@ sparc_summary <- function(data,
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(SMARTFORM_AVAILABLE = 1)
 
+  table <- table %>% left_join(smartform)
+
 
   # eCRF
 
@@ -85,6 +91,8 @@ sparc_summary <- function(data,
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, TYPE_OF_ENCOUNTER) %>%
     mutate(c = 1) %>%
     pivot_wider(names_from = TYPE_OF_ENCOUNTER, values_from = c)
+
+  table <- table %>% left_join(ecrf)
 
 
   # biosamples
@@ -229,7 +237,6 @@ sparc_summary <- function(data,
       "Unknown"
     ))) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
@@ -266,6 +273,7 @@ sparc_summary <- function(data,
     filter(keep == "keep") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
+    ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS)
 
 
@@ -338,10 +346,11 @@ sparc_summary <- function(data,
     right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
-    # mutate(keep = case_when(diff <= t ~ "keep")) %>%
-    # filter(keep == "keep") %>%
+     mutate(keep = case_when(diff <= t ~ "keep")) %>%
+     filter(keep == "keep") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
     slice(which.min(abs(diff))) %>%
+    ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
        pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     ungroup()
@@ -405,6 +414,7 @@ sparc_summary <- function(data,
     arrange(match(`Number of IBD Surgeries`, c("greater than 5", "5", "4", "3", "2", "1", "0"))) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
+    ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Number of IBD Surgeries`)
 
   cohort <- left_join(cohort, surg)
@@ -423,6 +433,7 @@ sparc_summary <- function(data,
     mutate(`Year of Most Recent IBD Surgery` = as.numeric(PROC_END_DATE), `Year of First IBD Surgery` = as.numeric(PROC_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.min(`Year of First IBD Surgery`)) %>%
+    ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Year of First IBD Surgery`)
 
   cohort <- left_join(cohort, surg_first)
@@ -439,6 +450,7 @@ sparc_summary <- function(data,
     mutate(`Year of Most Recent IBD Surgery` = as.numeric(PROC_END_DATE), `Year of First IBD Surgery` = as.numeric(PROC_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(`Year of Most Recent IBD Surgery`)) %>%
+    ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Year of Most Recent IBD Surgery`)
 
 
@@ -678,7 +690,7 @@ sparc_summary <- function(data,
 
   cohort <- left_join(cohort, shortgut)
 
-
+# Start here with Cass ----
 
   # SMOKING STATUS ----
 
