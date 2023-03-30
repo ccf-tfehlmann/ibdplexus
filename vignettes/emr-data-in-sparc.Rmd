@@ -26,7 +26,11 @@ This vignette details the functions built into the ibdplexus package to help nav
 
 ```{r setup}
 library(ibdplexus, quietly = T)
-library(tidyverse, quietly = T)
+library(tidyr, quietly = T)
+library(dplyr, quietly = T)
+library(lubridate, quietly = T)
+
+
 ```
 
 # Calculating BMI

@@ -38,7 +38,9 @@ A future iteration will parse out biosimilars into their own group.
 ```{r eval = TRUE, warning = FALSE, message = FALSE}
 
 library(ibdplexus, quietly = T)
-library(tidyverse, quietly = T)
+library(tidyr, quietly = T)
+library(dplyr, quietly = T)
+library(lubridate, quietly = T)
 
 # Here is the table of the medication types in med_grp
 knitr::kable(med_grp %>% distinct(med_type)) 

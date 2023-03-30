@@ -1,7 +1,6 @@
-#' @import tidyverse
+#' @import tidyr
 #' @import dplyr
 #' @import lubridate
-#' @import magrittr
 #' @import DT
 #' @import openxlsx
 #' @import readxl
@@ -12,5 +11,7 @@
 #' @importFrom data.table rbindlist
 #' @importFrom stats setNames
 #' @importFrom rlang .data
+#' @importFrom magrittr %>%
+
 NULL
 #> NULL
