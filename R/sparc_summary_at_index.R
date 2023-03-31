@@ -343,7 +343,7 @@ sparc_summary <- function(data,
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     arrange( OBS_TEST_RESULT_DATE, .by_group = TRUE) %>%
-    mutate(result = if_else(OBS_TEST_RESULT_DATE > lag(OBS_TEST_RESULT_DATE) & DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & lag(DESCRIPTIVE_SYMP_TEST_RESULTS) == "Yes", "Yes", DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = case_when(OBS_TEST_RESULT_DATE > lag(OBS_TEST_RESULT_DATE) & DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & lag(DESCRIPTIVE_SYMP_TEST_RESULTS) == "Yes" & OBS_TEST_CONCEPT_NAME == lag(OBS_TEST_CONCEPT_NAME) ~"Yes", TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
     ungroup() %>%
       right_join(cohort_index_info) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
@@ -382,7 +382,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     arrange( OBS_TEST_RESULT_DATE, .by_group = TRUE) %>%
-    mutate(result = if_else(OBS_TEST_RESULT_DATE > lag(OBS_TEST_RESULT_DATE) & DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & lag(DESCRIPTIVE_SYMP_TEST_RESULTS) == "Yes", "Yes", DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+    mutate(result = case_when(OBS_TEST_RESULT_DATE > lag(OBS_TEST_RESULT_DATE) & DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & lag(DESCRIPTIVE_SYMP_TEST_RESULTS) == "Yes" & OBS_TEST_CONCEPT_NAME == lag(OBS_TEST_CONCEPT_NAME) ~"Yes", TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
     ungroup() %>%
 
     right_join(cohort_index_info) %>%
