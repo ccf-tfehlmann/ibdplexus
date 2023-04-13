@@ -66,7 +66,7 @@ frequency_change <- function(medication){
     mutate(across(starts_with("weeks"),
                   ~ case_when(orig_freq - .x >= 2 ~ cur_column()), .names = "{.col}_new")) %>%
     unite(new, ends_with("_new"), na.rm = TRUE, sep = ", ") %>%
-    na_if("") %>%
+    mutate(new = ifelse(new %in% c("", " "), as.character(NA), new)) %>%
     mutate(DECREASE_IN_FREQUENCY = case_when(is.na(new) ~ 0, TRUE ~ 1)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
     slice(which.max(DECREASE_IN_FREQUENCY)) %>%

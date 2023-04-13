@@ -9,7 +9,7 @@
 #'
 dose_escalation <- function(medication){
 
-   medication %>%
+  medication %>%
     filter(!grepl('both eyes|Each Eye|external|Eyes (Each)|feeding tube|gastric tube|left eye|Misc.(Non-Drug; Combo Route)|MISCELLANEOUS|Mouth/Throat|nasogastric tube|ophthalmic|Per NG / OG tube|Per NG Tube|PO/NG/OG|Rectal|rectal|Topical|TOPICAL (LOTION OR CREAM)|Vaginal', ROUTE_OF_MEDICATION, ignore.case = T) | is.na(ROUTE_OF_MEDICATION)) %>%
     mutate(
       MED_START_DATE = if_else(year(MED_START_DATE) >
@@ -36,6 +36,7 @@ dose_escalation <- function(medication){
       new_med_name, DOSE_OF_MEDICATION
     ) %>%
     mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c(
         DEIDENTIFIED_MASTER_PATIENT_ID,
@@ -50,7 +51,8 @@ dose_escalation <- function(medication){
     mutate(across(starts_with("DOSE"),
                   ~ case_when(.x > orig_dose ~ cur_column()), .names = "{.col}_new")) %>%
     unite(new, ends_with("_new"), na.rm = TRUE, sep = ", ") %>%
-    na_if("") %>%
+    ungroup() %>%
+    mutate(new = ifelse(new %in% c("", " "), as.character(NA), new)) %>%
     mutate(DOSE_ESCALATION = case_when(is.na(new) ~ 0, TRUE ~ 1)) %>%
     rename(MEDICATION = new_med_name)
 
