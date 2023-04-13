@@ -477,7 +477,7 @@ sparc_summary <- function(data,
     left_join(data$encounter) %>%
     drop_na(PHYSICIAN_NOTES_PROC_AVAIL) %>%
     #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
-    mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
+    #mutate(`Number of IBD Surgeries` = PHYSICIAN_NOTES_PROC_AVAIL) %>%
     select(-DIAGNOSIS) %>%
     right_join(cohort_index_info) %>%
     mutate(diff = VISIT_ENCOUNTER_START_DATE - index_date) %>%
@@ -610,8 +610,9 @@ sparc_summary <- function(data,
   # SURGICAL HISTORY:
   #   Complete colectomy
 
+   # Account for duplicate entries with not enough data 10150036
 
-  cc <- data$procedures %>%
+  cc1 <- data$procedures %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
     left_join(data$encounter) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -621,12 +622,12 @@ sparc_summary <- function(data,
       PROC_STATUS_CONCEPT_NAME, VISIT_ENCOUNTER_START_DATE, PROC_START_DATE, INDICATION
     ) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(PROC_STATUS_CONCEPT_NAME = case_when(
       PROC_STATUS_CONCEPT_NAME == "Yes" ~ "Performed",
       PROC_STATUS_CONCEPT_NAME == "No" ~ "Not Performed",
       TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
     )) %>%
+    drop_na(PROC_STATUS_CONCEPT_NAME) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
@@ -634,14 +635,75 @@ sparc_summary <- function(data,
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
     mutate(
-      "Complete colectomy" = PROC_STATUS_CONCEPT_CODE,
-      `Year of Complete Colectomy` = as.numeric(PROC_START_DATE),
-      `Indication for total colectomy` = INDICATION
-    ) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, "Complete colectomy", `Year of Complete Colectomy`, `Indication for total colectomy`)
+      "Complete colectomy" = PROC_STATUS_CONCEPT_CODE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, "Complete colectomy")
 
   cohort <- cohort %>%
-    left_join(cc)
+    left_join(cc1)
+
+
+  cc2 <- data$procedures %>%
+    filter(DATA_SOURCE == "SF_SPARC") %>%
+    left_join(data$encounter) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    filter(PROC_CONCEPT_CODE %in% c("EPIC#41172", "EPIC#17655", "SMART_Q90__C") | SRC_PROC_CONCEPT_CODE %in% c("EPIC#41172", "EPIC#17655", "SMART_Q90__C")) %>%
+    distinct(
+      DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_CODE, PROC_STATUS_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
+      PROC_STATUS_CONCEPT_NAME, VISIT_ENCOUNTER_START_DATE, PROC_START_DATE, INDICATION
+    ) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
+    mutate(PROC_STATUS_CONCEPT_NAME = case_when(
+      PROC_STATUS_CONCEPT_NAME == "Yes" ~ "Performed",
+      PROC_STATUS_CONCEPT_NAME == "No" ~ "Not Performed",
+      TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
+    )) %>%
+    drop_na(PROC_START_DATE) %>%
+    left_join(cohort_index_info) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    # filter(diff <= t) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+    slice(which.min(abs(diff))) %>%
+    ungroup() %>%
+    mutate(
+          `Year of Complete Colectomy` = as.numeric(PROC_START_DATE)
+    ) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  `Year of Complete Colectomy`)
+
+
+  cohort <- cohort %>%
+    left_join(cc2)
+
+
+  cc3 <- data$procedures %>%
+    filter(DATA_SOURCE == "SF_SPARC") %>%
+    left_join(data$encounter) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    filter(PROC_CONCEPT_CODE %in% c("EPIC#41172", "EPIC#17655", "SMART_Q90__C") | SRC_PROC_CONCEPT_CODE %in% c("EPIC#41172", "EPIC#17655", "SMART_Q90__C")) %>%
+    distinct(
+      DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_CODE, PROC_STATUS_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
+      PROC_STATUS_CONCEPT_NAME, VISIT_ENCOUNTER_START_DATE, PROC_START_DATE, INDICATION
+    ) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
+    mutate(PROC_STATUS_CONCEPT_NAME = case_when(
+      PROC_STATUS_CONCEPT_NAME == "Yes" ~ "Performed",
+      PROC_STATUS_CONCEPT_NAME == "No" ~ "Not Performed",
+      TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
+    )) %>%
+    left_join(cohort_index_info) %>%
+    drop_na(INDICATION) %>%
+    mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
+    # filter(diff <= t) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+    slice(which.min(abs(diff))) %>%
+    ungroup() %>%
+    mutate(
+
+      `Indication for total colectomy` = INDICATION
+    ) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  `Indication for total colectomy`)
+
+  cohort <- cohort %>%
+    left_join(cc3)
 
 
   # SURGICAL HISTORY:
@@ -812,7 +874,7 @@ sparc_summary <- function(data,
 
 gc()
 
-
+# Start here with Cass ----
   # MEDICATION EXPOSURE UP UNTIL INDEX DATE FROM SMARTFORM ----
 
 
