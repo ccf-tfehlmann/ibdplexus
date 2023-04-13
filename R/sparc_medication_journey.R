@@ -250,11 +250,11 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
            lead_overlap_days = day(as.period(intersect(int, lead(int)), "days")),
 
     ) %>%
+    ungroup() %>%
     mutate(OVERLAPPING_MOA = case_when(is.na(lag_overlap) ~ lead_overlap,
                                        is.na(lead_overlap) ~ lag_overlap,
                                        !is.na(lag_overlap) & !is.na(lead_overlap) ~ paste0(lag_overlap, "; ", lead_overlap)),
            OVERLAPPING_DAYS = if_else(is.na(lag_overlap_days), lead_overlap_days, lag_overlap_days)) %>%
-    ungroup() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE, OVERLAPPING_MOA, OVERLAPPING_DAYS)
 
 
@@ -293,21 +293,21 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(no_med_enroll, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
 
   # Flag if bionaive at medication start ----
-
-  bionaive <- med %>%
-    mutate(b = ifelse(MEDICATION %in% c(
-      "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab",
-      "Natalizumab", "Other Biologic",  "Ustekinumab", "Vedolizumab"), 1, 0)) %>%
-    # filter(b == 1) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, b) %>%
-    mutate(FIRST_BIOLOGIC = ifelse(b == 1 & MEDICATION_NUMBER == min(MEDICATION_NUMBER), 1, 0)) %>%
-    mutate(FIRST_BIOLOGIC_NUMBER = ifelse(FIRST_BIOLOGIC == 1, MEDICATION_NUMBER, as.numeric(NA))) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    fill(FIRST_BIOLOGIC_NUMBER, .direction = "updown") %>%
-    rowwise() %>%
-    mutate(BIONAIVE = ifelse(MEDICATION_NUMBER < FIRST_BIOLOGIC_NUMBER, 1, 0)) %>%
-    ungroup() %>%
-    rename(BIOLOGIC = b)
+bionaive <- med %>%
+  mutate(b = ifelse(MEDICATION %in% c(
+    "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab",
+    "Natalizumab", "Other Biologic", "Ustekinumab", "Vedolizumab", "Adalimumab (Humira)", "Infliximab (Avsola)", "Infliximab (Inflectra)", "Infliximab (Renflexis)", "Infliximab (Remicade)", "Infliximab (Remsima)", "Tofacitinib", "Upadacitinib", "Ustekinumab", "Ozanimod", "Risankizumab"
+  ), 1, 0)) %>%
+  # filter(b == 1) %>%
+  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, b) %>%
+  mutate(FIRST_ADVANCED_MED = ifelse(b == 1 & MEDICATION_NUMBER == min(MEDICATION_NUMBER), 1, 0)) %>%
+  mutate(FIRST_ADVANCED_MED_NUMBER = ifelse(FIRST_ADVANCED_MED == 1, MEDICATION_NUMBER, as.numeric(NA))) %>%
+  group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+  fill(FIRST_ADVANCED_MED_NUMBER, .direction = "updown") %>%
+  rowwise() %>%
+  mutate(BIONAIVE = ifelse(MEDICATION_NUMBER < FIRST_ADVANCED_MED_NUMBER, 1, 0)) %>%
+  ungroup() %>%
+  rename(ADVANCED_MED = b)
 
   med <- med %>%
     left_join(bionaive) #%>%
