@@ -179,8 +179,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
     distinct(new_med_name, med_type) %>%
     rename(MEDICATION = new_med_name) %>%
-    mutate(MOA = case_when(MEDICATION %in% c(
-      "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab") ~ "antiTNF",
+    mutate(MOA =  case_when(grepl("Adalimumab|Certolizumab|Golimumab|Infliximab", MEDICATION, ignore.case = T)  ~ "antiTNF",
       MEDICATION %in% c("Tofacitinib","Upadacitinib") ~ "JAKi",
       MEDICATION %in% c("Vedolizumab", "Natalizumab") ~ "IRA",
       MEDICATION %in% c("Ustekinumab", "Risankizumab") ~ "ILA",
