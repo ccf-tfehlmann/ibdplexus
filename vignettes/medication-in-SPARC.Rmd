@@ -51,7 +51,7 @@ knitr::kable(head(med_grp, 5))
 
 # Here is how Infliximab and its' bio-similars are mapped 
 
-knitr::kable(med_grp %>% filter(new_med_name == "Infliximab"))
+knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = T)))
 
 ```
 
