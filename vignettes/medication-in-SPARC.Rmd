@@ -31,9 +31,9 @@ This vignette mainly focuses on the medication data from eCRF and EMR.
 
 `sparc_med_filter` filters through the eCRF and EMR data for medications of interest that are listed in the data.frame `med_grp`.
 
-`med grp` contains the medication name of interest, the type of medication and a standardized name. The MEDICATION_NAME column includes generic and brand names. the new_med_name column is the standardized name for each MEDICATION_NAME. Currently, all biosimilars are mapped to the generic name.
+`med grp` contains the medication name of interest, the type of medication and a standardized name. The MEDICATION_NAME column includes generic and brand names. the new_med_name column is the standardized name for each MEDICATION_NAME.
 
-A future iteration will parse out biosimilars into their own group.
+Biosimilars are now in their own groups.
 
 ```{r eval = TRUE, warning = FALSE, message = FALSE}
 
