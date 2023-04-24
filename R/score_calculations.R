@@ -127,8 +127,9 @@ calculate_scdai <- function(observations) {
     )) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
       names_from = c(OBS_TEST_CONCEPT_NAME),
@@ -140,7 +141,6 @@ calculate_scdai <- function(observations) {
       G = ifelse(is.na(`Constitutional - General Well-Being`), `Constitutional - General Well-Being`, `Constitutional - General Well-Being`),
       G = ifelse(is.na(G), `General Well Being Score`, G)
     ) %>%
-    ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(
@@ -154,6 +154,7 @@ calculate_scdai <- function(observations) {
       B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
       TRUE ~ as.character(NA)
     )) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
      mutate(
       A = ifelse(is.na(A) & diff <= 7, lag(A), A),
       G = ifelse(is.na(G) & diff <= 7, lag(G), G),
@@ -166,6 +167,7 @@ calculate_scdai <- function(observations) {
       B = ifelse(is.na(B) & (diff2 <= 7), lead(B), B),
       Daily.BM.Question = ifelse(is.na(Daily.BM.Question) & (diff2 <= 7), lead(Daily.BM.Question), Daily.BM.Question)
     ) %>%
+    ungroup() %>%
     dplyr::rename(Daily.BM = B, Abdominal.Pain.Score = A, General.well.being.score = G) %>%
     mutate(sCDAI.score = 44 + (2 * 7 * Daily.BM) + (5 * 7 * Abdominal.Pain.Score) + (7 * 7 * General.well.being.score), Source = "SF") %>%
     dplyr::rename(sCDAI.date = OBS_TEST_RESULT_DATE) %>%
@@ -195,6 +197,7 @@ calculate_scdai <- function(observations) {
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
     mutate(aug18 = ifelse(OBS_TEST_RESULT_DATE < as.Date("01-AUG-2018", format = "%d-%b-%Y"), "before", "after")) %>%
     mutate(
@@ -203,7 +206,6 @@ calculate_scdai <- function(observations) {
       B = ifelse(is.na(B), `Current Average Number of Daily Bowel Movements`, B),
       G = `General Well-Being`
     ) %>%
-    ungroup() %>%
     mutate(Daily.BM.Question = case_when(
       B == `Current Average Number of Daily Liquid Bowel Movements` ~ "Current Average Number of Daily Liquid Bowel Movements",
       B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
@@ -216,8 +218,6 @@ calculate_scdai <- function(observations) {
       diff2 = lead(OBS_TEST_RESULT_DATE) - OBS_TEST_RESULT_DATE
     ) %>%
     # mutate(diff = if_else(is.na(diff), 0, as.numeric(diff))) %>%
-    ungroup() %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(
       A = ifelse(is.na(A) & diff <= 7, lag(A), A),
       G = ifelse(is.na(G) & diff <= 7, lag(G), G),
