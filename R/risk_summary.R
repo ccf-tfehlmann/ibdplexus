@@ -352,10 +352,102 @@ risk_summary <- function(dir,
     filter(flag != 1) %>%
     select(-flag)
 
-  # arrange by DEIDENTIFIED_MASTER_PATIENT_ID
-  visit <- visit %>% mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+  #### Crohn's Disease Behavior Journey
+  ## Crohn's patients identified by final disease diagnosis
+
+  # create list with CD patient behavior to extract FIRST_BEHAVIOR from
+  cd_journey_first <- visit %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER, FINAL_DIAGNOSIS,
+           `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
+           `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    filter(FINAL_DIAGNOSIS == "Crohn's Disease") %>%
+    mutate(DISEASE_BEHAVIOR = case_when(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "No" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "No" ~ "B1",
+                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "No" ~ "B2",
+                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & is.na(`DISEASE BEHAVIOR - INTERNALLY PENTRATING`) ~ "B2",
+                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "No" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B3",
+                                        is.na(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`) & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B3",
+                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B2+B3",
+                                        TRUE ~ NA
+    )) %>%
+    mutate(STUDY_MONTH = case_when(`TYPE_OF_ENCOUNTER` == "Enrollment Visit" ~ 0,
+                                   TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`)))) %>%
+    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
+           VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, FINAL_DIAGNOSIS, STUDY_MONTH, DISEASE_BEHAVIOR)
+
+  # create list that pulls any stricturing or penetrating behavior so that final
+  # behavior accurately represents an end point. If behavior starts as unknown
+  # and switches to No, assume always had been No.
+  cd_journey_final <- visit %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER,
+           FINAL_DIAGNOSIS, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
+           `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    filter(FINAL_DIAGNOSIS == "Crohn's Disease") %>%
+    mutate(STUDY_MONTH = case_when(`TYPE_OF_ENCOUNTER` == "Enrollment Visit" ~ 0,
+                                   TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`)))) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    # remove this and see how group counts change
+    mutate(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` = ifelse(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Unknown",
+                                                               NA, `DISEASE BEHAVIOR - INTERNALLY PENTRATING`),
+           `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` = ifelse(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Unknown",
+                                                               NA, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
+    mutate(`stricturing` = ifelse(any(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes"),
+                                  "Yes", `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
+    mutate(`penetrating` = ifelse(any(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes"),
+                                  "Yes", `DISEASE BEHAVIOR - INTERNALLY PENTRATING`)) %>%
+    filter(!is.na(`DISEASE BEHAVIOR - INTERNALLY PENTRATING`) & !is.na(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
+    mutate(DISEASE_BEHAVIOR = case_when(`stricturing` == "No" & `penetrating` == "No" ~ "B1",
+                                        `stricturing` == "Yes" & `penetrating` == "No" ~ "B2",
+                                        `stricturing` == "Yes" & is.na(`penetrating`) ~ "B2",
+                                        `stricturing` == "No" & `penetrating` == "Yes" ~ "B3",
+                                        is.na(`stricturing`) & `penetrating` == "Yes" ~ "B3",
+                                        `stricturing` == "Yes" & `penetrating` == "Yes" ~ "B2+B3",
+                                        stricturing == "No" & is.na(penetrating) ~ "B1",
+                                        is.na(stricturing) & penetrating == "No" ~ "B1",
+                                        is.na(stricturing) & is.na(penetrating) ~ "B1",
+                                        TRUE ~ NA
+    )) %>%
+    ungroup()
+
+  # get first disease behavior for all crohn's disease patients
+  first_behavior <- cd_journey_first %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    filter(STUDY_MONTH == 0) %>%
+    mutate(DISEASE_BEHAVIOR = ifelse(is.na(DISEASE_BEHAVIOR), "Unknown", DISEASE_BEHAVIOR)) %>%
+    # drop_na(DISEASE_BEHAVIOR) %>%
+    rename("FIRST_BEHAVIOR" = "DISEASE_BEHAVIOR") %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, FIRST_BEHAVIOR) %>%
+    ungroup()
+
+
+  # get final behavior for all crohn's disease patients
+  final_behavior <- cd_journey_final %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(end_point = case_when(DISEASE_BEHAVIOR == "B1" ~ 1,
+                                 DISEASE_BEHAVIOR == "B2" ~ 2,
+                                 DISEASE_BEHAVIOR == "B3" ~ 2,
+                                 DISEASE_BEHAVIOR == "B2+B3" ~ 3,
+                                 TRUE ~ 0)) %>%
+    slice(which.max(end_point)) %>%
+    rename("FINAL_BEHAVIOR" = "DISEASE_BEHAVIOR") %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, FINAL_BEHAVIOR) %>%
+    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    ungroup()
+
+  # join behaviors, create variable that maps the disease journey
+  CD_behaviors <- first_behavior %>%
+    full_join(final_behavior) %>%
+    mutate(DISEASE_JOURNEY = paste0(FIRST_BEHAVIOR, " -> ", FINAL_BEHAVIOR)) %>%
+    # can't go backwards, so can assume Unknown to B1 is B1
+    mutate(DISEASE_JOURNEY = ifelse(DISEASE_JOURNEY == "Unknown -> B1", "B1 -> B1", DISEASE_JOURNEY)) %>%
+    ## CLB fix: know this one patient is stricturing at enrollment and unknown at
+    ## enrollment for penetrating, so hand code
+    # mutate(DISEASE_JOURNEY = ifelse(DISEASE_JOURNEY == "Unknown -> B3", "B3 -> B3", DISEASE_JOURNEY))
     mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.character(DEIDENTIFIED_MASTER_PATIENT_ID))
+
+  visit <- visit %>%
+    left_join(CD_behaviors, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    relocate(c(FIRST_BEHAVIOR:DISEASE_JOURNEY), .after = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`)
 
   #Write output file
   write.xlsx(visit, filename)
