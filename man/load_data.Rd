@@ -18,7 +18,7 @@ load_data(
 
 \item{domains}{The domains to load. Default is "ALL". Must be a character string. Other valid values are patterns matching input file names common examples are:  "demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions".}
 
-\item{data_type}{The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.}
+\item{data_type}{The data source to load either case report forms (including covid survey), electronic medical record, or both. Options are both, crf or emr.}
 }
 \value{
 A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
