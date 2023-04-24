@@ -68,7 +68,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
     mutate(time = as.character.POSIXt(strptime(mtime, "%Y-%m-%d"))) %>%
     mutate(df = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", rowname)) %>%
     mutate(df = gsub("_.*", "", df)) %>%
-    left_join(cohorts, by = "df",relationship = "many-to-many") %>%
+    left_join(cohorts, by = "df") %>%
     arrange(desc(time)) %>%
     group_by(Cohort) %>%
     filter(Cohort %in% cohort) %>%
@@ -252,7 +252,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     filter(grepl(".txt|.csv", files)) %>%
     mutate(df = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", files)) %>%
     mutate(df = gsub("_.*", "", df)) %>%
-    left_join(cohorts, by = "df",relationship = "many-to-many") %>%
+    left_join(cohorts, by = "df") %>%
     group_by(Cohort) %>%
     filter(Cohort %in% cohort) %>%
     ungroup() %>%
