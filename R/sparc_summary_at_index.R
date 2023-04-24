@@ -874,27 +874,31 @@ sparc_summary <- function(data,
 
 gc()
 
-# Start here with Cass ----
   # MEDICATION EXPOSURE UP UNTIL INDEX DATE FROM SMARTFORM ----
 
 
   # if never can pull back
-
-  sf_med <- data$prescriptions %>%
-    filter(DATA_SOURCE == "SF_SPARC") %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME, MEDICATION_ADMINISTRATED) %>%
-    left_join(data$encounter %>% filter(DATA_SOURCE == "SF_SPARC") %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
-    #mutate(VISIT_ENCOUNTER_START_DATE = (VISIT_ENCOUNTER_START_DATE)) %>%
-    left_join(cohort_index_info) %>%
-    drop_na(index_date) %>%
-    mutate(diff = (VISIT_ENCOUNTER_START_DATE - index_date)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, index_date) %>%
-    arrange(MEDICATION_ADMINISTRATED, .by_group = "TRUE") %>%
-    slice(which.min(abs(diff))) %>%
-    ungroup() %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = MEDICATION_NAME, values_from = MEDICATION_ADMINISTRATED) %>%
-    select(sort(names(.))) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, everything())
+sf_med <- data$prescriptions %>%
+  filter(DATA_SOURCE == "SF_SPARC") %>%
+  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME, MEDICATION_ADMINISTRATED) %>%
+  left_join(data$encounter %>%
+              filter(DATA_SOURCE == "SF_SPARC") %>%
+              distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
+  left_join(cohort_index_info) %>%
+  drop_na(index_date) %>%
+  mutate(diff = (VISIT_ENCOUNTER_START_DATE - index_date)) %>%
+  mutate(keep = case_when(
+    MEDICATION_ADMINISTRATED == "Never" & diff > t ~ "keep",
+    diff <= t ~ "keep"
+  )) %>%
+  filter(keep == "keep") %>%
+  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, index_date) %>%
+  arrange(MEDICATION_ADMINISTRATED, .by_group = "TRUE") %>%
+  slice(which.min(abs(diff))) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = MEDICATION_NAME, values_from = MEDICATION_ADMINISTRATED) %>%
+  select(sort(names(.))) %>%
+  select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, everything())
 
   cohort <- left_join(cohort, sf_med)
 
@@ -950,8 +954,6 @@ gc()
 
 
 
-
-
   # FECAL URGENCY ANSWERED WITHIN t DAYS ----
   #if multiple entries on one day take most severe
 
@@ -993,7 +995,7 @@ fecal_urgency <- data$observations %>%
 
   cohort <- cohort %>% left_join(scdai)
 
-
+# Start here with Cass ----
 
   #pro2
   pro2 <- calculate_pro2(data$observations) %>%
