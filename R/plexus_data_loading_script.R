@@ -173,6 +173,8 @@ if("observations" %in% names(data)){
              VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
 
   rm(list = c("files", "folderinfo"))
+  data <- lapply(data, function(x) x %>% setNames(gsub(" |\\.|-", "_", names(.))) %>% setNames(toupper(names(.))))
+
 
   return(data)
   gc()
@@ -361,6 +363,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
       mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
              VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
 
+  data <- lapply(data, function(x) x %>% setNames(gsub(" |\\.|-", "_", names(.))) %>% setNames(toupper(names(.))))
 
   return(data)
 }

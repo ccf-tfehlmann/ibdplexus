@@ -12,25 +12,24 @@
 #'
 calculate_ses <- function(procedures) {
   ses <- procedures %>%
-    rename(SES.CD_Subscore = `SES-CD_Subscore`) %>%
-    filter(!is.na(SES.CD_Subscore)) %>%
+    filter(!is.na(SES_CD_SUBSCORE)) %>%
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
-    mutate(SES.CD_Subscore = as.numeric(gsub("Not reached", "0", SES.CD_Subscore))) %>%
+    mutate(SES_CD_SUBSCORE = as.numeric(gsub("Not reached", "0", SES_CD_SUBSCORE))) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE, LOCATION) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(SES.CD_Subscore)) %>%
-    # slice(which.max(SES.CD_Subscore)) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE, LOCATION, SES.CD_Subscore) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(SES_CD_SUBSCORE), .by_group = T) %>%
+    # slice(which.max(SES_CD_SUBSCORE)) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE, LOCATION, SES_CD_SUBSCORE) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "PROC_START_DATE"),
       names_from = LOCATION,
-      values_from = SES.CD_Subscore,
+      values_from = SES_CD_SUBSCORE,
       values_fn = ~max(.x)
     ) %>%
     mutate(SES_Score = `Ileum` + `Left colon` + Rectum + `Right colon` + `Transverse colon`) %>%
     drop_na(SES_Score) %>%
-    mutate(SCORE_DATE = PROC_START_DATE) %>%
-    distinct_all() %>%
     mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
+    distinct_all() %>%
     ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, SES_Score, SCORE_DATE, Ileum, `Left colon`, Rectum, `Right colon`, `Transverse colon`) %>%
     mutate(ses_category = case_when(
@@ -68,7 +67,8 @@ calculate_mes <- function(procedures) {
     pivot_wider(
       id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "PROC_START_DATE", "MAX_EXTENT_ACTIVE_DISEASE"),
       names_from = LOCATION,
-      values_from = MAYO_ENDOSCOPIC_SUBSCORE
+      values_from = MAYO_ENDOSCOPIC_SUBSCORE,
+      values_fn = ~max(.x)
     ) %>%
     rowwise(DEIDENTIFIED_MASTER_PATIENT_ID, PROC_START_DATE, MAX_EXTENT_ACTIVE_DISEASE) %>%
     mutate(
@@ -77,9 +77,9 @@ calculate_mes <- function(procedures) {
       EXTENDED_MODIFIED_MAYO_SCORE = MODIFIED_MAYO_SCORE * (as.numeric(MAX_EXTENT_ACTIVE_DISEASE) / 10),
       MODIFIED_MAYO_ENDOSCOPIC_SCORE = ifelse(sum(Rectum > 0, `Sigmoid colon` > 0, `Right colon` > 0, `Descending colon` > 0, `Transverse colon` > 0) == 0, 0, EXTENDED_MODIFIED_MAYO_SCORE / sum(Rectum > 0, `Sigmoid colon` > 0, `Right colon` > 0, `Descending colon` > 0, `Transverse colon` > 0))
     ) %>%
+    ungroup() %>%
     distinct_all() %>%
     mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
-    ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MAX_EXTENT_ACTIVE_DISEASE, MAYO_ENDOSCOPY_SCORE, MODIFIED_MAYO_SCORE, EXTENDED_MODIFIED_MAYO_SCORE, MODIFIED_MAYO_ENDOSCOPIC_SCORE, SCORE_DATE,
              Rectum, `Sigmoid colon`, `Right colon`, `Descending colon`, `Transverse colon`) %>%
     mutate(mes_catgory = case_when(
@@ -102,6 +102,7 @@ calculate_mes <- function(procedures) {
 #'
 #' @return A dataframe with all sCDAI scores from eCRF and Smartform regardless of IBD diagnosis.
 #'
+#' @details Number of stools is capped at 20.
 #'
 calculate_scdai <- function(observations) {
 
@@ -125,6 +126,8 @@ calculate_scdai <- function(observations) {
       result == "Terrible" ~ 4,
       TRUE ~ as.numeric(result)
     )) %>%
+    mutate(result = ifelse(result > 20, 20, result)) %>%
+
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
@@ -193,6 +196,8 @@ calculate_scdai <- function(observations) {
       result == "20+" ~ 20,
       TRUE ~ as.numeric(result)
     )) %>%
+    mutate(result = ifelse(result > 20, 20, result)) %>%
+
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
@@ -298,15 +303,15 @@ calculate_mayo <- function(observations) {
     )) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
     mutate(
       T = ifelse(is.na(`Physician's Global Assessment of Current Disease Status`), `Inflammatory Bowel Disease - Global Assessment Score`, `Physician's Global Assessment of Current Disease Status`),
       R = `Blood in Stool - Recent Change in Rectal Bleeding Amount`,
       S = ifelse(is.na(`Recent Change in Daily Stool Frequency`), `Stool Frequency Score`, `Recent Change in Daily Stool Frequency`)
     ) %>%
-    ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(
@@ -353,14 +358,14 @@ calculate_mayo <- function(observations) {
     )) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = c(OBS_TEST_CONCEPT_NAME), values_from = c(result)) %>%
     mutate(
       R = ifelse(is.na(`Blood Passed Alone`), `Blood in Stool`, `Blood Passed Alone`),
       S = `Recent Change in Daily Stool Frequency`
     ) %>%
-    ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(
@@ -469,6 +474,9 @@ calculate_pga <- function(observations) {
 #'
 #' @return A dataframe with all pro2 scores from eCRF and Smartform regardless of IBD diagnosis.
 #'
+#' @details
+#' remission/mild/moderate/severe definition from https://pubmed.ncbi.nlm.nih.gov/25348809/
+#'
 #'
 calculate_pro2 <- function(observations) {
 
@@ -490,8 +498,9 @@ calculate_pro2 <- function(observations) {
     mutate(result = ifelse(result > 20, 20, result)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
       names_from = c(OBS_TEST_CONCEPT_NAME),
@@ -501,7 +510,6 @@ calculate_pro2 <- function(observations) {
       A = ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`),
       B = `Current Average Number of Daily Liquid Bowel Movements`
     ) %>%
-    ungroup() %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(
@@ -528,7 +536,6 @@ calculate_pro2 <- function(observations) {
     filter(DATA_SOURCE == "ECRF_SPARC") %>%
     filter(OBS_TEST_CONCEPT_NAME %in% c("Current Average Number of Daily Liquid Bowel Movements", "Abdominal Pain")) %>%
     mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
-    mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
     mutate(result = case_when(
       result == "None" ~ 0,
       result == "Mild" ~ 1,
@@ -539,8 +546,9 @@ calculate_pro2 <- function(observations) {
     )) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
       names_from = c(OBS_TEST_CONCEPT_NAME),
@@ -601,6 +609,8 @@ calculate_pro2 <- function(observations) {
 #'
 #' @return A dataframe with all pro3 scores from eCRF and Smartform regardless of IBD diagnosis.
 #'
+#' @details remission/mild/moderate/severe definition from https://pubmed.ncbi.nlm.nih.gov/25348809/
+#'
 #'
 calculate_pro3 <- function(observations) {
 
@@ -626,8 +636,9 @@ calculate_pro3 <- function(observations) {
     mutate(result = ifelse(result > 20, 20, result)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),
       names_from = c(OBS_TEST_CONCEPT_NAME),
@@ -681,9 +692,10 @@ calculate_pro3 <- function(observations) {
       result == "20+" ~ 20,
       TRUE ~ as.numeric(result)
     )) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
+    mutate(result = ifelse(result > 20, 20, result)) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME, result) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, OBS_TEST_CONCEPT_NAME) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, desc(result), .by_group = T) %>%
     slice(1) %>%
     pivot_wider(
       id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE),

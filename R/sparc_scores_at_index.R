@@ -78,7 +78,7 @@ sparc_scores <- function(data,
     cohort <- omics_index %>% left_join(table)
   } else if ("BIOSAMPLE" %in% index_info) {
     biosample <- data$biosample %>%
-      mutate(SAMPLE_COLLECTED_DATE = dmy(`Date Sample Collected`)) %>%
+      mutate(SAMPLE_COLLECTED_DATE = dmy(`DATE_SAMPLE_COLLECTED`)) %>%
       rename(index_date = SAMPLE_COLLECTED_DATE) %>%
       drop_na(index_date) %>%
       select(-c(DATA_SOURCE, DEIDENTIFIED_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%

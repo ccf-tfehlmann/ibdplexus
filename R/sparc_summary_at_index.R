@@ -98,10 +98,10 @@ sparc_summary <- function(data,
   # biosamples
   if (!("BIOSAMPLE" %in% index_info)) {
     bio_anytime <- data$biosample %>%
-      mutate(`Date Sample Collected` = dmy(`Date Sample Collected`)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, `Date Sample Collected`) %>%
+      mutate(`DATE_SAMPLE_COLLECTED` = dmy(`DATE_SAMPLE_COLLECTED`)) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, `DATE_SAMPLE_COLLECTED`) %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID ~ BIOSAMPLE_CONCEPT_NAME,
-        value.var = "Date Sample Collected",
+        value.var = "DATE_SAMPLE_COLLECTED",
         fun.aggregate = function(x) paste(unique(x), collapse = "; ")
       )
 
@@ -152,7 +152,7 @@ sparc_summary <- function(data,
     cohort <- omics_index %>% left_join(table)
   } else if ("BIOSAMPLE" %in% index_info) {
     biosample <- data$biosample %>%
-      mutate(SAMPLE_COLLECTED_DATE = dmy(`Date Sample Collected`)) %>%
+      mutate(SAMPLE_COLLECTED_DATE = dmy(`DATE_SAMPLE_COLLECTED`)) %>%
       rename(index_date = SAMPLE_COLLECTED_DATE) %>%
       drop_na(index_date) %>%
       select(-c(DATA_SOURCE, DEIDENTIFIED_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%
@@ -995,7 +995,6 @@ fecal_urgency <- data$observations %>%
 
   cohort <- cohort %>% left_join(scdai)
 
-# Start here with Cass ----
 
   #pro2
   pro2 <- calculate_pro2(data$observations) %>%
@@ -1003,7 +1002,7 @@ fecal_urgency <- data$observations %>%
     mutate(datediff = abs(PRO2_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(PRO2_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(PRO2_SOURCE), desc(PRO2_SCORE)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(PRO2_SOURCE),desc(PRO2_SCORE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     filter(datediff == min(abs(datediff))) %>%
     slice(1) %>%
@@ -1067,6 +1066,25 @@ fecal_urgency <- data$observations %>%
 
   cohort <- cohort %>% left_join(pga)
 
+
+  # CALCULATE DISEASE ACTIVITY  ----
+
+
+  cohort <- cohort %>%
+    mutate(DISEASE_ACTIVITY = case_when(
+      DIAGNOSIS == "Crohn's Disease"  ~ SCDAI_CATEGORY,
+      DIAGNOSIS == "Ulcerative Colitis" ~  MAYO6_CATEGORY,
+      TRUE ~ as.character(NA)
+    )) %>%
+    mutate(DISEASE_ACTIVITY = case_when(
+      is.na(DISEASE_ACTIVITY) & PGA == "Quiescent" ~ "Remission",
+      is.na(DISEASE_ACTIVITY)  & PGA != "Quiescent" ~ PGA,
+      TRUE ~ DISEASE_ACTIVITY
+    )) %>%
+    rename(!!paste("DISEASE_ACTIVITY", t, sep = "_") := DISEASE_ACTIVITY)
+
+
+
   # ENDOSCOPY SCORES WITHIN t of INDEX DATE ----
 
   # SES CD
@@ -1115,23 +1133,6 @@ fecal_urgency <- data$observations %>%
 
   cohort <- left_join(cohort, es)
 
-
-
-  # CALCULATE DISEASE ACTIVITY  ----
-
-
-  cohort <- cohort %>%
-    mutate(DISEASE_ACTIVITY = case_when(
-      DIAGNOSIS == "Crohn's Disease"  ~ SCDAI_CATEGORY,
-      DIAGNOSIS == "Ulcerative Colitis" ~  MAYO6_CATEGORY,
-      TRUE ~ as.character(NA)
-    )) %>%
-    mutate(DISEASE_ACTIVITY = case_when(
-      is.na(DISEASE_ACTIVITY) & PGA == "Quiescent" ~ "Remission",
-      is.na(DISEASE_ACTIVITY)  & PGA != "Quiescent" ~ PGA,
-      TRUE ~ DISEASE_ACTIVITY
-    )) %>%
-    rename(!!paste("DISEASE_ACTIVITY", t, sep = "_") := DISEASE_ACTIVITY)
 
 
   # BIOSAMPLES WITHIN t of index date ----
