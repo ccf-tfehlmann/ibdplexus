@@ -114,8 +114,8 @@ sparc_summary <- function(data,
   if (!("OMICS" %in% index_info)) {
     omics_anytime <- data$omics_patient_mapping %>%
       mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `ASSAY NAME`, SAMPLE_COLLECTED_DATE) %>%
-      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID ~ `ASSAY NAME`,
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `ASSAY_NAME`, SAMPLE_COLLECTED_DATE) %>%
+      reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID ~ `ASSAY_NAME`,
         value.var = "SAMPLE_COLLECTED_DATE",
         fun.aggregate = function(x) paste(unique(x), collapse = "; ")
       )
@@ -1139,11 +1139,11 @@ fecal_urgency <- data$observations %>%
 
     bio_t <- data$biosample %>%
       setNames((gsub(" ", ".", names(.)))) %>%
-      filter(`Sample.Status` %in% c("In Lab", "Stored")) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, `Date.Sample.Collected`) %>%
-      mutate(`Date.Sample.Collected` = dmy(`Date.Sample.Collected`)) %>%
+      filter(`SAMPLE_STATUS` %in% c("In Lab", "Stored")) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, `DATE_SAMPLE_COLLECTED`) %>%
+      mutate(`DATE_SAMPLE_COLLECTED` = dmy(`DATE_SAMPLE_COLLECTED`)) %>%
       left_join(cohort_index_info) %>%
-      mutate(diff = abs((`Date.Sample.Collected`) - index_date)) %>%
+      mutate(diff = abs((`DATE_SAMPLE_COLLECTED`) - index_date)) %>%
       filter(diff <= t) %>%
       mutate(c = 1) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, BIOSAMPLE_CONCEPT_NAME, c) %>%
@@ -1154,7 +1154,7 @@ fecal_urgency <- data$observations %>%
         values_from = c
       )
     # reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID ~ BIOSAMPLE_CONCEPT_NAME,
-    #                 value.var = `Date.Sample.Collected`,
+    #                 value.var = `DATE_SAMPLE_COLLECTED`,
     #                 fun.aggregate=function(x) paste(unique(x), collapse = "; "))
 
 
@@ -1170,16 +1170,16 @@ fecal_urgency <- data$observations %>%
       left_join(cohort_index_info) %>%
       mutate(diff = abs((SAMPLE_COLLECTED_DATE) - index_date)) %>%
       mutate(keep = case_when(
-        `ASSAY NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing") ~ 1,
-        !(`ASSAY NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing")) & diff <= t ~ 1,
+        `ASSAY_NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing") ~ 1,
+        !(`ASSAY_NAME` %in% c("Genotyping (Global Screening Array)", "Whole Exome Sequencing")) & diff <= t ~ 1,
         TRUE ~ 0
       )) %>%
       filter(keep == 1) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, `ASSAY NAME`, keep) %>%
-      mutate(`ASSAY NAME` = paste0(`ASSAY NAME`, "_", t)) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, `ASSAY_NAME`, keep) %>%
+      mutate(`ASSAY_NAME` = paste0(`ASSAY_NAME`, "_", t)) %>%
       pivot_wider(
         id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date),
-        names_from = `ASSAY NAME`,
+        names_from = `ASSAY_NAME`,
         values_from = keep
       )
 
