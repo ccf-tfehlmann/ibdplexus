@@ -122,9 +122,11 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   # Combine Data with the Same Name (Collapses EMR and CRF data together)
   data <- data[order(names(data))]
 
+
   data <- data %>%
     lapply(., mutate_if, is.integer, as.character) %>%
     lapply(., mutate_if, is.numeric, as.character) %>%
+    lapply(., mutate_if, is.logical, as.character) %>%
     lapply(., mutate_if, is.factor, as.character)
 
 
@@ -298,7 +300,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
 
   data <- lapply(files, function(x) {
-    data.table::fread(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header = T) %>% discard(~ all(is.na(.x)))
+    data.table::fread(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header = T)
   })
 
 
@@ -321,6 +323,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   data <- data %>%
     lapply(., mutate_if, is.integer, as.character) %>%
     lapply(., mutate_if, is.numeric, as.character) %>%
+    lapply(., mutate_if, is.logical, as.character) %>%
     lapply(., mutate_if, is.factor, as.character)
 
 
