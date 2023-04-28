@@ -174,6 +174,12 @@ if("observations" %in% names(data)){
       mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
              VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
 
+  if("labs" %in% names(data)){
+    data$labs <- data$labs %>%
+      mutate(LAB_TEST_CONCEPT_NAME = case_when(grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
+                                               grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
+                                               TRUE ~ LAB_TEST_CONCEPT_NAME))}
+
   rm(list = c("files", "folderinfo"))
   data <- lapply(data, function(x) x %>% setNames(gsub(" |\\.|-", "_", names(.))) %>% setNames(toupper(names(.))))
 
@@ -365,6 +371,13 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     data$encounter <- data$encounter %>%
       mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
              VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
+
+
+  if("labs" %in% names(data)){
+    data$labs <- data$labs %>%
+      mutate(LAB_TEST_CONCEPT_NAME = case_when(grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
+                                               grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
+                                               TRUE ~ LAB_TEST_CONCEPT_NAME))}
 
   data <- lapply(data, function(x) x %>% setNames(gsub(" |\\.|-", "_", names(.))) %>% setNames(toupper(names(.))))
 
