@@ -293,6 +293,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(no_med_enroll, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
 
   # Flag if bionaive at medication start ----
+  # Update to account for patients that have no biologic information in the eCRF and EMR and then incorporate Smartform Ever/Never data
 bionaive <- med %>%
   mutate(b = ifelse(MEDICATION %in% c(
     "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab",

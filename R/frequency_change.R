@@ -29,6 +29,7 @@ frequency_change <- function(medication){
     ) %>%
     distinct() %>%
     filter(new_med_name %in% c("Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab", "Natalizumab", "Ozanimod", "Risankizumab", "Tofacitinib", "Upadacitinib", "Ustekinumab", "Vedolizumab")) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,DATA_SOURCE) %>%
     mutate(weeks_between_med = difftime(MED_START_DATE, lag(MED_START_DATE), units = "weeks")) %>%
     mutate(freq1 = str_extract(SUMMARY, "Frequency.*"),
            freq2 = paste(MEDICATION_FREQUENCE, FREQUENCE_UNIT_OF_MEASURE, sep =" ")) %>%

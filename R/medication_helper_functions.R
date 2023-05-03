@@ -13,7 +13,7 @@
 reason_stopped <- function(prescriptions){
 
   stop_ecrf <- prescriptions %>%
-  filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC")) %>%
+  filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC", "ECRF")) %>%
   mutate(REASON_STOPPED = toupper(REASON_STOPPED),
          MEDICATION_NAME = toupper(MEDICATION_NAME)) %>%
     drop_na(REASON_STOPPED) %>%
@@ -53,7 +53,7 @@ reason_stopped <- function(prescriptions){
 current_med <- function(medication){
 
   current <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(DATA_SOURCE == "ECRF_SPARC"| DATA_SOURCE == "ECRF") %>%
     filter(CURRENT_MEDICATION == "YES") %>%
     mutate(
       MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),

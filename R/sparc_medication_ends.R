@@ -26,7 +26,7 @@ sparc_med_ends <- function(medication){
 
   # Find End Date in eCRF Data ----
   end_ecrf <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(DATA_SOURCE == "ECRF_SPARC"| DATA_SOURCE == "ECRF") %>%
     mutate(
       MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
       MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
