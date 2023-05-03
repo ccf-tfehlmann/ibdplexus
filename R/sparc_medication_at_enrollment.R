@@ -57,7 +57,7 @@ sparc_medication_enrollment <- function(cohort, med) {
     pivot_wider(
       id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"),
       names_from = MEDICATION,
-      values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION_ECRF)
+      values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION)
     )
 
 
