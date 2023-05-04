@@ -322,10 +322,10 @@ risk_summary <- function(dir,
     mutate(`GENOTYPING (GLOBAL SCREENING ARRAY)_ANYTIME` = ifelse(any(`GENOTYPING (GLOBAL SCREENING ARRAY)` != ""), 1, 0)) %>%
     mutate(`DNA METHYLATION_ANYTIME` = ifelse(any(`DNA METHYLATION` != ""), 0, 1)) %>%
     mutate(`RNASEQ (PAIRED-END 150-BP READS)_ANYTIME` = ifelse(any(`RNASEQ (PAIRED-END 150-BP READS)` != ""), 1, 0)) %>%
-    mutate(`16S_ANYTIME` = ifelse(any(`16S` != ""), 0, 1)) %>%
+    mutate(`16S_ANYTIME` = ifelse(any(`16S` != ""), 1, 0)) %>%
     mutate(`WHOLE SHOTGUN SEQUENCING (WGS)_ANYTIME` = ifelse(any(`WHOLE SHOTGUN SEQUENCING (WGS)` != ""), 1, 0)) %>%
     mutate(`RNASEQ (SINGLE-END 50-BP READS)_ANYTIME` = ifelse(any(`RNASEQ (SINGLE-END 50-BP READS)` != ""), 1, 0)) %>%
-    mutate(`ITS2 SEQUENCING_ANYTIME` = ifelse(any(`ITS2 SEQUENCING` != ""), 0, 1)) %>%
+    mutate(`ITS2 SEQUENCING_ANYTIME` = ifelse(any(`ITS2 SEQUENCING` != ""), 1, 0)) %>%
     mutate(`PROTEOMIC BIOMARKER PANELS (OLINK)_ANYTIME` = ifelse(any(`PROTEOMIC BIOMARKER PANELS (OLINK)` != ""), 1, 0)) %>%
     mutate(`VIRAL METAGENOMICS SEQUENCING (VIROME)_ANYTIME` = ifelse(any(`VIRAL METAGENOMICS SEQUENCING (VIROME)` != ""), 1, 0)) %>%
     ungroup()
