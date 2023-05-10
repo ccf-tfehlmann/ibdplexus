@@ -178,8 +178,8 @@ wpcdai <- function(observations, encounter, labs){
   visit$`PCDAI - ESR` <- sapply(visit$`ERYTHROCYTE SEDIMENTATION RATE (ESR)`, function(x){
     if(!is.na(x)){
       if(x<20){0
-      }else if(x>=20 & x<50){7.5
-      }else if(x>=50){ 15
+      }else if(x>=20 & x<=50){7.5
+      }else if(x>50){ 15
       }
     }else NA
   })

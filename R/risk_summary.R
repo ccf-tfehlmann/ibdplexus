@@ -340,12 +340,6 @@ risk_summary <- function(dir,
   #Sort table by deidentified master patient ID and encounter date
   visit <- visit[order(visit$DEIDENTIFIED_MASTER_PATIENT_ID, visit$VISIT_MONTH),]
 
-  # remove columns not necessary in summary table
-  visit <- visit %>% select(all_of(names))
-
-  #change column order
-  data.table::setcolorder(visit, names)
-
   # drop patients if no DIAGNOSIS at Enrollment
   visit <- visit %>%
     mutate(flag = ifelse(TYPE_OF_ENCOUNTER == "Enrollment Visit" & DIAGNOSIS == "", 1, 0)) %>%
@@ -448,6 +442,12 @@ risk_summary <- function(dir,
   visit <- visit %>%
     left_join(CD_behaviors, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     relocate(c(FIRST_BEHAVIOR:DISEASE_JOURNEY), .after = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`)
+
+  # remove columns not necessary in summary table
+  visit <- visit %>% select(all_of(names))
+
+  #change column order
+  data.table::setcolorder(visit, names)
 
   #Write output file
   write.xlsx(visit, filename)
