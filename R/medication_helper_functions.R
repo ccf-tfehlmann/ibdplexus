@@ -98,7 +98,7 @@ risk_meds_at_visit <- function(prescriptions, encounter){
     mutate(MED_START_DATE = dmy(MED_START_DATE),
            MED_END_DATE = dmy(MED_END_DATE)) %>%
     # if medication has been administered but no start date, assume start date is visit encounter date
-    mutate(MED_START_DATE = ifelse(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes",
+    mutate(MED_START_DATE = if_else(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes",
                                    VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
     select(all_of(names_req)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -107,6 +107,8 @@ risk_meds_at_visit <- function(prescriptions, encounter){
     # encounter_date = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, VISIT_ENCOUNTER_ID) %>%
+    # clb: have to slice which max to avoid including meds that have a start and
+    # an end date before the VISIT_ENCOUNTER_START_DATE
     slice(which.max(med_start)) %>%
     ungroup() %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
