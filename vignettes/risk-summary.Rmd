@@ -1,0 +1,39 @@
+---
+title: "RISK Summary Table"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{meds_at_visit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+The [RISK cohort](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/pediatric-risk-stratification) is a closed observational prospective cohort study which enrolled pediatric (\<16 years old) patients within 30 days of a suspected of a Crohn's Disease diagnosis. The final cohort enrolled 1,800 patients across 28 clinics in the U.S. and Canada, with a particular focus on the 913 children with a Crohn's Disease diagnosis who were complication free in the first 90 days post diagnosis. Follow-ups including clinical, demographic and biosample data were conducted on a schedule every 6 months for a total of an 8 year follow-up period.
+
+There are several functions that are used in creating the final RISK summary table. All data used in any RISK summary functions should be loaded using the `ibdplexus` R package `load_data` function.
+
+# RISK Summary Table
+
+```{r eval = TRUE, warning = FALSE, message = FALSE, echo = F}
+library(ibdplexus, quietly = T)
+library(tidyverse, quietly = T)
+library(knitr, quietly = T)
+# library(kableExtra, quietly = T)
+library(readxl, quietly = T)
+```
+
+`risk_summary` creates a table with the following columns:
+
+```{r echo = F}
+knitr::kable(simple_risk_columns)
+# ibdplexus::simple_risk_columns %>%
+#   kbl(booktabs = T) %>%
+#   kable_styling(full_width = T, latex_options = c("striped", "scale_down"))
+```
