@@ -25,7 +25,6 @@ There are several functions that are used in creating the final RISK summary tab
 library(ibdplexus, quietly = T)
 library(tidyverse, quietly = T)
 library(knitr, quietly = T)
-# library(kableExtra, quietly = T)
 library(readxl, quietly = T)
 ```
 
@@ -33,7 +32,4 @@ library(readxl, quietly = T)
 
 ```{r echo = F}
 knitr::kable(simple_risk_columns)
-# ibdplexus::simple_risk_columns %>%
-#   kbl(booktabs = T) %>%
-#   kable_styling(full_width = T, latex_options = c("striped", "scale_down"))
 ```
