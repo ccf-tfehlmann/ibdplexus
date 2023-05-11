@@ -75,38 +75,62 @@ If a medication had been administered but there was no start date recorded, assu
 
 wPCDAI is the weighted version of the Pediatric Crohn's Disease Activity Index. It is more feasible than the full PCDAI for many patients who may be missing some assessments or characteristics required for the calculation. wPCDAI has [performed better](https://naspghan.org/files/documents/pdfs/training/curriculum-resources/ibd/weighted_PCDAI.pdf) than other abbreviated PCDAI calculations. In the RISK summary table wPCDAI is calculated for any patient with the required values, even if they do not have a Crohn's Disease diagnosis.
 
-The required values for the wPCDAI calculation are found in the following columns. Each variable necessary for the calculation is then assigned a numerical category to calculate the wPCDAI. *Note the numerical categorization would be different to calculate the full PCDAI .*
+The required values for the wPCDAI calculation are found in the following columns. Each variable necessary for the calculation is assigned a numerical category to calculate the wPCDAI. *Note the numerical categorization would be different to calculate the full PCDAI .*
 
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| Column Used in Calculation                       | Original Columns                                         | Logic      |
-+==================================================+==========================================================+============+
-| `PCDAI - MOST SEVERE ABDOMINAL PAIN PAST 7 DAYS` | `PCDAI - MOST SEVERE ABDOMINAL PAIN PAST 7 DAYS`         |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI-PT FUNCTING,GENERAL WELLBEING PAST 7 DAY` | `PCDAI-PT FUNCTING,GENERAL WELLBEING PAST 7 DAY`         |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI - STOOLS PER DAY PAST 7 DAYS`             | `PCDAI - STOOLS PER DAY PAST 7 DAYS`                     |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI - ESR`                                    | `PCDAI - ESR (MM/HR) WITHIN LAST 2 WEEKS`                |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI - ALBUMIN`                                | `PCDAI - ALBUMIN (G/DL WITHIN LAST 2 WEEKS`              |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI - WEIGHT`                                 | `PCDAI - WEIGHT`                                         |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI - PERIRECTAL DISEASE`                     | | Perirectal Disease Columns                         |   |            |
-|                                                  | |----------------------------------------------------|   |            |
-|                                                  | | `PCDAI -PERIRECTAL DISEASE: ASYMPTOMATIC TAGS`     |   |            |
-|                                                  | | `PCDAI -PERIRECTAL DISEASE: INFLAMMED TAGS`        |   |            |
-|                                                  | | `PCDAI -PERIRECTAL DISEASE: FISSURE`               |   |            |
-|                                                  | | `PCDAI -PERIRECTAL DISEASE: INDOLENT FISTULA`      |   |            |
-|                                                  | | `PCDAI -PERIRECTAL DISEASE:ACTIVE FISTULA/ABSCESS` |   |            |
-|                                                  | | `PCDAI -PERIRECTAL DISEASE:DRAINAGE OR TENDERNESS` |   |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
-| `PCDAI - EIM`                                    | | EIM Columns                                          | |            |
-|                                                  | |------------------------------------------------------| |            |
-|                                                  | | `PCDAI-EIM: FEVER > 38.5C FOR 3 DAYS OVER PAST WEEK` | |            |
-|                                                  | | `PCDAI - EIM: ORAL ULCERS`                           | |            |
-|                                                  | | `PCDAI - EIM: UVEITIS`                               | |            |
-|                                                  | | `PCDAI - EIM: DEFINITE ARTHRITIS`                    | |            |
-|                                                  | | `PCDAI - EIM: E NODOSUM`                             | |            |
-|                                                  | | `PCDAI - EIM: P GANGRENOSUM`                         | |            |
-+--------------------------------------------------+----------------------------------------------------------+------------+
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| Column Used in Calculation                       | Original Columns                                         | Logic                                                                           |
++==================================================+==========================================================+=================================================================================+
+| `PCDAI - MOST SEVERE ABDOMINAL PAIN PAST 7 DAYS` | `PCDAI - MOST SEVERE ABDOMINAL PAIN PAST 7 DAYS`         | None: 0                                                                         |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Mild (brief, does not interfere with activies): 10                              |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Moderate/Severe (daily, longer lasting, affects activities, nocturnal): 20      |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI-PT FUNCTING,GENERAL WELLBEING PAST 7 DAY` | `PCDAI-PT FUNCTING,GENERAL WELLBEING PAST 7 DAY`         | No limitations of activities, well: 0                                           |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Occassional difficulty in maintaining age appropriate activities, below par: 10 |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Frequent limitation of activity, very poor: 20                                  |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - STOOLS PER DAY PAST 7 DAYS`             | `PCDAI - STOOLS PER DAY PAST 7 DAYS`                     | 0-1 liquid stools, no blood: 0                                                  |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | 2 semi-formed stools with little blood, or 2-5 liquid stools +/- blood: 7.5     |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Gross bleedings or 6 or more liquid or noctural diarrhea: 15                    |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - ESR`                                    | `PCDAI - ESR (MM/HR) WITHIN LAST 2 WEEKS`                | ESR (mm/hr) < 20: 0                                                            |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | ESR (mm/hr) from 20 - 50: 7.5                                                   |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | ESR (mm/hr) > 50: 15                                                           |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - ALBUMIN`                                | `PCDAI - ALBUMIN (G/DL WITHIN LAST 2 WEEKS`              | Albumin (g/dL) $\geq$ 3.5: 0                                                 |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Albumin (g/dL) from 3.1 - 3.4: 10                                               |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Albumin (g/dL) $\leq$ 3: 20                                                  |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - WEIGHT`                                 | `PCDAI - WEIGHT`                                         | Weight gain or voluntary weight stable/loss: 0                                  |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Involuntary weight stable or weight loss 1-9%: 5                                |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Weight loss $\geq$ 10%: 10                                                   |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - PERIRECTAL DISEASE`                     | | Perirectal Disease Columns                         |   | None/asymptomatic tags: 0                                                       |
+|                                                  | |----------------------------------------------------|   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: ASYMPTOMATIC TAGS`     |   | 1-2 indolent fistula/scant drainage/no tenderness: 7.5                          |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: INFLAMMED TAGS`        |   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: FISSURE`               |   | Active fistula, drainage, tenderness/abscess: 15                                |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: INDOLENT FISTULA`      |   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE:ACTIVE FISTULA/ABSCESS` |   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE:DRAINAGE OR TENDERNESS` |   |                                                                                 |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - EIM`                                    | | EIM Columns                                          | | No EIM: 0                                                                       |
+|                                                  | |------------------------------------------------------| |                                                                                 |
+|                                                  | | `PCDAI-EIM: FEVER > 38.5C FOR 3 DAYS OVER PAST WEEK` | | One or more EIM: 10                                                             |
+|                                                  | | `PCDAI - EIM: ORAL ULCERS`                           | |                                                                                 |
+|                                                  | | `PCDAI - EIM: UVEITIS`                               | |                                                                                 |
+|                                                  | | `PCDAI - EIM: DEFINITE ARTHRITIS`                    | |                                                                                 |
+|                                                  | | `PCDAI - EIM: E NODOSUM`                             | |                                                                                 |
+|                                                  | | `PCDAI - EIM: P GANGRENOSUM`                         | |                                                                                 |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
