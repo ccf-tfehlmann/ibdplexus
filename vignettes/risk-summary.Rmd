@@ -15,11 +15,12 @@ knitr::opts_chunk$set(
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
-The [RISK cohort](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/pediatric-risk-stratification) is a closed observational prospective cohort study which enrolled pediatric (\<16 years old) patients within 30 days of a suspected of a Crohn's Disease diagnosis. The final cohort enrolled 1,800 patients across 28 clinics in the U.S. and Canada, with a particular focus on the 913 children with a Crohn's Disease diagnosis who were complication free in the first 90 days post diagnosis. Follow-ups including clinical, demographic and biosample data were conducted on a schedule every 6 months for a total of an 8 year follow-up period.
+The [RISK cohort](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/pediatric-risk-stratification) is a closed observational prospective cohort study which enrolled pediatric (\<16 years old) patients within 30 days of a suspected of a Crohn's Disease diagnosis. The final cohort enrolled 1,800 patients across 28 clinics in the U.S. and Canada, with a particular focus on the 913 children with a Crohn's Disease diagnosis who were complication free in the first 90 days post diagnosis. Follow-ups including clinical and demographic data were conducted on a schedule every 6 months for a total of an 8 year follow-up period. Blood, stool and intestinal biopsies biosamples (at a regularly scheduled procedure at baseline) were collected at enrollment. Blood biosamples were collected every 12 months for a total of 3 years. Molecular data including iChip genotyping, 16S rDNA sequencing, RNASeq (10M reads, 30M reads, from FFPE slides) transcriptomics, methylation epigenetics, whole shotgun sequencing metagenomics (viral, bacterial and fungal), proteomics, and serology have been generated from available biosamples. 
 
-There are several functions that are used in creating the final RISK summary table. All data used in any RISK summary functions should be loaded using the `ibdplexus` R package `load_data` function.
 
-# RISK Summary Table
+All data used in any RISK summary functions should be loaded using the `ibdplexus` R package `load_data` function. `risk_summary` is a function in the ibdplexus package which exports an excel file with a RISK Summary table. The RISK Summary table has one row for each visit per patient. All data used to create the summary table comes from provider reported case report forms. There are several functions that are used in creating the final RISK summary table which are described below.
+
+## RISK Summary Table Overview
 
 ```{r eval = TRUE, warning = FALSE, message = FALSE, echo = F}
 library(ibdplexus, quietly = T)
@@ -28,8 +29,12 @@ library(knitr, quietly = T)
 library(readxl, quietly = T)
 ```
 
+
 `risk_summary` creates a table with the following columns:
+
 
 ```{r echo = F}
 knitr::kable(simple_risk_columns)
 ```
+
+*Future: Link to full table column descriptions*
