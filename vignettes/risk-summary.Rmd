@@ -73,6 +73,8 @@ If a medication had been administered but there was no start date recorded, assu
 
 ## `wpcdai`
 
+The function `wpcdai` creates a dataframe with patient and visit encounter ID's, the wPCDAI calculated for a patient, and all PCDAI columns. 
+
 wPCDAI is the weighted version of the Pediatric Crohn's Disease Activity Index. It is more feasible than the full PCDAI for many patients who may be missing some assessments or characteristics required for the calculation. wPCDAI has [performed better](https://naspghan.org/files/documents/pdfs/training/curriculum-resources/ibd/weighted_PCDAI.pdf) than other abbreviated PCDAI calculations. In the RISK summary table wPCDAI is calculated for any patient with the required values, even if they do not have a Crohn's Disease diagnosis.
 
 The required values for the wPCDAI calculation are found in the following columns. Each variable necessary for the calculation is assigned a numerical category to calculate the wPCDAI. *Note the numerical categorization would be different to calculate the full PCDAI .*
@@ -134,3 +136,17 @@ The required values for the wPCDAI calculation are found in the following column
 |                                                  | | `PCDAI - EIM: E NODOSUM`                             | |                                                                                 |
 |                                                  | | `PCDAI - EIM: P GANGRENOSUM`                         | |                                                                                 |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+
+wPCDAI is calculated by summing the numeric values from the required columns. The scoring for disease activity for the wPCDAI are: 
+
+$<12.5$ - remission 
+
+$12.5 - 40$ - mild 
+
+$>40$ - moderate
+
+$>57.5$ - severe
+
+A decrease of 17.5 points is taken evidence of improvement. 
+
+
