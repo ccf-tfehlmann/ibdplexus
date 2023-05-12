@@ -31,7 +31,7 @@ library(readxl, quietly = T)
 `risk_summary` creates a table with the following columns:
 
 ```{r echo = F}
-knitr::kable(simple_risk_columns)
+knitr::kable(ibdplexus:::simple_risk_columns)
 ```
 
 *Future: Link to full table column descriptions*

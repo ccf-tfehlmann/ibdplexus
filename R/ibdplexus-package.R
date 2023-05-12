@@ -6,6 +6,7 @@
 #' @import readxl
 #' @import reshape2
 #' @import DiagrammeR
+#' @import influenceR
 #' @importFrom tidyr drop_na pivot_wider
 #' @importFrom data.table fread
 #' @importFrom data.table rbindlist
