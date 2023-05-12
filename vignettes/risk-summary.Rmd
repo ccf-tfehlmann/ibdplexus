@@ -23,8 +23,8 @@ All data used in any RISK summary functions should be loaded using the `ibdplexu
 
 ```{r eval = TRUE, warning = FALSE, message = FALSE, echo = F}
 library(ibdplexus, quietly = T)
-library(tidyverse, quietly = T)
-library(knitr, quietly = T)
+library(tidyr, quietly = T)
+library(dplyr, quietly = T)
 library(readxl, quietly = T)
 ```
 
