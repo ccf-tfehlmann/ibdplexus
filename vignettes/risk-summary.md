@@ -459,12 +459,31 @@ blood: 7.5</p>
 wPCDAI is calculated by summing the numeric values from the required
 columns. The scoring for disease activity for the wPCDAI are:
 
- &lt; 12.5 - remission
-
-12.5 − 40 - mild
-
- &gt; 40 - moderate
-
- &gt; 57.5 - severe
+<table>
+<thead>
+<tr class="header">
+<th>wPCDAI Score</th>
+<th>Disease Activity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline"> &lt; 12.5</span></td>
+<td>Remission</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">12.5 − 40</span></td>
+<td>Mild</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline"> &gt; 40</span></td>
+<td>Moderate</td>
+</tr>
+<tr class="even">
+<td><span class="math inline"> &gt; 57.5</span></td>
+<td>Severe</td>
+</tr>
+</tbody>
+</table>
 
 A decrease of 17.5 points is taken evidence of improvement.

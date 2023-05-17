@@ -73,7 +73,7 @@ If a medication had been administered but there was no start date recorded, assu
 
 ## `wpcdai`
 
-The function `wpcdai` creates a dataframe with patient and visit encounter ID's, the wPCDAI calculated for a patient, and all PCDAI columns. 
+The function `wpcdai` creates a dataframe with patient and visit encounter ID's, the wPCDAI calculated for a patient, and all PCDAI columns.
 
 wPCDAI is the weighted version of the Pediatric Crohn's Disease Activity Index. It is more feasible than the full PCDAI for many patients who may be missing some assessments or characteristics required for the calculation. wPCDAI has [performed better](https://naspghan.org/files/documents/pdfs/training/curriculum-resources/ibd/weighted_PCDAI.pdf) than other abbreviated PCDAI calculations. In the RISK summary table wPCDAI is calculated for any patient with the required values, even if they do not have a Crohn's Disease diagnosis.
 
@@ -100,23 +100,23 @@ The required values for the wPCDAI calculation are found in the following column
 |                                                  |                                                          |                                                                                 |
 |                                                  |                                                          | Gross bleedings or 6 or more liquid or noctural diarrhea: 15                    |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
-| `PCDAI - ESR`                                    | `PCDAI - ESR (MM/HR) WITHIN LAST 2 WEEKS`                | ESR (mm/hr) < 20: 0                                                            |
+| `PCDAI - ESR`                                    | `PCDAI - ESR (MM/HR) WITHIN LAST 2 WEEKS`                | ESR (mm/hr) \< 20: 0 \|                                                         |
 |                                                  |                                                          |                                                                                 |
 |                                                  |                                                          | ESR (mm/hr) from 20 - 50: 7.5                                                   |
 |                                                  |                                                          |                                                                                 |
-|                                                  |                                                          | ESR (mm/hr) > 50: 15                                                           |
+|                                                  |                                                          | ESR (mm/hr) \> 50: 15 \|                                                        |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
-| `PCDAI - ALBUMIN`                                | `PCDAI - ALBUMIN (G/DL WITHIN LAST 2 WEEKS`              | Albumin (g/dL) $\geq$ 3.5: 0                                                 |
+| `PCDAI - ALBUMIN`                                | `PCDAI - ALBUMIN (G/DL WITHIN LAST 2 WEEKS`              | Albumin (g/dL) $\geq$ 3.5: 0 \|                                                 |
 |                                                  |                                                          |                                                                                 |
 |                                                  |                                                          | Albumin (g/dL) from 3.1 - 3.4: 10                                               |
 |                                                  |                                                          |                                                                                 |
-|                                                  |                                                          | Albumin (g/dL) $\leq$ 3: 20                                                  |
+|                                                  |                                                          | Albumin (g/dL) $\leq$ 3: 20 \|                                                  |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
 | `PCDAI - WEIGHT`                                 | `PCDAI - WEIGHT`                                         | Weight gain or voluntary weight stable/loss: 0                                  |
 |                                                  |                                                          |                                                                                 |
 |                                                  |                                                          | Involuntary weight stable or weight loss 1-9%: 5                                |
 |                                                  |                                                          |                                                                                 |
-|                                                  |                                                          | Weight loss $\geq$ 10%: 10                                                   |
+|                                                  |                                                          | Weight loss $\geq$ 10%: 10 \|                                                   |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
 | `PCDAI - PERIRECTAL DISEASE`                     | | Perirectal Disease Columns                         |   | None/asymptomatic tags: 0                                                       |
 |                                                  | |----------------------------------------------------|   |                                                                                 |
@@ -137,16 +137,13 @@ The required values for the wPCDAI calculation are found in the following column
 |                                                  | | `PCDAI - EIM: P GANGRENOSUM`                         | |                                                                                 |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
 
-wPCDAI is calculated by summing the numeric values from the required columns. The scoring for disease activity for the wPCDAI are: 
+wPCDAI is calculated by summing the numeric values from the required columns. The scoring for disease activity for the wPCDAI are:
 
-$<12.5$ - remission 
+| wPCDAI Score | Disease Activity |
+|--------------|------------------|
+| $<12.5$      | Remission        |
+| $12.5 - 40$  | Mild             |
+| $>40$        | Moderate         |
+| $>57.5$      | Severe           |
 
-$12.5 - 40$ - mild 
-
-$>40$ - moderate
-
-$>57.5$ - severe
-
-A decrease of 17.5 points is taken evidence of improvement. 
-
-
+A decrease of 17.5 points is taken evidence of improvement.
