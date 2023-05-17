@@ -1,11 +1,13 @@
 ---
-title: "RISK Summary Table"
+title: ""
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{meds_at_visit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+# RISK Summary Table
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -75,9 +77,9 @@ If a medication had been administered but there was no start date recorded, assu
 
 The function `wpcdai` creates a dataframe with patient and visit encounter ID's, the wPCDAI calculated for a patient, and all PCDAI columns.
 
-wPCDAI is the weighted version of the Pediatric Crohn's Disease Activity Index. It is more feasible than the full PCDAI for many patients who may be missing some assessments or characteristics required for the calculation. wPCDAI has [performed better](https://naspghan.org/files/documents/pdfs/training/curriculum-resources/ibd/weighted_PCDAI.pdf) than other abbreviated PCDAI calculations. In the RISK summary table wPCDAI is calculated for any patient with the required values, even if they do not have a Crohn's Disease diagnosis.
+wPCDAI is the weighted version of the Pediatric Crohn's Disease Activity Index. It is more feasible than the full PCDAI for many patients who may be missing some assessments or characteristics required for the calculation. wPCDAI has performed better than other abbreviated PCDAI calculations.$^2$ In the RISK summary table wPCDAI is calculated for any patient with the required values, even if they do not have a Crohn's Disease diagnosis.
 
-The required values for the wPCDAI calculation are found in the following columns. Each variable necessary for the calculation is assigned a numerical category to calculate the wPCDAI. *Note the numerical categorization would be different to calculate the full PCDAI .*
+The required values for the wPCDAI calculation are found in the following columns. Each variable necessary for the calculation is assigned a numerical category to calculate the wPCDAI.$^3$ *Note the numerical categorization would be different to calculate the full PCDAI .*
 
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
 | Column Used in Calculation                       | Original Columns                                         | Logic                                                                           |
@@ -137,7 +139,7 @@ The required values for the wPCDAI calculation are found in the following column
 |                                                  | | `PCDAI - EIM: P GANGRENOSUM`                         | |                                                                                 |
 +--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
 
-wPCDAI is calculated by summing the numeric values from the required columns. The scoring for disease activity for the wPCDAI are:
+wPCDAI is calculated by summing the numeric values from the required columns. The scoring for disease activity for the wPCDAI are$^2$:
 
 | wPCDAI Score | Disease Activity |
 |--------------|------------------|
@@ -146,4 +148,14 @@ wPCDAI is calculated by summing the numeric values from the required columns. Th
 | $>40$        | Moderate         |
 | $>57.5$      | Severe           |
 
-A decrease of 17.5 points is taken evidence of improvement.
+A decrease of 17.5 points is taken evidence of improvement.$^2$
+
+## References 
+
+1. Satsangi J, Silverberg MS, Vermeire S, Colombel JF. The Montreal classification of inflammatory bowel disease: controversies, consensus, and implications. Gut. 2006 Jun;55(6):749-53. doi: 10.1136/gut.2005.082909. PMID: 16698746; PMCID: PMC1856208.
+
+1. Turner D, Griffiths AM, Walters TD, Seah T, Markowitz J, Pfefferkorn M, Keljo D, Waxman J, Otley A, LeLeiko NS, Mack D, Hyams J, Levine A. Mathematical weighting of the pediatric Crohn's disease activity index (PCDAI) and comparison with its other short versions. Inflamm Bowel Dis. 2012 Jan;18(1):55-62. doi: 10.1002/ibd.21649. Epub 2011 Feb 23. PMID: 21351206.
+
+2. Turner D, Levine A, Walters TD, Focht G, Otley A, López VN, Koletzko S, Baldassano R, Mack D, Hyams J, Griffiths AM. Which PCDAI Version Best Reflects Intestinal Inflammation in Pediatric Crohn Disease? J Pediatr Gastroenterol Nutr. 2017 Feb;64(2):254-260. doi: 10.1097/MPG.0000000000001227. PMID: 27050050.
+
+
