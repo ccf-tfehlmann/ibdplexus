@@ -1,20 +1,21 @@
+# RISK Summary Table
+
 The [RISK
 cohort](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/pediatric-risk-stratification)
 is a closed observational prospective cohort study which enrolled
-pediatric (&lt;16 years old) patients within 30 days of a suspected of a
+pediatric (&lt;16 years old) patients within 30 days of a suspected
 Crohn’s Disease diagnosis. The final cohort enrolled 1,800 patients
 across 28 clinics in the U.S. and Canada, with a particular focus on the
 913 children with a Crohn’s Disease diagnosis who were complication free
 in the first 90 days post diagnosis. Follow-ups including clinical and
-demographic data were conducted on a schedule every 6 months for a total
-of an 8 year follow-up period. Blood, stool and intestinal biopsies
-biosamples (at a regularly scheduled procedure at baseline) were
-collected at enrollment. Blood biosamples were collected every 12 months
-for a total of 3 years. Molecular data including iChip genotyping, 16S
-rDNA sequencing, RNASeq (10M reads, 30M reads, from FFPE slides)
-transcriptomics, methylation epigenetics, whole shotgun sequencing
-metagenomics (viral, bacterial and fungal), proteomics, and serology
-have been generated from available biosamples.
+demographic data were conducted every 6 months for a total of an 8-year
+follow-up period. Blood, stool and tissue samples were collected at a
+regularly scheduled procedure at baseline. Blood samples were collected
+every 12 months for a total of 3 years. Molecular data including iChip
+genotyping, 16S rDNA sequencing, RNASeq (10M reads, 30M reads, from FFPE
+slides) transcriptomics, methylation epigenetics, whole shotgun
+sequencing metagenomics (viral, bacterial and fungal), proteomics, and
+serology have been generated from available biosamples.
 
 All data used in any RISK summary functions should be loaded using the
 `ibdplexus` R package `load_data` function. `risk_summary` is a function
@@ -63,7 +64,7 @@ visit or follow-up visit based on 6 month cadence</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">VISIT_MONTH</td>
-<td style="text-align: left;">Numeric colum with follow-up visit month,
+<td style="text-align: left;">Numeric column with follow-up visit month,
 enrollment visit is 0</td>
 </tr>
 <tr class="odd">
@@ -116,14 +117,14 @@ penetrating disease behavior at encounter</td>
 <td style="text-align: left;">The first disease behavior recorded for
 Crohn’s Disease patients based on the <a
 href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1856208/">Montreal
-Classification</a></td>
+Classification</a>.<span class="math inline"><sup>1</sup></span></td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">FINAL_BEHAVIOR</td>
 <td style="text-align: left;">The last disease behavior recorded for
 Crohn’s Disease patients based on the <a
 href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1856208/">Montreal
-Classification</a></td>
+Classification</a>.<span class="math inline"><sup>1</sup></span></td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">DISEASE_JOURNEY</td>
@@ -164,7 +165,7 @@ function</td>
 patient was on at a visit encounter. ANTIBIOTICS, CORTICOSTEROIDS,
 IMMUNOMODULATORS, BIOLOGIC AGENTS, 5-ASA ORAL are filled out as Yes/No
 for enrollment visits only. Columns beginning with ONGOING_ are only
-filled out at follow-up encounters. Date is used if patient has recieved
+filled out at follow-up encounters. Date is used if patient has received
 medication, otherwise the column is left blank or filled with
 <code>No</code>. <code>Yes</code> is used when date is not
 available.</td>
@@ -216,34 +217,33 @@ surface involved and amount of surface ulcerated.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">OMICS COLUMNS - 215:224</td>
-<td style="text-align: left;">Lists of files for omics data if available
-at that visit. Possible omics include: Immunochip high-density array,
-ITS2 sequencing, RNASeq (paired-end 150-bp reads), RNASeq (single-end
-50-bp reads), viral metagenomics sequencing (virome), whole shotgun
-sequencing (WGS), 16S, DNA methylation, genotyping (global screening
-array), proteomic biomarker panels (Olink)</td>
+<td style="text-align: left;">Lists of files for omics data if generated
+from biosamples collected at that visit. Possible omics include:
+Immunochip high-density array, ITS2 sequencing, RNASeq (paired-end
+150-bp reads), RNASeq (single-end 50-bp reads), viral metagenomics
+sequencing (virome), whole shotgun sequencing (WGS), 16S, DNA
+methylation, genotyping (global screening array), proteomic biomarker
+panels (Olink)</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">BIOSAMPLE COLUMNS - 225:231</td>
-<td style="text-align: left;">Stored/In Lab for the biosamples a patient
-might have available from that visit. Possible biosamples available
-include: plasma 0.5mL, mucosal RNA 2.0mL, plasma aliquot 0.7mL, blood
-DNA 2.0mL, blood plasma 1.8mL, mucosal DNA 2.0mL, stool 7.0mL</td>
+<td style="text-align: left;">Status (Stored/In Lab) for the biosamples
+a patient might have available from that visit. Possible biosamples
+available include: plasma, mucosal RNA, blood DNA, mucosal DNA, and
+stool.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">OMICS_ANYTIME COLUMNS - 232:241</td>
 <td style="text-align: left;">1 if the patient has omics data at any
-visit, 0 if not</td>
+visit, 0 if no omics data is available for that patient</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">BIOSAMPLE_ANYTIME COLUMNS 242:248</td>
 <td style="text-align: left;">1 if the patient has a biosample at any
-visit, 0 if not</td>
+visit, 0 if biosamples not available for that patient</td>
 </tr>
 </tbody>
 </table>
-
-*Future: Link to full table column descriptions*
 
 ## `risk_meds_at_visit`
 
@@ -253,14 +253,10 @@ Summary table. It requires the `prescriptions` table and `encounter`
 table from the `load_data` function.
 
     # load all risk data
-    dat <- load_data("~/r_input/", cohort = "RISK", domains = c("ALL"), data_type = "BOTH")
-
-    # extract prescriptions and encounters tables to use in risk_meds_at_visit_function 
-    prescriptions <- dat$prescriptions
-    encounter <- dat$encounter 
+    dat <- load_data("~/r_input/", cohort = "RISK", domains = c("prescriptions", "encounter"), data_type = "CRF")
 
     # run risk_meds_at_visit function
-    risk_meds_at_visit_df <- risk_meds_at_visit(prescriptions, encounter)
+    risk_meds_at_visit_df <- risk_meds_at_visit(dat$prescriptions, dat$encounter)
 
 The columns produced from the `risk_meds_at_visit` function are:
 
@@ -317,17 +313,16 @@ columns.
 wPCDAI is the weighted version of the Pediatric Crohn’s Disease Activity
 Index. It is more feasible than the full PCDAI for many patients who may
 be missing some assessments or characteristics required for the
-calculation. wPCDAI has [performed
-better](https://naspghan.org/files/documents/pdfs/training/curriculum-resources/ibd/weighted_PCDAI.pdf)
-than other abbreviated PCDAI calculations. In the RISK summary table
-wPCDAI is calculated for any patient with the required values, even if
-they do not have a Crohn’s Disease diagnosis.
+calculation. wPCDAI has performed better than other abbreviated PCDAI
+calculations.<sup>2</sup> In the RISK summary table wPCDAI is calculated
+for any patient with the required values, even if they do not have a
+Crohn’s Disease diagnosis.
 
 The required values for the wPCDAI calculation are found in the
 following columns. Each variable necessary for the calculation is
-assigned a numerical category to calculate the wPCDAI. *Note the
-numerical categorization would be different to calculate the full PCDAI
-.*
+assigned a numerical category to calculate the wPCDAI.<sup>3</sup> *Note
+the numerical categorization would be different to calculate the full
+PCDAI .*
 
 <table style="width:99%;">
 <colgroup>
@@ -457,7 +452,8 @@ blood: 7.5</p>
 </table>
 
 wPCDAI is calculated by summing the numeric values from the required
-columns. The scoring for disease activity for the wPCDAI are:
+columns. The scoring for disease activity for the wPCDAI
+are<sup>2</sup>:
 
 <table>
 <thead>
@@ -486,4 +482,24 @@ columns. The scoring for disease activity for the wPCDAI are:
 </tbody>
 </table>
 
-A decrease of 17.5 points is taken evidence of improvement.
+A decrease of 17.5 points is taken evidence of improvement.<sup>2</sup>
+
+## References
+
+1.  Satsangi J, Silverberg MS, Vermeire S, Colombel JF. The Montreal
+    classification of inflammatory bowel disease: controversies,
+    consensus, and implications. Gut. 2006 Jun;55(6):749-53. doi:
+    10.1136/gut.2005.082909. PMID: 16698746; PMCID: PMC1856208.
+
+2.  Turner D, Griffiths AM, Walters TD, Seah T, Markowitz J, Pfefferkorn
+    M, Keljo D, Waxman J, Otley A, LeLeiko NS, Mack D, Hyams J,
+    Levine A. Mathematical weighting of the pediatric Crohn’s disease
+    activity index (PCDAI) and comparison with its other short versions.
+    Inflamm Bowel Dis. 2012 Jan;18(1):55-62. doi: 10.1002/ibd.21649.
+    Epub 2011 Feb 23. PMID: 21351206.
+
+3.  Turner D, Levine A, Walters TD, Focht G, Otley A, López VN, Koletzko
+    S, Baldassano R, Mack D, Hyams J, Griffiths AM. Which PCDAI Version
+    Best Reflects Intestinal Inflammation in Pediatric Crohn Disease? J
+    Pediatr Gastroenterol Nutr. 2017 Feb;64(2):254-260. doi:
+    10.1097/MPG.0000000000001227. PMID: 27050050.
