@@ -24,7 +24,6 @@ Imports:
     data.table,
     readr,
     DiagrammeR,
-    influenceR,
     rlang
 RoxygenNote: 7.2.3
 URL: https://github.com/ccf-tfehlmann/ibdplexus
