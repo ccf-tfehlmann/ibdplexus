@@ -122,13 +122,13 @@ risk_summary <- function(dir,
   data$prescriptions$MED_START_DATE[is.na(data$prescriptions$MED_START_DATE)] <- data$prescriptions$MEDICATION_ADMINISTRATED[is.na(data$prescriptions$MED_START_DATE)]
   #Divide prescriptions into started since last review and ongoing treatment
   data$prescriptions1 <- data$prescriptions[data$prescriptions$MED_ACTION_CONCEPT_NAME  %in%  c("Started Since Last Review", "Received"),]
-  data$prescriptions2 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "Methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "SC/IM",]
-  data$prescriptions3 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "Methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "Oral",]
-  data$prescriptions1 <- data$prescriptions1[!data$prescriptions1$MEDICATION_NAME %in% "Methotrexate",]
+  data$prescriptions2 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "SC/IM",]
+  data$prescriptions3 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "Oral",]
+  data$prescriptions1 <- data$prescriptions1[!data$prescriptions1$MEDICATION_NAME %in% "methotrexate",]
   data$prescriptions4 <- data$prescriptions[data$prescriptions$MED_ACTION_CONCEPT_NAME  %in%  c("Ongoing Treatment","Administered Again Since Last Dose 1"),]
-  data$prescriptions5 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "Methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "SC/IM",]
-  data$prescriptions6 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "Methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "Oral",]
-  data$prescriptions4 <- data$prescriptions4[!data$prescriptions4$MEDICATION_NAME %in% "Methotrexate",]
+  data$prescriptions5 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "SC/IM",]
+  data$prescriptions6 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "Oral",]
+  data$prescriptions4 <- data$prescriptions4[!data$prescriptions4$MEDICATION_NAME %in% "methotrexate",]
 
   data$prescriptions <- NULL
 
