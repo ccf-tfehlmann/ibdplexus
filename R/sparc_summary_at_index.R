@@ -442,7 +442,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.min(`Year of First IBD Surgery`)) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,`Year of First IBD Surgery`)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Year of First IBD Surgery`)
 
   cohort <- left_join(cohort, surg_first)
 
@@ -459,7 +459,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(`Year of Most Recent IBD Surgery`)) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,`Year of Most Recent IBD Surgery`)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Year of Most Recent IBD Surgery`)
 
 
   cohort <- left_join(cohort, surg_recent)
