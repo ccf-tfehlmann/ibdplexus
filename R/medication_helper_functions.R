@@ -94,18 +94,22 @@ risk_meds_at_visit <- function(prescriptions, encounter){
   meds <- prescriptions %>%
     filter(DATA_SOURCE == "RISK") %>%
     left_join(encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE, VISIT_ENCOUNTER_ID,
-                                         ADMISSION_TYPE, SOURCE_OF_ADMISSION)) %>%
+                                      ADMISSION_TYPE, SOURCE_OF_ADMISSION)) %>%
     mutate(MED_START_DATE = dmy(MED_START_DATE),
            MED_END_DATE = dmy(MED_END_DATE)) %>%
     # if medication has been administered but no start date, assume start date is visit encounter date
     mutate(MED_START_DATE = if_else(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes",
-                                   VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
+                                    VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
     select(all_of(names_req)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(med_start = MED_START_DATE,
            med_end = MED_END_DATE) %>%
     # encounter_date = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
+    mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
+    filter(MEDICATION_NAME != "Biologic Agents" & MEDICATION_NAME != "5-Asa Oral" &
+             MEDICATION_NAME != "Corticosteroids" & MEDICATION_NAME != "Antibiotics" &
+             MEDICATION_NAME != "Immunomodulators") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, VISIT_ENCOUNTER_ID) %>%
     # clb: have to slice which max to avoid including meds that have a start and
     # an end date before the VISIT_ENCOUNTER_START_DATE
