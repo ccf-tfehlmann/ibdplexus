@@ -86,7 +86,7 @@ sparc_summary <- function(data,
   # eCRF
 
   ecrf <- data$encounter %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF")) %>%
     filter(TYPE_OF_ENCOUNTER != "IBD Procedure Biosample") %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, TYPE_OF_ENCOUNTER) %>%
     mutate(c = 1) %>%
@@ -423,7 +423,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Number of IBD Surgeries`)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,index_date, `Number of IBD Surgeries`)
 
   cohort <- left_join(cohort, surg)
 
@@ -442,7 +442,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.min(`Year of First IBD Surgery`)) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Year of First IBD Surgery`)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,`Year of First IBD Surgery`)
 
   cohort <- left_join(cohort, surg_first)
 
@@ -459,7 +459,7 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(`Year of Most Recent IBD Surgery`)) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `Year of Most Recent IBD Surgery`)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,`Year of Most Recent IBD Surgery`)
 
 
   cohort <- left_join(cohort, surg_recent)
@@ -760,7 +760,7 @@ sparc_summary <- function(data,
 
   cohort <- left_join(cohort, shortgut)
 
-# Start here with Cass ----
+
 
   # SMOKING STATUS ----
 
