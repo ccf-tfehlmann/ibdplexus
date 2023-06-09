@@ -719,6 +719,11 @@ risk_med_journey <- function(prescriptions, encounter){
   #### FINAL ARRANGE ----
   table <- table %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    # remake final MED_NUMBER
+    select(-MED_NUMBER) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    arrange(MED_START_DATE, .by_group = T) %>%
+    mutate(MED_NUMBER = row_number()) %>%
     arrange(MED_NUMBER, .by_group = T) %>%
     ungroup() %>%
     # CLB: DROP THE DATE ERROR FLAG AND SAME START DATE FLAG FOR NOW, USE LATER
