@@ -36,11 +36,11 @@ library(readxl, quietly = T)
 knitr::kable(ibdplexus:::simple_risk_columns)
 ```
 
-### MEDICATIONS_AT_VISIT
+<!-- ### MEDICATIONS_AT_VISIT -->
 
-The column `MEDICATIONS_AT_VISIT` is a list of medications the patient was on at that visit. The medications at visit column is based on medications listed associated with the VISIT_ENCOUNTER_ID in the prescriptions table.
+<!-- The column `MEDICATIONS_AT_VISIT` is a list of medications the patient was on at that visit. The medications at visit column is based on medications listed associated with the VISIT_ENCOUNTER_ID in the prescriptions table. -->
 
-If a medication had been administered but there was no start date recorded, assume the start date is the visit encounter date.
+<!-- If a medication had been administered but there was no start date recorded, assume the start date is the visit encounter date. -->
 
 ## `wpcdai`
 

@@ -245,15 +245,9 @@ visit, 0 if biosamples not available for that patient</td>
 </tbody>
 </table>
 
-### MEDICATIONS\_AT\_VISIT
-
-The column `MEDICATIONS_AT_VISIT` is a list of medications the patient
-was on at that visit. The medications at visit column is based on
-medications listed associated with the VISIT\_ENCOUNTER\_ID in the
-prescriptions table.
-
-If a medication had been administered but there was no start date
-recorded, assume the start date is the visit encounter date.
+<!-- ### MEDICATIONS_AT_VISIT -->
+<!-- The column `MEDICATIONS_AT_VISIT` is a list of medications the patient was on at that visit. The medications at visit column is based on medications listed associated with the VISIT_ENCOUNTER_ID in the prescriptions table. -->
+<!-- If a medication had been administered but there was no start date recorded, assume the start date is the visit encounter date. -->
 
 ## `wpcdai`
 
