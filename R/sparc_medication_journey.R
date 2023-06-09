@@ -119,40 +119,57 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     if ("Infliximab" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
+        mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
         mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
           weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
     } else if ("Adalimumab" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
+
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
+
         mutate(first_use_emr = ifelse(dose_1 == "160" & dose_2 == "80", "Loading Dose", "Not Loading Dose"))
     } else if ("Certolizumab Pegol" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
+
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
-        mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
+          mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
           weeks_between_med_3 >= 1.5 & weeks_between_med_3 < 3.5, "Loading Dose", "Not Loading Dose"))
     } else if ("Vedolizumab" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
+
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
+
         mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
           weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
     } else if ("Ustekinumab" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+        mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
+
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
+
         mutate(first_use_emr = ifelse(toupper(route_1) == "INTRAVENOUS", "Loading Dose", "Not Loading Dose"))
     }
   }

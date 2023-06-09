@@ -47,7 +47,10 @@ frequency_change <- function(medication){
     mutate(helper = paste0(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,DATA_SOURCE) %>%
     mutate(count = seq_along(helper)) %>%
+    mutate(freq_weeks = as.numeric(freq_weeks)) %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,DATA_SOURCE), names_from = c(count), values_from = c(freq_weeks), names_prefix = "weeks_between_med_") %>%
+    dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
+
     mutate(loading_dose = case_when(new_med_name == "Infliximab" & weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 & weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5 ~ 1,
                                     new_med_name == "Certolizumab Pegol" & weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
                                       weeks_between_med_3 >= 1.5 & weeks_between_med_3 < 3.5 ~ 1,
