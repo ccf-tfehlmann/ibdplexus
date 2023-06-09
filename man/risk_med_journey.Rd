@@ -12,9 +12,13 @@ risk_med_journey(prescriptions, encounter)
 \item{encounter}{A dataframe with encounter data usually generated using load_data.}
 }
 \value{
-An table with the RISK medication journey table.
-
-#' @details Medication start and stop takes are from RISK case report forms. If there is no medication end date, but a new medication with the same mechanism of action was started, the day before the start of the new medication is used as the medication end date.
+A table with the RISK medication journey table.
+}
+\description{
+Creates RISK medication journey table for long term medications including Biologics, 5-ASA's and Immunomodulators.
+}
+\details{
+Medication start and stop takes are from RISK case report forms. If there is no medication end date, but a new medication with the same mechanism of action was started, the day before the start of the new medication is used as the medication end date.
 
 The following columns are convenience flags and indices to facilitate easy filtering of the data:
 
@@ -24,9 +28,6 @@ The medication with with earliest start date will have MEDICATION_NUMBER = 1.}
   \item{STEROID_OVERLAP}{is 1 if a patient also reported being on steroids at some point that overlaps with the medication interval.}
   \item{ANTIBIOTIC_OVERLAP}{is 1 if a patient also reported being on an antibiotic at some point that overlaps with the medication interval.}
 }
-}
-\description{
-Creates RISK medication journey table for long term medications including Biologics, 5-ASA's and Immunomodulators.
 }
 \examples{
 # upload data
