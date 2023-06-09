@@ -245,55 +245,6 @@ visit, 0 if biosamples not available for that patient</td>
 </tbody>
 </table>
 
-## `risk_meds_at_visit`
-
-The function `risk_meds_at_visit` produces a dataframe. It is also the
-function used to create the `MEDICATIONS_AT_VISIT` column in the RISK
-Summary table. It requires the `prescriptions` table and `encounter`
-table from the `load_data` function.
-
-    # load all risk data
-    dat <- load_data("~/r_input/", cohort = "RISK", domains = c("prescriptions", "encounter"), data_type = "CRF")
-
-    # run risk_meds_at_visit function
-    risk_meds_at_visit_df <- risk_meds_at_visit(dat$prescriptions, dat$encounter)
-
-The columns produced from the `risk_meds_at_visit` function are:
-
-<table>
-<thead>
-<tr class="header">
-<th><code>risk_meds_at_visit</code> columns</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>DEIDENTIFIED_MASTER_PATIENT_ID</td>
-</tr>
-<tr class="even">
-<td>DEIDENTIFIED_PATIENT_ID</td>
-</tr>
-<tr class="odd">
-<td>DATA_SOURCE</td>
-</tr>
-<tr class="even">
-<td>VISIT_ENCOUNTER_ID</td>
-</tr>
-<tr class="odd">
-<td>TYPE_OF_ENCOUNTER</td>
-</tr>
-<tr class="even">
-<td>MEDICATIONS_AT_VISIT</td>
-</tr>
-<tr class="odd">
-<td>VISIT_ENCOUNTER_START_DATE</td>
-</tr>
-<tr class="even">
-<td>VISIT_ENCOUNTER_END_DATE</td>
-</tr>
-</tbody>
-</table>
-
 ### MEDICATIONS\_AT\_VISIT
 
 The column `MEDICATIONS_AT_VISIT` is a list of medications the patient

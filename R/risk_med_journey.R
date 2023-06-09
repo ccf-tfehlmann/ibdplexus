@@ -122,6 +122,9 @@ risk_med_journey <- function(prescriptions, encounter){
 
   #### ANTI-TNFs DATES ----
 
+  # CLB: check with tara what to do when the med end for one anti-tnf is after
+  # the med start for another anti-tnf
+
   # create the logic for the start of one biologic with same MOA to be the end of
   # previous one. Only have to worry about anti-TNF for RISK
 
@@ -717,6 +720,9 @@ risk_med_journey <- function(prescriptions, encounter){
   table <- table %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     arrange(MED_NUMBER, .by_group = T) %>%
-    ungroup()
+    ungroup() %>%
+    # CLB: DROP THE DATE ERROR FLAG AND SAME START DATE FLAG FOR NOW, USE LATER
+    # DROP interval column, same as med start and end
+    select(-c(date_error_flag, same_start_date_flag, INTERVAL))
 
 }
