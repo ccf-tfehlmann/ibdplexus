@@ -184,6 +184,7 @@ extract_demo <- function(demographics, study) {
 
   demo <- demographics %>%
     filter(DATA_SOURCE %in% c("EMR", data_source)) %>%
+    drop_na(GENDER) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(DATA_SOURCE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(1) %>%
