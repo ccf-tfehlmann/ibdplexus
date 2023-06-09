@@ -7,7 +7,7 @@
 #'
 #' @return A table with the RISK medication journey table.
 #'
-#' @details Medication start and stop takes are from RISK case report forms. If there is no medication end date, but a new medication with the same mechanism of action was started, the day before the start of the new medication is used as the medication end date.
+#' @details Medication start and stop dates are from RISK case report forms. If there is no medication end date, but a new medication with the same mechanism of action was started, the day before the start of the new medication is used as the medication end date.
 #'
 #' The following columns are convenience flags and indices to facilitate easy filtering of the data:
 #'

@@ -1,0 +1,18 @@
+---
+title: ""
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{meds_at_visit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# RISK Med Journey
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
