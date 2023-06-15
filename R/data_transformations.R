@@ -70,9 +70,9 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
                   values_from = DIAGNOSIS)
 
    dx_ecrf <-  diagnosis %>%
-      filter(DATA_SOURCE %in% c( "ECRF_SPARC")) %>%
+      filter(DATA_SOURCE %in% c( "ECRF_SPARC", "ECRF")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
-      left_join(encounter %>% filter(DATA_SOURCE %in% c( "ECRF_SPARC")), by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
+      left_join(encounter %>% filter(DATA_SOURCE %in% c( "ECRF_SPARC", "ECRF")), by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
       mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE,DATA_SOURCE, DIAGNOSIS, DIAGNOSIS_DATE) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID,  desc(VISIT_ENCOUNTER_START_DATE)) %>%
