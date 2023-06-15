@@ -36,37 +36,11 @@ library(readxl, quietly = T)
 knitr::kable(ibdplexus:::simple_risk_columns)
 ```
 
+<!-- ### MEDICATIONS_AT_VISIT -->
 
-## `risk_meds_at_visit`
+<!-- The column `MEDICATIONS_AT_VISIT` is a list of medications the patient was on at that visit. The medications at visit column is based on medications listed associated with the VISIT_ENCOUNTER_ID in the prescriptions table. -->
 
-The function `risk_meds_at_visit` produces a dataframe. It is also the function used to create the `MEDICATIONS_AT_VISIT` column in the RISK Summary table. It requires the `prescriptions` table and `encounter` table from the `load_data` function.
-
-```{r, eval = F}
-# load all risk data
-dat <- load_data("~/r_input/", cohort = "RISK", domains = c("prescriptions", "encounter"), data_type = "CRF")
-
-# run risk_meds_at_visit function
-risk_meds_at_visit_df <- risk_meds_at_visit(dat$prescriptions, dat$encounter)
-```
-
-The columns produced from the `risk_meds_at_visit` function are:
-
-| `risk_meds_at_visit` columns   |
-|--------------------------------|
-| DEIDENTIFIED_MASTER_PATIENT_ID |
-| DEIDENTIFIED_PATIENT_ID        |
-| DATA_SOURCE                    |
-| VISIT_ENCOUNTER_ID             |
-| TYPE_OF_ENCOUNTER              |
-| MEDICATIONS_AT_VISIT           |
-| VISIT_ENCOUNTER_START_DATE     |
-| VISIT_ENCOUNTER_END_DATE       |
-
-### MEDICATIONS_AT_VISIT
-
-The column `MEDICATIONS_AT_VISIT` is a list of medications the patient was on at that visit. The medications at visit column is based on medications listed associated with the VISIT_ENCOUNTER_ID in the prescriptions table.
-
-If a medication had been administered but there was no start date recorded, assume the start date is the visit encounter date.
+<!-- If a medication had been administered but there was no start date recorded, assume the start date is the visit encounter date. -->
 
 ## `wpcdai`
 

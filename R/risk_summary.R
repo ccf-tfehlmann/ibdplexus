@@ -61,8 +61,8 @@ risk_summary <- function(dir,
   data$prescriptions <- data$prescriptions %>% filter(DATA_SOURCE == "RISK")
   data$procedures <- data$procedures %>% filter(DATA_SOURCE == "RISK")
 
-  # CLB: Create medications at visit table
-  meds <- risk_meds_at_visit(prescriptions = prescriptions_med, encounter = encounter_med)
+  # # CLB: Create medications at visit table
+  # meds <- risk_meds_at_visit(prescriptions = prescriptions_med, encounter = encounter_med)
 
   #Filter diagnosis for patient's medical conditions (excluding leading question), extra-intestinal manifestations leading question (combining enrollment and follow-up), diagnosis date for IBD diseases at enrollment, and valid status concept name for Ankylising Spondlitis
   data$diagnosis$DIAG_CONCEPT_NAME[data$diagnosis$DIAG_CONCEPT_NAME %in% "Extra-Intestinal Manifestations Follow-up"] <- "Extra-Intestinal Manifestations"
@@ -334,8 +334,8 @@ risk_summary <- function(dir,
   visit <- visit %>%
     mutate(VISIT_ENCOUNTER_START_DATE = as.Date(VISIT_ENCOUNTER_START_DATE))
 
-  # join meds_at_visit table
-  visit <- left_join(visit, meds)
+  # # join meds_at_visit table
+  # visit <- left_join(visit, meds)
 
   #Sort table by deidentified master patient ID and encounter date
   visit <- visit[order(visit$DEIDENTIFIED_MASTER_PATIENT_ID, visit$VISIT_MONTH),]
