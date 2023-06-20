@@ -50,9 +50,9 @@ risk_med_journey <- function(prescriptions, encounter){
   ### entered like that. methotrexate problem when med start date is the same as
   ### med end date
 
-  #### MED_SIMPLE_TABLE ----
+  #### MED_GROUP_TABLE ----
 
-  med_simple <- prescriptions %>%
+  med_group <- prescriptions %>%
     distinct(MEDICATION_NAME) %>%
     # select out all of the medication names that are just leading questions at
     # enrollment
@@ -61,7 +61,7 @@ risk_med_journey <- function(prescriptions, encounter){
              MEDICATION_NAME != "Biologic Agents" & MEDICATION_NAME != "Exclusive Enteral Therapy" &
              MEDICATION_NAME != "Supplemental Enteral Therapy") %>%
     mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
-    mutate(MED_SIMPLE = case_when(MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
+    mutate(MED_GROUP = case_when(MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
                                   MEDICATION_NAME %in% c("Azathioprine", "Mercaptopurine", "Tacrolimus", "Cyclosporine",
                                                          "Methotrexate") ~ "Immunomodulators",
                                   MEDICATION_NAME %in% c("Adalimumab", "Certolizumab Pegol", "Infliximab (Unspecified)",
@@ -96,19 +96,19 @@ risk_med_journey <- function(prescriptions, encounter){
     # filter for the meds in sparc script first. Try to work on prednisone/on-off
     # meds later
     mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
-    mutate(MED_SIMPLE = case_when(MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
+    mutate(MED_GROUP = case_when(MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
                                   MEDICATION_NAME %in% c("Azathioprine", "Mercaptopurine", "Tacrolimus", "Cyclosporine",
                                                          "Methotrexate") ~ "Immunomodulators",
                                   MEDICATION_NAME %in% c("Adalimumab", "Certolizumab Pegol", "Infliximab (Unspecified)",
                                                          "Natalizumab") ~ "Biologic")) %>%
-    filter(!is.na(MED_SIMPLE))
+    filter(!is.na(MED_GROUP))
 
   #### MOA ----
 
   # create MOA dataframe (from SPARC)
 
   moa <- meds %>%
-    distinct(MEDICATION_NAME, MED_SIMPLE) %>%
+    distinct(MEDICATION_NAME, MED_GROUP) %>%
     mutate(MOA =case_when(grepl("Adalimumab|Certolizumab Pegol", MEDICATION_NAME, ignore.case = T)  ~ "antiTNF",
                           MEDICATION_NAME %in% c("Natalizumab") ~ "IRA",
                           MEDICATION_NAME == "Infliximab (Unspecified)" ~ "antiTNF",
@@ -195,7 +195,7 @@ risk_med_journey <- function(prescriptions, encounter){
     filter(n > 1) %>%
     # max stop dates is 4
     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME,
-           MED_END_DATE, MED_SIMPLE, n) %>%
+           MED_END_DATE, MED_GROUP, n) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     arrange(MED_END_DATE, .by_group = T) %>%
     mutate(order = row_number()) %>%
@@ -208,10 +208,10 @@ risk_med_journey <- function(prescriptions, encounter){
     # date. If not drop those patients, assume the latest end date is true end
     left_join(meds %>%
                 select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,
-                       MED_START_DATE, MED_SIMPLE) %>%
+                       MED_START_DATE, MED_GROUP) %>%
                 filter(!is.na(MED_START_DATE)),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
-                           MEDICATION_NAME, MED_SIMPLE), multiple = "all") %>%
+                           MEDICATION_NAME, MED_GROUP), multiple = "all") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
     # create flag to find med_start dates that are after the med end date
@@ -248,10 +248,10 @@ risk_med_journey <- function(prescriptions, encounter){
     # date. If not drop those patients, assume the latest end date is true end
     left_join(meds %>%
                 select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,
-                       MED_START_DATE, MED_SIMPLE) %>%
+                       MED_START_DATE, MED_GROUP) %>%
                 filter(!is.na(MED_START_DATE)),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
-                           MEDICATION_NAME, MED_SIMPLE), multiple = "all") %>%
+                           MEDICATION_NAME, MED_GROUP), multiple = "all") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
     # create flag to find med_start dates that are after the med end date
@@ -292,10 +292,10 @@ risk_med_journey <- function(prescriptions, encounter){
     # date. If not drop those patients, assume the latest end date is true end
     left_join(meds %>%
                 select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,
-                       MED_START_DATE, MED_SIMPLE) %>%
+                       MED_START_DATE, MED_GROUP) %>%
                 filter(!is.na(MED_START_DATE)),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
-                           MEDICATION_NAME, MED_SIMPLE), multiple = "all") %>%
+                           MEDICATION_NAME, MED_GROUP), multiple = "all") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
     # create flag to find med_start dates that are after the med end date
@@ -335,10 +335,10 @@ risk_med_journey <- function(prescriptions, encounter){
     # date. If not drop those patients, assume the latest end date is true end
     left_join(meds %>%
                 select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,
-                       MED_START_DATE, MED_SIMPLE) %>%
+                       MED_START_DATE, MED_GROUP) %>%
                 filter(!is.na(MED_START_DATE)),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
-                           MEDICATION_NAME, MED_SIMPLE), multiple = "all") %>%
+                           MEDICATION_NAME, MED_GROUP), multiple = "all") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
     # create flag to find med_start dates that are after the med end date
@@ -394,7 +394,7 @@ risk_med_journey <- function(prescriptions, encounter){
     left_join(earliest_start_multiple_end, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                         MEDICATION_NAME)) %>%
     left_join(first_med_end_dates %>%
-                select(-c(n, order, flag, no_restart, VISIT_ENCOUNTER_ID, MED_SIMPLE)),
+                select(-c(n, order, flag, no_restart, VISIT_ENCOUNTER_ID, MED_GROUP)),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)) %>%
     # join all patients with two med ends dates
     left_join(second_med_end_dates, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)) %>%
@@ -566,7 +566,7 @@ risk_med_journey <- function(prescriptions, encounter){
 
   # add med simple to table
   table <- table %>%
-    left_join(med_simple, by = join_by(MEDICATION_NAME))
+    left_join(med_group, by = join_by(MEDICATION_NAME))
 
   #### FILL MISSING END DATES ----
 
@@ -595,7 +595,7 @@ risk_med_journey <- function(prescriptions, encounter){
                                     MEDICATION_ADMINISTRATED == "No", VISIT_ENCOUNTER_START_DATE, NA)) %>%
     filter(!is.na(MED_END_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE,
-           MED_NUMBER, date_error_flag, same_start_date_flag, MED_SIMPLE) %>%
+           MED_NUMBER, date_error_flag, same_start_date_flag, MED_GROUP) %>%
     distinct()
 
   # make the med end date for all other patients the day of their last visit
@@ -622,7 +622,7 @@ risk_med_journey <- function(prescriptions, encounter){
     mutate(MED_END_DATE = if_else(flag != 1, VISIT_ENCOUNTER_START_DATE,
                                   MED_START_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
-           MED_END_DATE, MED_NUMBER, date_error_flag, same_start_date_flag, MED_SIMPLE)
+           MED_END_DATE, MED_NUMBER, date_error_flag, same_start_date_flag, MED_GROUP)
 
   all_missing_med_ends_final <- missing_ends_other %>%
     rbind(missing_ends_ongoing_no) %>%
@@ -632,7 +632,7 @@ risk_med_journey <- function(prescriptions, encounter){
     left_join(all_missing_med_ends_final, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                        MEDICATION_NAME, MED_START_DATE, MED_NUMBER,
                                                        date_error_flag, same_start_date_flag,
-                                                       MED_SIMPLE)) %>%
+                                                       MED_GROUP)) %>%
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE), MED_END_DATE_new, MED_END_DATE)) %>%
     select(-MED_END_DATE_new)
 
