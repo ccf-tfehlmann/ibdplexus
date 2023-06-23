@@ -88,8 +88,15 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
 
 
   dx <- full_join(dx_sf, dx_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_START_DATE")) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) #%>%
+    mutate(source = case_when(
+      if_all(starts_with("SF"), is.na) ~ "ECRF",
+
+      T ~ "SF"
+    )) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(source), VISIT_ENCOUNTER_START_DATE) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    slice(1) %>%
+    ungroup() #%>%
       #rowwise() %>%
       #mutate(`Crohn's Disease` = sum(c_across(contains("SPARC")) == "Crohn's Disease", na.rm = T),
       #       `Ulcerative Colitis` = sum(c_across(contains("SPARC")) == "Ulcerative Colitis", na.rm = T),
