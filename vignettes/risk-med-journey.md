@@ -9,8 +9,8 @@ the RISK study. The columns included in the RISK medication journey are:
 
 <table>
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 75%" />
+<col style="width: 26%" />
+<col style="width: 73%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -50,7 +50,7 @@ medications based on medication start date. The first medication a
 patient received == 1.</td>
 </tr>
 <tr class="even">
-<td>MED_SIMPLE</td>
+<td>MED_GROUP</td>
 <td>The class of medication. Either biologic, 5-ASA (aminosalicylates),
 or immunomodulators.</td>
 </tr>
