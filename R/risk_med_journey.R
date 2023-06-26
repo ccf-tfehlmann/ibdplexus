@@ -529,7 +529,7 @@ risk_med_journey <- function(prescriptions, encounter){
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
     # add row number for number therapy the patient has been on
-    mutate(MED_NUMBER = row_number()) %>%
+    mutate(MED_ORDER = row_number()) %>%
     ungroup() %>%
     # create flag for messed up dates
     mutate(date_error_flag = if_else(MED_START_DATE > MED_END_DATE, 1, 0),
@@ -561,7 +561,7 @@ risk_med_journey <- function(prescriptions, encounter){
     ungroup() %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     arrange(MED_START_DATE) %>%
-    mutate(MED_NUMBER = row_number()) %>%
+    mutate(MED_ORDER = row_number()) %>%
     ungroup()
 
   # add med simple to table
@@ -595,7 +595,7 @@ risk_med_journey <- function(prescriptions, encounter){
                                     MEDICATION_ADMINISTRATED == "No", VISIT_ENCOUNTER_START_DATE, NA)) %>%
     filter(!is.na(MED_END_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE,
-           MED_NUMBER, date_error_flag, same_start_date_flag, MED_GROUP) %>%
+           MED_ORDER, date_error_flag, same_start_date_flag, MED_GROUP) %>%
     distinct()
 
   # make the med end date for all other patients the day of their last visit
@@ -622,7 +622,7 @@ risk_med_journey <- function(prescriptions, encounter){
     mutate(MED_END_DATE = if_else(flag != 1, VISIT_ENCOUNTER_START_DATE,
                                   MED_START_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
-           MED_END_DATE, MED_NUMBER, date_error_flag, same_start_date_flag, MED_GROUP)
+           MED_END_DATE, MED_ORDER, date_error_flag, same_start_date_flag, MED_GROUP)
 
   all_missing_med_ends_final <- missing_ends_other %>%
     rbind(missing_ends_ongoing_no) %>%
@@ -630,7 +630,7 @@ risk_med_journey <- function(prescriptions, encounter){
 
   table <- table %>%
     left_join(all_missing_med_ends_final, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
-                                                       MEDICATION_NAME, MED_START_DATE, MED_NUMBER,
+                                                       MEDICATION_NAME, MED_START_DATE, MED_ORDER,
                                                        date_error_flag, same_start_date_flag,
                                                        MED_GROUP)) %>%
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE), MED_END_DATE_new, MED_END_DATE)) %>%
@@ -649,7 +649,7 @@ risk_med_journey <- function(prescriptions, encounter){
   overlapping_medications <- overlapping_meds(table)
   table <- table %>%
     right_join(overlapping_medications, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
-                                                     MEDICATION_NAME, MED_START_DATE, MED_END_DATE, MED_NUMBER,
+                                                     MEDICATION_NAME, MED_START_DATE, MED_END_DATE, MED_ORDER,
                                                      INTERVAL))
 
   #### OVERLAPPING MOA ----
@@ -719,12 +719,12 @@ risk_med_journey <- function(prescriptions, encounter){
   #### FINAL ARRANGE ----
   table <- table %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    # remake final MED_NUMBER
-    select(-MED_NUMBER) %>%
+    # remake final MED_ORDER
+    select(-MED_ORDER) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
-    mutate(MED_NUMBER = row_number()) %>%
-    arrange(MED_NUMBER, .by_group = T) %>%
+    mutate(MED_ORDER = row_number()) %>%
+    arrange(MED_ORDER, .by_group = T) %>%
     ungroup() %>%
     # CLB: DROP THE DATE ERROR FLAG AND SAME START DATE FLAG FOR NOW, USE LATER
     # DROP interval column, same as med start and end
