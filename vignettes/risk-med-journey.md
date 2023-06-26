@@ -9,8 +9,8 @@ the RISK study. The columns included in the RISK medication journey are:
 
 <table>
 <colgroup>
-<col style="width: 9%" />
-<col style="width: 90%" />
+<col style="width: 25%" />
+<col style="width: 75%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -44,7 +44,7 @@ start and end dates, each interval for the medication is a separate row
 in the medication journey table.</td>
 </tr>
 <tr class="odd">
-<td>MED_NUMBER</td>
+<td>MED_ORDER</td>
 <td>An index that counts the order in which a patient received
 medications based on medication start date. The first medication a
 patient received == 1.</td>
@@ -93,3 +93,10 @@ reported medication end date for one anti-TNF medication and another
 anti-TNF medication was started, then the day before the start date of
 the next anti-TNF is used as the medication end date for the prior
 medication.
+
+#### Overlapping Medications
+
+Medications are considered overlapping if there is at least 1 day where
+the medication intervals overlap. If a medication was started on the
+same day another medication was stopped, these medications are not
+considered overlapping.
