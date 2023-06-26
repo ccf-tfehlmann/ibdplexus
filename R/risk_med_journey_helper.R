@@ -257,9 +257,25 @@ overlapping_meds <- function(table){
     mutate(OVERLAP_DAYS = time_length(intersect(INTERVAL, int), unit = "days"))  %>%
     select(-which_lag)
 
+
+#### ZERO DAYS OVERLAP REMOVE ----
+  # create table with the overlapping meds of 0 days to remove them from the
+  # lists
+  zero_overlaps_remove <-  lag_overlaps_int %>%
+    rbind(lead_overlaps_int) %>%
+    filter(OVERLAP_DAYS == 0) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE, med) %>%
+    mutate(MED_GROUP = case_when(MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
+                                 MEDICATION_NAME %in% c("Azathioprine", "Mercaptopurine", "Tacrolimus", "Cyclosporine",
+                                                        "Methotrexate") ~ "Immunomodulators",
+                                 MEDICATION_NAME %in% c("Adalimumab", "Certolizumab Pegol", "Infliximab (Unspecified)",
+                                                        "Natalizumab") ~ "Biologic")) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE) %>%
+    summarise(meds=paste(med,collapse='; ')) %>%
+    separate(meds, into = c("meds1", "meds2", "meds3"), "; ")
+
   all_overlaps_int <- lag_overlaps_int %>%
     rbind(lead_overlaps_int) %>%
-    # remove meds that overlap 0 days
     filter(OVERLAP_DAYS != 0) %>%
     mutate(OVERLAP_DAYS = ifelse(OVERLAP_DAYS < 0, abs(OVERLAP_DAYS), OVERLAP_DAYS)) %>%
     rename(MED = med) %>%
@@ -277,7 +293,21 @@ overlapping_meds <- function(table){
 
   final <- all_overlaps %>%
     left_join(all_overlaps_int, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,
-                                             MED_START_DATE, MED_END_DATE))
+                                             MED_START_DATE, MED_END_DATE)) %>%
+    # remove 0 day overlaps
+    left_join(zero_overlaps_remove, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID,
+                                                 MEDICATION_NAME, MED_START_DATE, MED_END_DATE)) %>%
+    ungroup() %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE) %>%
+    mutate(MEDS_OVERLAP = ifelse(!is.na(meds1) & str_detect(MEDS_OVERLAP, meds1),
+                                 gsub(meds1, " ", MEDS_OVERLAP), MEDS_OVERLAP),
+           MEDS_OVERLAP = ifelse(!is.na(meds2) & str_detect(MEDS_OVERLAP, meds2),
+                                 gsub(meds2, " ", MEDS_OVERLAP), MEDS_OVERLAP),
+           MEDS_OVERLAP = ifelse(!is.na(meds3) & str_detect(MEDS_OVERLAP, meds3),
+                                 gsub(meds3, " ", MEDS_OVERLAP), MEDS_OVERLAP)) %>%
+    mutate(MEDS_OVERLAP = gsub(" ; ", "", MEDS_OVERLAP)) %>%
+    mutate(MEDS_OVERLAP = ifelse(MEDS_OVERLAP == " ", NA, MEDS_OVERLAP)) %>%
+    select(-c(meds1, meds2, meds3))
 }
 
 #' risk_steroid_rounds
