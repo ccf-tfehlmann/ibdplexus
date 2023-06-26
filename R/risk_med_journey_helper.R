@@ -25,7 +25,7 @@ overlapping_meds <- function(table){
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     arrange(MED_START_DATE, .by_group = T) %>%
     # add row number for number therapy the patient has been on
-    mutate(MED_NUMBER = row_number())
+    mutate(MED_ORDER = row_number())
 
   ## 8 overall meds
   # find one lead and one lag, then create groups like I did for
@@ -38,16 +38,16 @@ overlapping_meds <- function(table){
   # interval to compare with
   overlaps_lead <- all_meds %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    arrange(desc(MED_NUMBER), .by_group = T) %>%
+    arrange(desc(MED_ORDER), .by_group = T) %>%
     mutate(num_end = row_number()) %>%
-    arrange(MED_NUMBER, .by_group = T)
+    arrange(MED_ORDER, .by_group = T)
 
   max_rounds <- overlaps_lead %>%
     ungroup() %>%
-    select(MED_NUMBER) %>%
-    slice(which.max(MED_NUMBER))
+    select(MED_ORDER) %>%
+    slice(which.max(MED_ORDER))
 
-  max_rounds <- max_rounds$MED_NUMBER
+  max_rounds <- max_rounds$MED_ORDER
 
   # for loop comparing all intervals
   for(i in 1:max_rounds) {
@@ -91,9 +91,9 @@ overlapping_meds <- function(table){
   #### lag overlaps ---
   overlaps_lag <- all_meds %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    arrange(desc(MED_NUMBER), .by_group = T) %>%
+    arrange(desc(MED_ORDER), .by_group = T) %>%
     mutate(num_end = row_number()) %>%
-    arrange(MED_NUMBER, .by_group = T)
+    arrange(MED_ORDER, .by_group = T)
 
   # for loop comparing all intervals
   for(i in 1:max_rounds) {
@@ -109,7 +109,7 @@ overlapping_meds <- function(table){
   # make the values NA when they are checking for a lead for a different patient ID
   for (i in name_1){
 
-    overlaps_lag[[i]] <- ifelse(overlaps_lag$MED_NUMBER <= parse_number(i), NA, overlaps_lag[[i]])
+    overlaps_lag[[i]] <- ifelse(overlaps_lag$MED_ORDER <= parse_number(i), NA, overlaps_lag[[i]])
 
   }
 
@@ -135,9 +135,9 @@ overlapping_meds <- function(table){
 
   all_overlaps <- lag_overlaps %>%
     full_join(lead_overlaps, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE, INTERVAL,
-                                          MED_NUMBER)) %>%
+                                          MED_ORDER)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    arrange(MED_NUMBER, .by_group = T) %>%
+    arrange(MED_ORDER, .by_group = T) %>%
     pivot_longer(starts_with("MEDS_OVERLAP"), names_to = "leadorlag", values_to = "MEDS_OVERLAP_draft") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE) %>%
     filter(!is.na(MEDS_OVERLAP_draft)) %>%
@@ -145,7 +145,7 @@ overlapping_meds <- function(table){
     select(-c(leadorlag, MEDS_OVERLAP_draft)) %>%
     distinct() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
-           MED_END_DATE, MED_NUMBER, MEDS_OVERLAP)
+           MED_END_DATE, MED_ORDER, MEDS_OVERLAP)
 
   #### OVERLAPPING DAYS ----
 
@@ -156,16 +156,16 @@ overlapping_meds <- function(table){
   # interval to compare with
   overlaps_lead_ints <- all_meds %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    arrange(desc(MED_NUMBER), .by_group = T) %>%
+    arrange(desc(MED_ORDER), .by_group = T) %>%
     mutate(num_end = row_number()) %>%
-    arrange(MED_NUMBER, .by_group = T)
+    arrange(MED_ORDER, .by_group = T)
 
   max_rounds <- overlaps_lead_ints %>%
     ungroup() %>%
-    select(MED_NUMBER) %>%
-    slice(which.max(MED_NUMBER))
+    select(MED_ORDER) %>%
+    slice(which.max(MED_ORDER))
 
-  max_rounds <- max_rounds$MED_NUMBER
+  max_rounds <- max_rounds$MED_ORDER
 
   # for loop comparing all intervals
   for(i in 1:max_rounds) {
@@ -211,9 +211,9 @@ overlapping_meds <- function(table){
   #### lag overlaps ---
   overlaps_lag_ints <- all_meds %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    arrange(desc(MED_NUMBER), .by_group = T) %>%
+    arrange(desc(MED_ORDER), .by_group = T) %>%
     mutate(num_end = row_number()) %>%
-    arrange(MED_NUMBER, .by_group = T)
+    arrange(MED_ORDER, .by_group = T)
 
   # for loop comparing all intervals
   for(i in 1:max_rounds) {
@@ -229,7 +229,7 @@ overlapping_meds <- function(table){
   # make the values NA when they are checking for a lead for a different patient ID
   for (i in name_1){
 
-    overlaps_lag_ints[[i]] <- ifelse(overlaps_lag_ints$MED_NUMBER <= parse_number(i), NA, overlaps_lag_ints[[i]])
+    overlaps_lag_ints[[i]] <- ifelse(overlaps_lag_ints$MED_ORDER <= parse_number(i), NA, overlaps_lag_ints[[i]])
 
   }
 
@@ -259,7 +259,9 @@ overlapping_meds <- function(table){
 
   all_overlaps_int <- lag_overlaps_int %>%
     rbind(lead_overlaps_int) %>%
-    mutate(OVERLAP_DAYS = ifelse(OVERLAP_DAYS < 0, 0, OVERLAP_DAYS)) %>%
+    # remove meds that overlap 0 days
+    filter(OVERLAP_DAYS != 0) %>%
+    mutate(OVERLAP_DAYS = ifelse(OVERLAP_DAYS < 0, abs(OVERLAP_DAYS), OVERLAP_DAYS)) %>%
     rename(MED = med) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE,
            INTERVAL, MED, int, OVERLAP_DAYS) %>%
