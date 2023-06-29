@@ -116,6 +116,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   names(data) <- gsub("_SiteExtract", "", names(data))
   names(data) <- gsub("^[_]|_$|__$|___$|____$", "", names(data))
   names(data) <- gsub("_CRF|_EMR|_COVID", "", names(data), ignore.case = T)
+  names(data) <- gsub("sparc_", "", names(data), ignore.case = T)
 
 
 
@@ -316,6 +317,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   names(data) <- gsub("^[_]|_$|__$|___$|____$", "", names(data))
 
   names(data) <- gsub("_CRF|_EMR|_COVID", "", names(data), ignore.case = T)
+  names(data) <- gsub("sparc_", "", names(data), ignore.case = T)
 
 
   # Combine Data with the Same Name (Collapses EMR and CRF data)
