@@ -28,5 +28,4 @@ Creates dataframe with patient and visit encounter ID's, wPCDAI calculation, and
 # get dataframe with wpcdai
 # wpcdai <- wpcdai(observations, encounter, labs)
 
-
 }

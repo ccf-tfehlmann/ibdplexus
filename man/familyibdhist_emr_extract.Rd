@@ -20,9 +20,9 @@ First degree is defined as: Biological Parent, Sibling or Child.
 }
 \examples{
 
-#example for patient family history
+# example for patient family history
 
-#famhist = familyibdhist_emr_extract(data)
+# famhist = familyibdhist_emr_extract(data)
 #example for only first degree family member history
 
 #famhist1stdeg = familyibdhist_emr_extract(data,relation="FIRST_DEG")

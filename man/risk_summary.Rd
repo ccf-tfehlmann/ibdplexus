@@ -25,5 +25,4 @@ Creates RISK Cohort Summary Table with wPCDAI calculations, and exports as an ex
 # export RISK Summary Table to xlsx
 # risk_summary(dir, data = dat, filename = "RISK_Summary.xlsx")
 
-
 }

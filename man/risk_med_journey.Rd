@@ -35,6 +35,4 @@ The medication with with earliest start date will have MEDICATION_NUMBER = 1.}
 # export RISK Summary Table to xlsx
 # risk_med_journey_df <- risk_med_journey(dat$prescriptions, dat$encounter)
 
-
-
 }

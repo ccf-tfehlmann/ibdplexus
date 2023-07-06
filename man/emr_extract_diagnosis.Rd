@@ -39,11 +39,11 @@ interest.
 }
 \examples{
 
-#example with predefined category (all cancer diagnoses excluding skin carcinomas)
+# example with predefined category (all cancer diagnoses excluding skin carcinomas)
 
-#cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
+# cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
 
-#example with custom category (all cancer diagnoses excluding cervical carcinomas)
+# example with custom category (all cancer diagnoses excluding cervical carcinomas)
 #example with predefined category
 
 #cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
