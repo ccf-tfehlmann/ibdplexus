@@ -51,7 +51,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
   study <- toupper(study)
 
   if (study == "SPARC") {
-   dx_sf <- diagnosis %>%
+    dx_sf <- diagnosis %>%
       filter(DATA_SOURCE %in% c("SF_SPARC")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
       left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
@@ -59,70 +59,75 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
       dplyr::mutate(keep = ifelse(DATA_SOURCE == "SF_SPARC" & is.na(DIAG_STATUS_CONCEPT_NAME), 0, 1)) %>% # Smartform Data should have a DIAG_STATUS_CONCEPT_NAME equal to yes
       filter(keep == 1) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE,DATA_SOURCE, DIAGNOSIS) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, DATA_SOURCE, DIAGNOSIS) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>%
       mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
       ungroup() %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
-                  names_from = c,
-                  values_from = DIAGNOSIS)
+      pivot_wider(
+        id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
+        names_from = c,
+        values_from = DIAGNOSIS
+      )
 
-   dx_ecrf <-  diagnosis %>%
-      filter(DATA_SOURCE %in% c( "ECRF_SPARC", "ECRF")) %>%
+    dx_ecrf <- diagnosis %>%
+      filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
-      left_join(encounter %>% filter(DATA_SOURCE %in% c( "ECRF_SPARC", "ECRF")), by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
+      left_join(encounter %>% filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF")), by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE")) %>%
       mutate(DIAGNOSIS = DIAG_CONCEPT_NAME) %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE,DATA_SOURCE, DIAGNOSIS, DIAGNOSIS_DATE) %>%
-      arrange(DEIDENTIFIED_MASTER_PATIENT_ID,  desc(VISIT_ENCOUNTER_START_DATE)) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, DATA_SOURCE, DIAGNOSIS, DIAGNOSIS_DATE) %>%
+      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
       filter(case_when(!is.na(DIAGNOSIS_DATE) ~ dmy(DIAGNOSIS_DATE) == max(dmy(DIAGNOSIS_DATE)), TRUE ~ is.na(DIAGNOSIS_DATE))) %>%
       mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
       ungroup() %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
-                  names_from = c,
-                  values_from = DIAGNOSIS)
+      pivot_wider(
+        id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE),
+        names_from = c,
+        values_from = DIAGNOSIS
+      )
 
 
-  dx <- full_join(dx_sf, dx_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_START_DATE")) %>%
-    mutate(source = case_when(
-      if_all(starts_with("SF"), is.na) ~ "ECRF",
+    dx <- full_join(dx_sf, dx_ecrf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_START_DATE")) %>%
+      mutate(source = case_when(
+        if_all(starts_with("SF"), is.na) ~ "ECRF",
+        T ~ "SF"
+      )) %>%
+      arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(source), VISIT_ENCOUNTER_START_DATE) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      slice(1) %>%
+      ungroup() # %>%
+    # rowwise() %>%
+    # mutate(`Crohn's Disease` = sum(c_across(contains("SPARC")) == "Crohn's Disease", na.rm = T),
+    #       `Ulcerative Colitis` = sum(c_across(contains("SPARC")) == "Ulcerative Colitis", na.rm = T),
+    #       `IBD Unclassified` = sum(c_across(contains("SPARC")) == "IBD Unclassified", na.rm = T))
 
-      T ~ "SF"
-    )) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(source), VISIT_ENCOUNTER_START_DATE) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    slice(1) %>%
-    ungroup() #%>%
-      #rowwise() %>%
-      #mutate(`Crohn's Disease` = sum(c_across(contains("SPARC")) == "Crohn's Disease", na.rm = T),
-      #       `Ulcerative Colitis` = sum(c_across(contains("SPARC")) == "Ulcerative Colitis", na.rm = T),
-      #       `IBD Unclassified` = sum(c_across(contains("SPARC")) == "IBD Unclassified", na.rm = T))
-
-    #START HERE ----
+    # START HERE ----
     # n <- grep("Crohn's Disease|Ulcerative Colitis|IBD Unclassified", names(dx))
     # dx$DIAGNOSIS <- names(dx)[n][max.col(dx[n], 'last')*NA^(rowSums(dx[n])==0)]
 
-    if("SF_SPARC_2" %in% colnames(dx))
-    {
+    if ("SF_SPARC_2" %in% colnames(dx)) {
       dx <- dx %>%
-                    ungroup() %>%
-        mutate(DIAGNOSIS = case_when(SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_1 == ECRF_SPARC_1 ~ SF_SPARC_1,
-                                     SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_2 == ECRF_SPARC_1 ~ SF_SPARC_2,
-                                     SF_SPARC_1 == SF_SPARC_2 ~ SF_SPARC_1,
-                                     !is.na(SF_SPARC_1) & is.na(SF_SPARC_2) ~ SF_SPARC_1,
-                                     TRUE ~ as.character(NA))) %>%
+        ungroup() %>%
+        mutate(DIAGNOSIS = case_when(
+          SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_1 == ECRF_SPARC_1 ~ SF_SPARC_1,
+          SF_SPARC_1 != SF_SPARC_2 & SF_SPARC_2 == ECRF_SPARC_1 ~ SF_SPARC_2,
+          SF_SPARC_1 == SF_SPARC_2 ~ SF_SPARC_1,
+          !is.na(SF_SPARC_1) & is.na(SF_SPARC_2) ~ SF_SPARC_1,
+          TRUE ~ as.character(NA)
+        )) %>%
         mutate(DIAGNOSIS = ifelse(is.na(DIAGNOSIS), ECRF_SPARC_1, DIAGNOSIS))
-    } else
-    {
-      dx <- dx %>%  ungroup() %>% mutate(DIAGNOSIS = ifelse(is.na(SF_SPARC_1), ECRF_SPARC_1, SF_SPARC_1))
+    } else {
+      dx <- dx %>%
+        ungroup() %>%
+        mutate(DIAGNOSIS = ifelse(is.na(SF_SPARC_1), ECRF_SPARC_1, SF_SPARC_1))
     }
 
 
-     dx <- dx %>%
+    dx <- dx %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS) %>%
       ungroup()
 
@@ -231,7 +236,7 @@ extract_race <- function(demographics, study) {
   # combine multipe entries per subject into a single line.
   race <- race %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    summarise(across(everything(),~ paste0(sort(unique(.x[!is.na(.x)])), collapse = "; "))) %>%
+    summarise(across(everything(), ~ paste0(sort(unique(.x[!is.na(.x)])), collapse = "; "))) %>%
     ungroup()
   # race <- data.table::as.data.table(race)
   # race <- race[, lapply(.SD, function(x) {
@@ -255,8 +260,7 @@ extract_race <- function(demographics, study) {
 #' @return A dataframe with the master patient id, lab result, units and date of specimen collection
 #' @export
 #'
-extract_labs <- function(labs, test){
-
+extract_labs <- function(labs, test) {
   if (test == "hscrp") {
     result <- labs %>%
       filter(LAB_TEST_CONCEPT_NAME == "HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)")
@@ -268,7 +272,5 @@ extract_labs <- function(labs, test){
   result <- result %>%
     mutate(SPECIMEN_COLLECTION_DATE = dmy(SPECIMEN_COLLECTION_DATE)) %>%
     mutate(LAB_RESULTS = ifelse(is.na(LAB_RESULTS), TEST_RESULT_NUMERIC, LAB_RESULTS)) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID,LAB_TEST_CONCEPT_NAME,SPECIMEN_COLLECTION_DATE, LAB_RESULTS, TEST_UNIT)
-
-
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, LAB_TEST_CONCEPT_NAME, SPECIMEN_COLLECTION_DATE, LAB_RESULTS, TEST_UNIT)
 }

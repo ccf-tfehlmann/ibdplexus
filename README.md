@@ -14,18 +14,18 @@ More information on Plexus and the cohorts can be found
 [here](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/ibd-plexus).
 Functions include:
 
--   `load_data()` loads unzipped data from Plexus
--   `load_zipped_data()` loads zipped data from Plexus
--   `risk_extract_clinical_data()` creates a summary table by visit for
-    RISK
--   `sparc_summary()` creates a summary table for SPARC
--   `calculate_disease_scores()` calculates disease scores for SPARC
--   `sparc_scores()` calculates disease scores at a specific time for
-    SPARC
--   `sparc_medication()` predicts the medication a SPARC participant is
-    on at a specific time
--   `emr_extract_diagnosis()` subsets the plexus extract based on
-    specified ICD10 codes
+- `load_data()` loads unzipped data from Plexus
+- `load_zipped_data()` loads zipped data from Plexus
+- `risk_extract_clinical_data()` creates a summary table by visit for
+  RISK
+- `sparc_summary()` creates a summary table for SPARC
+- `calculate_disease_scores()` calculates disease scores for SPARC
+- `sparc_scores()` calculates disease scores at a specific time for
+  SPARC
+- `sparc_medication()` predicts the medication a SPARC participant is on
+  at a specific time
+- `emr_extract_diagnosis()` subsets the plexus extract based on
+  specified ICD10 codes
 
 ## Installation
 
@@ -39,20 +39,19 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 
 ## User Guides
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>
+- <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/Calculating_Disease_Activity_Scores_for_SPARC.pdf">`calculate_disease_scores()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
+- <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
+- <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>
+- <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>
 
--   <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/inst/userguides/Diagnosis_EMR_Extract.md">`Diagnosis_EMR_Extract`</a>
+- <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/inst/userguides/Diagnosis_EMR_Extract.md">`Diagnosis_EMR_Extract`</a>
 
 ## Example
 
 ``` r
-
 library(ibdplexus)
 
 # Load in all data in IBD Plexus for the SPARC cohort ----
@@ -61,11 +60,11 @@ data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = "ALL", dat
 
 # Get Excel Tables and Data.Frames with Data Summarised within 60 days of the Enrollment Time Point ----
 
-# SPARC Summary Table 
+# SPARC Summary Table
 e_sum <- sparc_summary(
   data = data,
   index_info = "ENROLLMENT",
-  filename = "SPARC_SUMMARY_ENROLLMENT.xlsx")),
+  filename = "SPARC_SUMMARY_ENROLLMENT.xlsx",
   index_range = "60"
 )
 
@@ -75,7 +74,7 @@ e_sum <- sparc_summary(
 e_scores <- sparc_scores(
   data = data,
   index_info = "ENROLLMENT",
-  filename = "SPARC_SCORES_ENROLLMENT.xlsx")),
+  filename = "SPARC_SCORES_ENROLLMENT.xlsx",
   index_range = "60"
 )
 
@@ -85,6 +84,6 @@ e_scores <- sparc_scores(
 e_med <- sparc_medication(
   data = data,
   index_info = "ENROLLMENT",
-  filename = "SPARC_MEDICATION_ENROLLMENT.xlsx")),
+  filename = "SPARC_MEDICATION_ENROLLMENT.xlsx"
 )
 ```

@@ -58,7 +58,6 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 ## Example
 
 ```{r example, eval = FALSE}
-
 library(ibdplexus)
 
 # Load in all data in IBD Plexus for the SPARC cohort ----
@@ -67,11 +66,11 @@ data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = "ALL", dat
 
 # Get Excel Tables and Data.Frames with Data Summarised within 60 days of the Enrollment Time Point ----
 
-# SPARC Summary Table 
+# SPARC Summary Table
 e_sum <- sparc_summary(
   data = data,
   index_info = "ENROLLMENT",
-  filename = "SPARC_SUMMARY_ENROLLMENT.xlsx")),
+  filename = "SPARC_SUMMARY_ENROLLMENT.xlsx",
   index_range = "60"
 )
 
@@ -81,7 +80,7 @@ e_sum <- sparc_summary(
 e_scores <- sparc_scores(
   data = data,
   index_info = "ENROLLMENT",
-  filename = "SPARC_SCORES_ENROLLMENT.xlsx")),
+  filename = "SPARC_SCORES_ENROLLMENT.xlsx",
   index_range = "60"
 )
 
@@ -91,9 +90,6 @@ e_scores <- sparc_scores(
 e_med <- sparc_medication(
   data = data,
   index_info = "ENROLLMENT",
-  filename = "SPARC_MEDICATION_ENROLLMENT.xlsx")),
+  filename = "SPARC_MEDICATION_ENROLLMENT.xlsx"
 )
-
-
-
 ```

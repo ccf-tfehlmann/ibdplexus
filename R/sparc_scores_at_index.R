@@ -16,11 +16,10 @@
 #'
 #' @export
 sparc_scores <- function(data,
-           index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
-           filename = "SPARC_SCORES.xlsx",
-           index_range = "30",
-           location_logic = "CCF") {
-
+                         index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
+                         filename = "SPARC_SCORES.xlsx",
+                         index_range = "30",
+                         location_logic = "CCF") {
   if ("character" %in% class(index_info)) {
     index_info <- toupper(index_info)
   } else {
@@ -187,7 +186,6 @@ sparc_scores <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     filter(OBS_TEST_CONCEPT_CODE %in% c("EPIC#31000125051", "EPIC#31000125052", "EPIC#31000125053", "EPIC#31000125054", "EPIC#31000125055", "SMART_Q61__C") & (!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS, OBS_TEST_CONCEPT_CODE, OBS_TEST_RESULT_DATE) %>%
-
     right_join(cohort) %>%
     filter(DIAGNOSIS == "IBD Unclassified") %>%
     mutate(diff = (OBS_TEST_RESULT_DATE) - index_date) %>%
@@ -207,173 +205,175 @@ sparc_scores <- function(data,
   # DISEASE LOCATION - at index date ----
 
 
-if ("AZ" %in% location_logic) {
-  location <- calculate_location_az(data$observations, data$encounter, window = t) %>%
-    left_join(cohort) %>%
-    filter(DIAGNOSIS == "Crohn's Disease") %>%
-    mutate(diff = abs((VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    slice(which.min(diff)) %>%
-    ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, `Ileal Phenotype`, `Transverse Colonic Phenotype`,   `Rectal Phenotype`    ,           `Jejunal Phenotype`   ,           `Esophageal Phenotype`     ,
-           `Left Colonic Phenotype`    ,     `Gastric Phenotype`   ,           `Anal Phenotype`         ,        `Right Colonic Phenotype`      ,
-            `Duodenal Phenotype`      ,       `Colonic involvement`         ,   `Upper GI`             ,          `CD Location` )
-
-  cohort <- cohort %>% left_join(location)
-} else {
-  location <- data$observations %>%
-    filter(DATA_SOURCE == "SF_SPARC") %>%
-    filter(OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
-    #group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
-    drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    right_join(cohort) %>%
-    filter(DIAGNOSIS == "Crohn's Disease") %>%
-    mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
-    # mutate(keep = case_when(diff <= t ~ "keep")) %>%
-    # filter(keep == "keep") %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
-    slice(which.min(abs(diff))) %>%
+  if ("AZ" %in% location_logic) {
+    location <- calculate_location_az(data$observations, data$encounter, window = t) %>%
+      left_join(cohort) %>%
+      filter(DIAGNOSIS == "Crohn's Disease") %>%
+      mutate(diff = abs((VISIT_ENCOUNTER_START_DATE) - index_date)) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+      slice(which.min(diff)) %>%
       ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    mutate(Phenotype = case_when(
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Yes" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Anal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Duodenal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Esophageal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Gastric inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Ileal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Jejunal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Left colonic inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Rectal inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Right colonic inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Transverse colonic inflammatory crohn's disease" ~ "Yes",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No anal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No rectal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No right colonic involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No transverse colonic involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No duodenal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No esophageal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No gastric involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No ileal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No jejunal involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "No left colonic involvement" ~ "No",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown anal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown rectal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown right colonic involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown transverse colonic involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown duodenal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown esophageal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown gastric involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown ileal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown jejunal involvement" ~ "Unknown",
-      DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown left colonic involvement" ~ "Unknown",
-      TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS
-    )) %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = Phenotype) %>%
-    ungroup()
+      select(
+        DEIDENTIFIED_MASTER_PATIENT_ID, `Ileal Phenotype`, `Transverse Colonic Phenotype`, `Rectal Phenotype`, `Jejunal Phenotype`, `Esophageal Phenotype`,
+        `Left Colonic Phenotype`, `Gastric Phenotype`, `Anal Phenotype`, `Right Colonic Phenotype`,
+        `Duodenal Phenotype`, `Colonic involvement`, `Upper GI`, `CD Location`
+      )
+
+    cohort <- cohort %>% left_join(location)
+  } else {
+    location <- data$observations %>%
+      filter(DATA_SOURCE == "SF_SPARC") %>%
+      filter(OBS_TEST_CONCEPT_NAME %in% c("Anal Phenotype", "Duodenal Phenotype", "Esophageal Phenotype", "Gastric Phenotype", "Ileal Phenotype", "Jejunal Phenotype", "Left Colonic Phenotype", "Rectal Phenotype", "Right Colonic Phenotype", "Transverse Colonic Phenotype")) %>%
+      # group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
+      drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      right_join(cohort) %>%
+      filter(DIAGNOSIS == "Crohn's Disease") %>%
+      mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
+      # mutate(keep = case_when(diff <= t ~ "keep")) %>%
+      # filter(keep == "keep") %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
+      slice(which.min(abs(diff))) %>%
+      ungroup() %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      mutate(Phenotype = case_when(
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Yes" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Anal inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Duodenal inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Esophageal inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Gastric inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Ileal inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Jejunal inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Left colonic inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Rectal inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Right colonic inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Transverse colonic inflammatory crohn's disease" ~ "Yes",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No anal involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No rectal involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No right colonic involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No transverse colonic involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No duodenal involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No esophageal involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No gastric involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No ileal involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No jejunal involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No left colonic involvement" ~ "No",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown anal involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown rectal involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown right colonic involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown transverse colonic involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown duodenal involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown esophageal involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown gastric involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown ileal involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown jejunal involvement" ~ "Unknown",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "Unknown left colonic involvement" ~ "Unknown",
+        TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS
+      )) %>%
+      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = Phenotype) %>%
+      ungroup()
 
 
-  cohort <- left_join(cohort, location)
-
-
-
-  # PERIANAL INVOLVEMENT ----
-
-
-perianal <- data$observations %>%
-    filter(DATA_SOURCE == "SF_SPARC") %>%
-    filter(OBS_TEST_CONCEPT_NAME %in% c(
-      "Perianal Abcess",
-      "Perianal Fistula",
-      "Perianal Fistula - Complex Fistula",
-      "Rectovaginal Fistula",
-      "Anal Canal Ulcer",
-      "Anal Canal Stricture",
-      "Anal Fissure",
-      "Large Skin Tags"
-    )) %>%
-    drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    right_join(cohort) %>%
-    filter(DIAGNOSIS == "Crohn's Disease") %>%
-    mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
-    mutate(keep = case_when(diff <= t ~ "keep")) %>%
-    filter(keep == "keep") %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
-    slice(which.min(abs(diff))) %>%
-    ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    ungroup()
-
-  cohort <- left_join(cohort, perianal)
+    cohort <- left_join(cohort, location)
 
 
 
-  #  CALCULATE DISEASE LOCATION ----
+    # PERIANAL INVOLVEMENT ----
 
-  disease_location <- cohort %>%
-    filter(DIAGNOSIS == "Crohn's Disease") %>%
-    setNames(toupper(names(.))) %>%
-    mutate(
-      ileal = ifelse(`ILEAL PHENOTYPE` == "Yes", 1, 0),
-      colonic = ifelse(`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
-        `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes", 1, 0),
-      ilealcolonic = ifelse(ileal == 1 & colonic == 1, 1, 0)
-    ) %>%
-    mutate(
-      Location = case_when(
-        `ILEAL PHENOTYPE` == "Yes" &
-          `LEFT COLONIC PHENOTYPE` == "No" & `RECTAL PHENOTYPE` == "No" &
-          `RIGHT COLONIC PHENOTYPE` == "No" & `TRANSVERSE COLONIC PHENOTYPE` == "No" ~ "Ileal",
-        `ILEAL PHENOTYPE` == "No" &
-          (`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
-            `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes") ~ "Colonic",
-        `ILEAL PHENOTYPE` == "Yes" &
-          (`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
-            `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes") ~ "Ileocolonic",
-        `ILEAL PHENOTYPE` == "Unknown" &
-          `LEFT COLONIC PHENOTYPE` == "Unknown" & `RECTAL PHENOTYPE` == "Unknown" &
-          `RIGHT COLONIC PHENOTYPE` == "Unknown" & `TRANSVERSE COLONIC PHENOTYPE` == "Unknown" ~ "Unknown"
-      ),
-      UpperGI = case_when(
-        `DUODENAL PHENOTYPE` == "Yes" | `ESOPHAGEAL PHENOTYPE` == "Yes" | `GASTRIC PHENOTYPE` == "Yes" | `JEJUNAL PHENOTYPE` == "Yes" ~ "Yes",
-        `DUODENAL PHENOTYPE` == "Unknown" & `ESOPHAGEAL PHENOTYPE` == "Unknown" & `GASTRIC PHENOTYPE` == "Unknown" & `JEJUNAL PHENOTYPE` == "Unknown" ~ "Unknown",
-        `DUODENAL PHENOTYPE` == "No" & `ESOPHAGEAL PHENOTYPE` == "No" & `GASTRIC PHENOTYPE` == "No" & `JEJUNAL PHENOTYPE` == "No" ~ "No"
-      ),
-      Perianal = case_when(
-        `ANAL PHENOTYPE` == "Yes" |
-          `ANAL CANAL STRICTURE` == "Yes" |
-          `ANAL CANAL ULCER` == "Yes" |
-          `ANAL FISSURE` == "Yes" |
-          `PERIANAL ABCESS` == "Yes" |
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "Yes" ~ "Yes",
-        `ANAL PHENOTYPE` == "Unknown" & `ANAL CANAL STRICTURE` == "Unknown" &
-          `ANAL CANAL ULCER` == "Unknown" &
-          `ANAL FISSURE` == "Unknown" &
-          `PERIANAL ABCESS` == "Unknown" &
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "Unknown" ~ "Unknown",
-        `ANAL PHENOTYPE` == "No" & `ANAL CANAL STRICTURE` == "No" &
-          `ANAL CANAL ULCER` == "No" &
-          `ANAL FISSURE` == "No" &
-          `PERIANAL ABCESS` == "No" &
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "No" ~ "No"
-      ),
-      PHENOTYPE_Data = "Yes"
-    ) %>%
-    mutate(Location = case_when(
-      is.na(Location) & ilealcolonic == 1 ~ "Ileocolonic",
-      is.na(Location) & (is.na(ilealcolonic) | ilealcolonic == 0) & ileal == 1 ~ "Ileal",
-      is.na(Location) & (is.na(ilealcolonic) | ilealcolonic == 0) & colonic == 1 ~ "Colonic",
-      TRUE ~ Location
-    )) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, INDEX_DATE, Location, UpperGI, Perianal) %>%
-    dplyr::rename(DISEASE_LOCATION = Location, UPPERGI = UpperGI, PERIANAL = Perianal, index_date = INDEX_DATE)
 
-  cohort <- cohort %>%
-    left_join(disease_location)
-}
+    perianal <- data$observations %>%
+      filter(DATA_SOURCE == "SF_SPARC") %>%
+      filter(OBS_TEST_CONCEPT_NAME %in% c(
+        "Perianal Abcess",
+        "Perianal Fistula",
+        "Perianal Fistula - Complex Fistula",
+        "Rectovaginal Fistula",
+        "Anal Canal Ulcer",
+        "Anal Canal Stricture",
+        "Anal Fissure",
+        "Large Skin Tags"
+      )) %>%
+      drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      right_join(cohort) %>%
+      filter(DIAGNOSIS == "Crohn's Disease") %>%
+      mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
+      mutate(keep = case_when(diff <= t ~ "keep")) %>%
+      filter(keep == "keep") %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
+      slice(which.min(abs(diff))) %>%
+      ungroup() %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      ungroup()
+
+    cohort <- left_join(cohort, perianal)
+
+
+
+    #  CALCULATE DISEASE LOCATION ----
+
+    disease_location <- cohort %>%
+      filter(DIAGNOSIS == "Crohn's Disease") %>%
+      setNames(toupper(names(.))) %>%
+      mutate(
+        ileal = ifelse(`ILEAL PHENOTYPE` == "Yes", 1, 0),
+        colonic = ifelse(`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
+          `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes", 1, 0),
+        ilealcolonic = ifelse(ileal == 1 & colonic == 1, 1, 0)
+      ) %>%
+      mutate(
+        Location = case_when(
+          `ILEAL PHENOTYPE` == "Yes" &
+            `LEFT COLONIC PHENOTYPE` == "No" & `RECTAL PHENOTYPE` == "No" &
+            `RIGHT COLONIC PHENOTYPE` == "No" & `TRANSVERSE COLONIC PHENOTYPE` == "No" ~ "Ileal",
+          `ILEAL PHENOTYPE` == "No" &
+            (`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
+              `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes") ~ "Colonic",
+          `ILEAL PHENOTYPE` == "Yes" &
+            (`LEFT COLONIC PHENOTYPE` == "Yes" | `RECTAL PHENOTYPE` == "Yes" |
+              `RIGHT COLONIC PHENOTYPE` == "Yes" | `TRANSVERSE COLONIC PHENOTYPE` == "Yes") ~ "Ileocolonic",
+          `ILEAL PHENOTYPE` == "Unknown" &
+            `LEFT COLONIC PHENOTYPE` == "Unknown" & `RECTAL PHENOTYPE` == "Unknown" &
+            `RIGHT COLONIC PHENOTYPE` == "Unknown" & `TRANSVERSE COLONIC PHENOTYPE` == "Unknown" ~ "Unknown"
+        ),
+        UpperGI = case_when(
+          `DUODENAL PHENOTYPE` == "Yes" | `ESOPHAGEAL PHENOTYPE` == "Yes" | `GASTRIC PHENOTYPE` == "Yes" | `JEJUNAL PHENOTYPE` == "Yes" ~ "Yes",
+          `DUODENAL PHENOTYPE` == "Unknown" & `ESOPHAGEAL PHENOTYPE` == "Unknown" & `GASTRIC PHENOTYPE` == "Unknown" & `JEJUNAL PHENOTYPE` == "Unknown" ~ "Unknown",
+          `DUODENAL PHENOTYPE` == "No" & `ESOPHAGEAL PHENOTYPE` == "No" & `GASTRIC PHENOTYPE` == "No" & `JEJUNAL PHENOTYPE` == "No" ~ "No"
+        ),
+        Perianal = case_when(
+          `ANAL PHENOTYPE` == "Yes" |
+            `ANAL CANAL STRICTURE` == "Yes" |
+            `ANAL CANAL ULCER` == "Yes" |
+            `ANAL FISSURE` == "Yes" |
+            `PERIANAL ABCESS` == "Yes" |
+            `PERIANAL FISTULA - COMPLEX FISTULA` == "Yes" ~ "Yes",
+          `ANAL PHENOTYPE` == "Unknown" & `ANAL CANAL STRICTURE` == "Unknown" &
+            `ANAL CANAL ULCER` == "Unknown" &
+            `ANAL FISSURE` == "Unknown" &
+            `PERIANAL ABCESS` == "Unknown" &
+            `PERIANAL FISTULA - COMPLEX FISTULA` == "Unknown" ~ "Unknown",
+          `ANAL PHENOTYPE` == "No" & `ANAL CANAL STRICTURE` == "No" &
+            `ANAL CANAL ULCER` == "No" &
+            `ANAL FISSURE` == "No" &
+            `PERIANAL ABCESS` == "No" &
+            `PERIANAL FISTULA - COMPLEX FISTULA` == "No" ~ "No"
+        ),
+        PHENOTYPE_Data = "Yes"
+      ) %>%
+      mutate(Location = case_when(
+        is.na(Location) & ilealcolonic == 1 ~ "Ileocolonic",
+        is.na(Location) & (is.na(ilealcolonic) | ilealcolonic == 0) & ileal == 1 ~ "Ileal",
+        is.na(Location) & (is.na(ilealcolonic) | ilealcolonic == 0) & colonic == 1 ~ "Colonic",
+        TRUE ~ Location
+      )) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID, INDEX_DATE, Location, UpperGI, Perianal) %>%
+      dplyr::rename(DISEASE_LOCATION = Location, UPPERGI = UpperGI, PERIANAL = Perianal, index_date = INDEX_DATE)
+
+    cohort <- cohort %>%
+      left_join(disease_location)
+  }
 
 
   # Calculate disease activity scores +/- t days of index ----
@@ -384,7 +384,7 @@ perianal <- data$observations %>%
   scores <- calculate_disease_scores(data$demographics, data$diagnosis, data$procedures, data$encounter, data$observations, export = FALSE)
 
 
-  #scdai
+  # scdai
   scdai <- scores$scdai %>%
     left_join(cohort) %>%
     mutate(datediff = abs(SCDAI_DATE - index_date)) %>%
@@ -403,7 +403,7 @@ perianal <- data$observations %>%
 
 
 
-  #pro2
+  # pro2
   pro2 <- scores$pro2 %>%
     left_join(cohort) %>%
     mutate(datediff = abs(PRO2_DATE - index_date)) %>%
@@ -420,7 +420,7 @@ perianal <- data$observations %>%
 
   cohort <- cohort %>% left_join(pro2)
 
-  #pr03
+  # pr03
 
   pro3 <- scores$pro3 %>%
     left_join(cohort) %>%
@@ -439,7 +439,7 @@ perianal <- data$observations %>%
   cohort <- cohort %>% left_join(pro3)
 
 
-  #6pt mayo
+  # 6pt mayo
 
   mayo <- scores$mayo %>%
     left_join(cohort) %>%
@@ -457,7 +457,7 @@ perianal <- data$observations %>%
 
   cohort <- cohort %>% left_join(mayo)
 
-  #pga
+  # pga
 
 
 
@@ -493,9 +493,11 @@ perianal <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  intersect(names(.), names(scores$ses))) %>%
-    rename(ENDO_DATE = SCORE_DATE,
-           ENDO_CATEGORY = SES_CATEGORY)
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$ses))) %>%
+    rename(
+      ENDO_DATE = SCORE_DATE,
+      ENDO_CATEGORY = SES_CATEGORY
+    )
 
 
 
@@ -503,7 +505,7 @@ perianal <- data$observations %>%
 
   # Mayo Endocscopy Score - source: https://academic.oup.com/ecco-jcc/article/9/10/846/425061
 
-  mes  <- scores$mes %>%
+  mes <- scores$mes %>%
     left_join(cohort) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
@@ -514,9 +516,11 @@ perianal <- data$observations %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date,  intersect(names(.), names(scores$mes))) %>%
-    rename(ENDO_DATE = SCORE_DATE,
-           ENDO_CATEGORY = MES_CATGORY)
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$mes))) %>%
+    rename(
+      ENDO_DATE = SCORE_DATE,
+      ENDO_CATEGORY = MES_CATGORY
+    )
 
   es <- bind_rows(ses, mes) %>%
     distinct() %>%
@@ -582,13 +586,13 @@ perianal <- data$observations %>%
 
   cohort <- cohort %>%
     mutate(DISEASE_ACTIVITY = case_when(
-      DIAGNOSIS == "Crohn's Disease"  ~ SCDAI_CATEGORY,
-      DIAGNOSIS == "Ulcerative Colitis" ~  MAYO6_CATEGORY,
+      DIAGNOSIS == "Crohn's Disease" ~ SCDAI_CATEGORY,
+      DIAGNOSIS == "Ulcerative Colitis" ~ MAYO6_CATEGORY,
       TRUE ~ as.character(NA)
     )) %>%
     mutate(DISEASE_ACTIVITY = case_when(
       is.na(DISEASE_ACTIVITY) & PGA == "Quiescent" ~ "Remission",
-      is.na(DISEASE_ACTIVITY)  & PGA != "Quiescent" ~ PGA,
+      is.na(DISEASE_ACTIVITY) & PGA != "Quiescent" ~ PGA,
       TRUE ~ DISEASE_ACTIVITY
     )) %>%
     rename(!!paste("DISEASE_ACTIVITY", t, sep = "_") := DISEASE_ACTIVITY)
@@ -602,7 +606,9 @@ perianal <- data$observations %>%
 
 
 
-  cohort <- cohort %>% arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>% setNames(gsub(" ","_", names(.)))
+  cohort <- cohort %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+    setNames(gsub(" ", "_", names(.)))
   names(cohort) <- toupper(names(cohort))
 
 

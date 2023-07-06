@@ -1,5 +1,3 @@
-
-
 #' sparc_medication_enrollment
 #'
 #' Finds the medications the participant is prescribed from the
@@ -12,9 +10,6 @@
 
 #'
 sparc_medication_enrollment <- function(cohort, med) {
-
-
-
   # MEDICATIONS AT ENROLLMENT ----
 
   med_enroll <- med %>%

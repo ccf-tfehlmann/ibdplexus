@@ -1,4 +1,3 @@
-
 #' calculate_disease_scores
 #'
 #' Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI
@@ -18,7 +17,6 @@
 #' @return An excel spreadsheet with the scores as different tabs and a list of dataframes with each score as a list element.
 #' @export
 calculate_disease_scores <- function(demographics, diagnosis, procedures, encounter, observations, export = TRUE) {
-
   # Update observations
 
   # LATEST DIAGNOSIS ----

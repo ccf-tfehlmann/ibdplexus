@@ -1,7 +1,3 @@
-
-
-
-
 #' load_data
 #'
 #' Load unzipped DDM txt or csv files.If multiple cohorts are unzipped in one directory from different times, only the most recent one will load.
@@ -14,15 +10,16 @@
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
 load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
-
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
-  datadir = folder_fix(datadir)
+  datadir <- folder_fix(datadir)
 
   # INCLUDE COVID SURVEY IN CRF DATA SOURCE ----
 
-  if(data_type == "CRF") { data_type = paste0(data_type, "|COVID")}
+  if (data_type == "CRF") {
+    data_type <- paste0(data_type, "|COVID")
+  }
 
   # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 
@@ -164,25 +161,36 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
 
-if("observations" %in% names(data)){
-  data$observations <- data$observations %>%
-    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
-    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-    mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
+  if ("observations" %in% names(data)) {
+    data$observations <- data$observations %>%
+      mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
+      mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
+      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))
+  }
 
-  if("encounter" %in% names(data)){
+  if ("encounter" %in% names(data)) {
     data$encounter <- data$encounter %>%
-      mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
-             VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
+      mutate(
+        VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
+        VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE)
+      )
+  }
 
-  if("labs" %in% names(data)){
+  if ("labs" %in% names(data)) {
     data$labs <- data$labs %>%
-      mutate(LAB_TEST_CONCEPT_NAME = case_when(grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
-                                               grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
-                                               TRUE ~ LAB_TEST_CONCEPT_NAME))}
+      mutate(LAB_TEST_CONCEPT_NAME = case_when(
+        grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
+        grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
+        TRUE ~ LAB_TEST_CONCEPT_NAME
+      ))
+  }
 
   rm(list = c("files", "folderinfo"))
-  data <- lapply(data, function(x) x %>% setNames(gsub(" |\\.|-", "_", names(.))) %>% setNames(toupper(names(.))))
+  data <- lapply(data, function(x) {
+    x %>%
+      setNames(gsub(" |\\.|-", "_", names(.))) %>%
+      setNames(toupper(names(.)))
+  })
 
 
   return(data)
@@ -210,12 +218,14 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
-  datadir = folder_fix(datadir)
+  datadir <- folder_fix(datadir)
 
 
   # INCLUDE COVID SURVEY IN CRF DATA SOURCE ----
 
-  if(data_type == "CRF") { data_type = paste0(data_type, "|COVID")}
+  if (data_type == "CRF") {
+    data_type <- paste0(data_type, "|COVID")
+  }
 
 
 
@@ -248,7 +258,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
   cohorts <- cohorts %>%
     filter(DATA_SOURCE != "EMR") %>%
-      distinct(df, DATA_SOURCE) %>%
+    distinct(df, DATA_SOURCE) %>%
     mutate(
       Date = ymd(gsub(".*_", "", df)),
       Cohort = gsub("ECRF_|COVID_SURVEY_|SF_", "", DATA_SOURCE)
@@ -363,25 +373,36 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
 
-  if("observations" %in% names(data)){
+  if ("observations" %in% names(data)) {
     data$observations <- data$observations %>%
       mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
       mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
+      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))
+  }
 
-  if("encounter" %in% names(data)){
+  if ("encounter" %in% names(data)) {
     data$encounter <- data$encounter %>%
-      mutate(VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
-             VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE))}
+      mutate(
+        VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
+        VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE)
+      )
+  }
 
 
-  if("labs" %in% names(data)){
+  if ("labs" %in% names(data)) {
     data$labs <- data$labs %>%
-      mutate(LAB_TEST_CONCEPT_NAME = case_when(grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
-                                               grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
-                                               TRUE ~ LAB_TEST_CONCEPT_NAME))}
+      mutate(LAB_TEST_CONCEPT_NAME = case_when(
+        grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
+        grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
+        TRUE ~ LAB_TEST_CONCEPT_NAME
+      ))
+  }
 
-  data <- lapply(data, function(x) x %>% setNames(gsub(" |\\.|-", "_", names(.))) %>% setNames(toupper(names(.))))
+  data <- lapply(data, function(x) {
+    x %>%
+      setNames(gsub(" |\\.|-", "_", names(.))) %>%
+      setNames(toupper(names(.)))
+  })
 
   return(data)
 }

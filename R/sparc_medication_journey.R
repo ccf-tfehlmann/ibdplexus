@@ -1,4 +1,3 @@
-
 #' sparc_med_journey
 #'
 #' Extract medication first instance of medication start dates from SPARC patient reported and electronic medical record data. This
@@ -38,11 +37,10 @@
 #'
 #' @export
 #'
-sparc_med_journey <- function(prescriptions, demographics, observations, encounter,med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"), export = FALSE) {
-
+sparc_med_journey <- function(prescriptions, demographics, observations, encounter, med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"), export = FALSE) {
   # Get medications of interest
 
-  medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups )
+  medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups)
 
   # Find medication start date ----
 
@@ -56,32 +54,39 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   # Combine start & stop date ----
 
   med <- full_join(med_start, med_end, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    mutate(MED_START_SOURCE = case_when(MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE != MED_START_DATE_EMR ~ "ECRF",
-                                        MED_START_DATE != MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "EMR",
-                                        MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "BOTH",
-                                        MED_START_DATE == MED_START_DATE_ECRF & is.na(MED_START_DATE_EMR) ~ "ECRF",
-                                        MED_START_DATE == MED_START_DATE_EMR & is.na(MED_START_DATE_ECRF) ~ "EMR",
-                                        TRUE  ~ NA_character_),
-           MED_END_SOURCE =  case_when(MED_END_DATE == MED_END_DATE_ECRF & (MED_END_DATE != MED_END_DATE_EMR & MED_END_DATE != MED_DISCONT_START_DATE_EMR) ~ "ECRF",
-                                       MED_END_DATE != MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "EMR",
-                                       MED_END_DATE == MED_END_DATE_ECRF  & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "BOTH",
-                                       MED_END_DATE == MED_END_DATE_ECRF & (is.na(MED_END_DATE_EMR) & is.na(MED_DISCONT_START_DATE_EMR))~ "ECRF",
-                                       (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) & is.na(MED_END_DATE_ECRF) ~ "EMR",
-                                       TRUE  ~ NA_character_))
+    mutate(
+      MED_START_SOURCE = case_when(
+        MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE != MED_START_DATE_EMR ~ "ECRF",
+        MED_START_DATE != MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "EMR",
+        MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "BOTH",
+        MED_START_DATE == MED_START_DATE_ECRF & is.na(MED_START_DATE_EMR) ~ "ECRF",
+        MED_START_DATE == MED_START_DATE_EMR & is.na(MED_START_DATE_ECRF) ~ "EMR",
+        TRUE ~ NA_character_
+      ),
+      MED_END_SOURCE = case_when(
+        MED_END_DATE == MED_END_DATE_ECRF & (MED_END_DATE != MED_END_DATE_EMR & MED_END_DATE != MED_DISCONT_START_DATE_EMR) ~ "ECRF",
+        MED_END_DATE != MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "EMR",
+        MED_END_DATE == MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "BOTH",
+        MED_END_DATE == MED_END_DATE_ECRF & (is.na(MED_END_DATE_EMR) & is.na(MED_DISCONT_START_DATE_EMR)) ~ "ECRF",
+        (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) & is.na(MED_END_DATE_ECRF) ~ "EMR",
+        TRUE ~ NA_character_
+      )
+    )
 
 
   # Add if medication is current ----
 
   current <- current_med(medication)
 
-  med <- med  %>% left_join(current, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
+  med <- med %>%
+    left_join(current, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
     mutate(CURRENT_MEDICATION = ifelse(is.na(MED_END_DATE), "YES", CURRENT_MEDICATION))
 
   # Reason Stopped in Smartform or eCRF ----
 
   stop_crf <- reason_stopped(prescriptions)
 
-  med <- med %>% left_join(stop_crf,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
+  med <- med %>% left_join(stop_crf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
 
 
@@ -94,7 +99,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     filter(DATA_SOURCE == "EMR") %>%
     filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
     left_join(encounter) %>%
-     filter(year(MED_START_DATE) > 1900) %>%
+    filter(year(MED_START_DATE) > 1900) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_START_DATE) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, new_med_name, ROUTE_OF_MEDICATION, MEDICATION_DOMAIN, MED_START_DATE,
@@ -123,7 +128,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
-        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3 = numeric())) %>%
         mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
           weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
     } else if ("Adalimumab" %in% names(first_use_emr[i])) {
@@ -131,33 +136,28 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
         mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
-
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
-        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
-
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3 = numeric())) %>%
         mutate(first_use_emr = ifelse(dose_1 == "160" & dose_2 == "80", "Loading Dose", "Not Loading Dose"))
     } else if ("Certolizumab Pegol" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
         mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
-
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
-        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
-          mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3 = numeric())) %>%
+        mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
           weeks_between_med_3 >= 1.5 & weeks_between_med_3 < 3.5, "Loading Dose", "Not Loading Dose"))
     } else if ("Vedolizumab" %in% names(first_use_emr[i])) {
       first_use_emr[[i]] <- first_use_emr[[i]] %>%
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
         mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
-
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
-        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
-
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3 = numeric())) %>%
         mutate(first_use_emr = if_else(weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
           weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5, "Loading Dose", "Not Loading Dose"))
     } else if ("Ustekinumab" %in% names(first_use_emr[i])) {
@@ -165,11 +165,9 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
         distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date, MED_START_DATE, MED_END_DATE, weeks_between_med, dose, route) %>%
         mutate(count = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
         mutate(weeks_between_med = as.numeric(weeks_between_med)) %>%
-
         pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, first_date), names_from = c(count, count, count), values_from = c(weeks_between_med, dose, route)) %>%
         ungroup() %>%
-        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3=numeric())) %>%
-
+        dplyr::bind_rows(dplyr::tibble(weeks_between_med_3 = numeric())) %>%
         mutate(first_use_emr = ifelse(toupper(route_1) == "INTRAVENOUS", "Loading Dose", "Not Loading Dose"))
     }
   }
@@ -196,12 +194,14 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
     distinct(new_med_name, med_type) %>%
     rename(MEDICATION = new_med_name) %>%
-    mutate(MOA =  case_when(grepl("Adalimumab|Certolizumab|Golimumab|Infliximab", MEDICATION, ignore.case = T)  ~ "antiTNF",
-      MEDICATION %in% c("Tofacitinib","Upadacitinib") ~ "JAKi",
+    mutate(MOA = case_when(
+      grepl("Adalimumab|Certolizumab|Golimumab|Infliximab", MEDICATION, ignore.case = T) ~ "antiTNF",
+      MEDICATION %in% c("Tofacitinib", "Upadacitinib") ~ "JAKi",
       MEDICATION %in% c("Vedolizumab", "Natalizumab") ~ "IRA",
       MEDICATION %in% c("Ustekinumab", "Risankizumab") ~ "ILA",
       MEDICATION %in% c("Ozanimod") ~ "S1P",
-      TRUE ~ med_type)) %>%
+      TRUE ~ med_type
+    )) %>%
     select(MEDICATION, MOA)
 
   med <- med %>% left_join(moa, by = "MEDICATION")
@@ -214,19 +214,19 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   dose_escalation <- dose_escalation(medication) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION) %>%
     right_join(moa) %>%
-    filter(!(MOA %in% c("Aminosalicylates","Immunomodulators"))) %>%
+    filter(!(MOA %in% c("Aminosalicylates", "Immunomodulators"))) %>%
     distinct() %>%
     filter(DOSE_ESCALATION == 1) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION)
 
   med <- med %>% left_join(dose_escalation, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
-# Flags a Frequency Change ----
+  # Flags a Frequency Change ----
 
   frequency_change <- frequency_change(medication) %>%
     ungroup() %>%
     left_join(moa) %>%
-    filter(!(MOA %in% c("Aminosalicylates","Immunomodulators"))) %>%
+    filter(!(MOA %in% c("Aminosalicylates", "Immunomodulators"))) %>%
     distinct() %>%
     filter(DECREASE_IN_FREQUENCY == 1) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DECREASE_IN_FREQUENCY)
@@ -251,27 +251,35 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
 
   # Flag if medications overlap  ----
-  last_encounter_date <- extract_latest(encounter) %>% pull("index_date") %>% max(na.rm = TRUE)
+  last_encounter_date <- extract_latest(encounter) %>%
+    pull("index_date") %>%
+    max(na.rm = TRUE)
 
   overlap <- med %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(int = case_when(!is.na(MED_START_DATE) & !is.na(MED_END_DATE) ~ interval(MED_START_DATE, MED_END_DATE, tz = "UTC"),
-                           !is.na(MED_START_DATE) & is.na(MED_END_DATE) ~  interval(MED_START_DATE ,last_encounter_date, tz = "UTC" ) ) )  %>%
+    mutate(int = case_when(
+      !is.na(MED_START_DATE) & !is.na(MED_END_DATE) ~ interval(MED_START_DATE, MED_END_DATE, tz = "UTC"),
+      !is.na(MED_START_DATE) & is.na(MED_END_DATE) ~ interval(MED_START_DATE, last_encounter_date, tz = "UTC")
+    )) %>%
     drop_na(int) %>%
     arrange(int_start(int), .by_group = TRUE) %>%
     # mutate(overlap = map_int(int, ~ ifelse(sum(int_overlaps(.x, int)) > 1, nrow(.x), NA))) %>%
     # ungroup()
-    mutate(lag_overlap = case_when(int_overlaps(int, lag(int)) ~ lag(MOA)),
-           lead_overlap = case_when(int_overlaps(int, lead(int)) ~ lead(MOA)),
-           lag_overlap_days = day(as.period(intersect(int, lag(int)), "days")), # check this ----
-           lead_overlap_days = day(as.period(intersect(int, lead(int)), "days")),
-
+    mutate(
+      lag_overlap = case_when(int_overlaps(int, lag(int)) ~ lag(MOA)),
+      lead_overlap = case_when(int_overlaps(int, lead(int)) ~ lead(MOA)),
+      lag_overlap_days = day(as.period(intersect(int, lag(int)), "days")), # check this ----
+      lead_overlap_days = day(as.period(intersect(int, lead(int)), "days")),
     ) %>%
     ungroup() %>%
-    mutate(OVERLAPPING_MOA = case_when(is.na(lag_overlap) ~ lead_overlap,
-                                       is.na(lead_overlap) ~ lag_overlap,
-                                       !is.na(lag_overlap) & !is.na(lead_overlap) ~ paste0(lag_overlap, "; ", lead_overlap)),
-           OVERLAPPING_DAYS = if_else(is.na(lag_overlap_days), lead_overlap_days, lag_overlap_days)) %>%
+    mutate(
+      OVERLAPPING_MOA = case_when(
+        is.na(lag_overlap) ~ lead_overlap,
+        is.na(lead_overlap) ~ lag_overlap,
+        !is.na(lag_overlap) & !is.na(lead_overlap) ~ paste0(lag_overlap, "; ", lead_overlap)
+      ),
+      OVERLAPPING_DAYS = if_else(is.na(lag_overlap_days), lead_overlap_days, lag_overlap_days)
+    ) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE, OVERLAPPING_MOA, OVERLAPPING_DAYS)
 
 
@@ -311,25 +319,25 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Flag if bionaive at medication start ----
   # Update to account for patients that have no biologic information in the eCRF and EMR and then incorporate Smartform Ever/Never data
-bionaive <- med %>%
-  mutate(b = ifelse(MEDICATION %in% c(
-    "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab",
-    "Natalizumab", "Other Biologic", "Ustekinumab", "Vedolizumab", "Adalimumab (Humira)", "Infliximab (Avsola)", "Infliximab (Inflectra)", "Infliximab (Renflexis)", "Infliximab (Remicade)", "Infliximab (Remsima)", "Tofacitinib", "Upadacitinib", "Ustekinumab", "Ozanimod", "Risankizumab"
-  ), 1, 0)) %>%
-  # filter(b == 1) %>%
-  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, b) %>%
-  mutate(FIRST_ADVANCED_MED = ifelse(b == 1 & MEDICATION_NUMBER == min(MEDICATION_NUMBER), 1, 0)) %>%
-  mutate(FIRST_ADVANCED_MED_NUMBER = ifelse(FIRST_ADVANCED_MED == 1, MEDICATION_NUMBER, as.numeric(NA))) %>%
-  group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-  fill(FIRST_ADVANCED_MED_NUMBER, .direction = "updown") %>%
-  rowwise() %>%
-  mutate(BIONAIVE = ifelse(MEDICATION_NUMBER < FIRST_ADVANCED_MED_NUMBER, 1, 0)) %>%
-  ungroup() %>%
-  rename(ADVANCED_MED = b)
+  bionaive <- med %>%
+    mutate(b = ifelse(MEDICATION %in% c(
+      "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab",
+      "Natalizumab", "Other Biologic", "Ustekinumab", "Vedolizumab", "Adalimumab (Humira)", "Infliximab (Avsola)", "Infliximab (Inflectra)", "Infliximab (Renflexis)", "Infliximab (Remicade)", "Infliximab (Remsima)", "Tofacitinib", "Upadacitinib", "Ustekinumab", "Ozanimod", "Risankizumab"
+    ), 1, 0)) %>%
+    # filter(b == 1) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, b) %>%
+    mutate(FIRST_ADVANCED_MED = ifelse(b == 1 & MEDICATION_NUMBER == min(MEDICATION_NUMBER), 1, 0)) %>%
+    mutate(FIRST_ADVANCED_MED_NUMBER = ifelse(FIRST_ADVANCED_MED == 1, MEDICATION_NUMBER, as.numeric(NA))) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    fill(FIRST_ADVANCED_MED_NUMBER, .direction = "updown") %>%
+    rowwise() %>%
+    mutate(BIONAIVE = ifelse(MEDICATION_NUMBER < FIRST_ADVANCED_MED_NUMBER, 1, 0)) %>%
+    ungroup() %>%
+    rename(ADVANCED_MED = b)
 
   med <- med %>%
-    left_join(bionaive) #%>%
-    #rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
+    left_join(bionaive) # %>%
+  # rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
 
 
   if (export == "TRUE") {

@@ -39,8 +39,9 @@ extract_endoscopy <- function(procedures) {
 #' @return A dataframe with  date and type of most recent encounter.
 #' @export
 extract_latest <- function(encounter, datasource = c("SF_SPARC", "ECRF_SPARC")) {
-
-  if("ECRF_SPARC" %in% datasource){datasource = append(datasource, "ECRF")}
+  if ("ECRF_SPARC" %in% datasource) {
+    datasource <- append(datasource, "ECRF")
+  }
 
   latest <- encounter %>%
     filter(DATA_SOURCE %in% datasource) %>%

@@ -1,5 +1,3 @@
-
-
 #' emr_loading_pattern
 #'
 #' Find if emr prescriptions follows known loading patterns for biologics
@@ -14,8 +12,6 @@
 #'
 #'
 emr_loading_pattern <- function(prescriptions, encounter) {
-
-
   # EMR
 
   meds <- med_grp %>%

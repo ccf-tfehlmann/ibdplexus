@@ -1,4 +1,3 @@
-
 #' reason_stopped
 #'
 #' Extract reason stopped for ECRF and SF SPARC Data source
@@ -10,31 +9,30 @@
 #'
 #'
 
-reason_stopped <- function(prescriptions){
-
+reason_stopped <- function(prescriptions) {
   stop_ecrf <- prescriptions %>%
-  filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC", "ECRF")) %>%
-  mutate(REASON_STOPPED = toupper(REASON_STOPPED),
-         MEDICATION_NAME = toupper(MEDICATION_NAME)) %>%
+    filter(DATA_SOURCE %in% c("SF_SPARC", "ECRF_SPARC", "ECRF")) %>%
+    mutate(
+      REASON_STOPPED = toupper(REASON_STOPPED),
+      MEDICATION_NAME = toupper(MEDICATION_NAME)
+    ) %>%
     drop_na(REASON_STOPPED) %>%
     left_join(med_grp %>% mutate(MEDICATION_NAME = toupper(MEDICATION_NAME))) %>%
     drop_na(new_med_name) %>%
-  distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, REASON_STOPPED) %>%
-  arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-  mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-  pivot_wider(
-    id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name),
-    names_from = c,
-    values_from = c(REASON_STOPPED),
-    names_prefix = "STOP_"
-  ) %>%
-  rowwise() %>%
-  unite(col = "REASON_STOPPED", starts_with("STOP"), na.rm = T, sep = "; ") %>%
-  rename(MEDICATION = new_med_name) %>%
-  mutate(across(-"DEIDENTIFIED_MASTER_PATIENT_ID", ~ ifelse(. == "", NA, as.character(.))))
-
-
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DATA_SOURCE, new_med_name, REASON_STOPPED) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
+    mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    pivot_wider(
+      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name),
+      names_from = c,
+      values_from = c(REASON_STOPPED),
+      names_prefix = "STOP_"
+    ) %>%
+    rowwise() %>%
+    unite(col = "REASON_STOPPED", starts_with("STOP"), na.rm = T, sep = "; ") %>%
+    rename(MEDICATION = new_med_name) %>%
+    mutate(across(-"DEIDENTIFIED_MASTER_PATIENT_ID", ~ ifelse(. == "", NA, as.character(.))))
 }
 
 
@@ -50,10 +48,9 @@ reason_stopped <- function(prescriptions){
 #'
 #'
 
-current_med <- function(medication){
-
+current_med <- function(medication) {
   current <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC"| DATA_SOURCE == "ECRF") %>%
+    filter(DATA_SOURCE == "ECRF_SPARC" | DATA_SOURCE == "ECRF") %>%
     filter(CURRENT_MEDICATION == "YES") %>%
     mutate(
       MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
@@ -65,9 +62,8 @@ current_med <- function(medication){
     slice(which.max(date)) %>%
     pivot_wider(names_from = type, values_from = date) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name,CURRENT_MEDICATION) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, CURRENT_MEDICATION) %>%
     rename(MEDICATION = new_med_name)
-
 }
 
 
@@ -84,64 +80,80 @@ current_med <- function(medication){
 #'
 #'
 
-risk_meds_at_visit <- function(prescriptions, encounter){
-
-  names_req = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE",
-                "MED_ID", "VISIT_ENCOUNTER_ID", "VISIT_ENCOUNTER_START_DATE", "MEDICATION_NAME",
-                "DRUG_CODE", "DRUG_CODE_SYS_NM",
-                "MED_START_DATE", "MED_END_DATE", "TYPE_OF_ENCOUNTER")
+risk_meds_at_visit <- function(prescriptions, encounter) {
+  names_req <- c(
+    "DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE",
+    "MED_ID", "VISIT_ENCOUNTER_ID", "VISIT_ENCOUNTER_START_DATE", "MEDICATION_NAME",
+    "DRUG_CODE", "DRUG_CODE_SYS_NM",
+    "MED_START_DATE", "MED_END_DATE", "TYPE_OF_ENCOUNTER"
+  )
 
   meds <- prescriptions %>%
     filter(DATA_SOURCE == "RISK") %>%
-    left_join(encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE, VISIT_ENCOUNTER_ID,
-                                      ADMISSION_TYPE, SOURCE_OF_ADMISSION)) %>%
-    mutate(MED_START_DATE = dmy(MED_START_DATE),
-           MED_END_DATE = dmy(MED_END_DATE)) %>%
+    left_join(encounter, by = join_by(
+      DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE, VISIT_ENCOUNTER_ID,
+      ADMISSION_TYPE, SOURCE_OF_ADMISSION
+    )) %>%
+    mutate(
+      MED_START_DATE = dmy(MED_START_DATE),
+      MED_END_DATE = dmy(MED_END_DATE)
+    ) %>%
     # if medication has been administered but no start date, assume start date is visit encounter date
     mutate(MED_START_DATE = if_else(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes",
-                                    VISIT_ENCOUNTER_START_DATE, MED_START_DATE)) %>%
+      VISIT_ENCOUNTER_START_DATE, MED_START_DATE
+    )) %>%
     select(all_of(names_req)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(med_start = MED_START_DATE,
-           med_end = MED_END_DATE) %>%
+    mutate(
+      med_start = MED_START_DATE,
+      med_end = MED_END_DATE
+    ) %>%
     # encounter_date = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
     mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
     filter(MEDICATION_NAME != "Biologic Agents" & MEDICATION_NAME != "5-Asa Oral" &
-             MEDICATION_NAME != "Corticosteroids" & MEDICATION_NAME != "Antibiotics" &
-             MEDICATION_NAME != "Immunomodulators") %>%
+      MEDICATION_NAME != "Corticosteroids" & MEDICATION_NAME != "Antibiotics" &
+      MEDICATION_NAME != "Immunomodulators") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, VISIT_ENCOUNTER_ID) %>%
     # clb: have to slice which max to avoid including meds that have a start and
     # an end date before the VISIT_ENCOUNTER_START_DATE
     slice(which.max(med_start)) %>%
     ungroup() %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    pivot_wider(id_cols = "DEIDENTIFIED_MASTER_PATIENT_ID", names_from = "TYPE_OF_ENCOUNTER",
-                values_from = "MEDICATION_NAME",  values_fn = ~paste0(.x, collapse = "; ")) %>%
+    pivot_wider(
+      id_cols = "DEIDENTIFIED_MASTER_PATIENT_ID", names_from = "TYPE_OF_ENCOUNTER",
+      values_from = "MEDICATION_NAME", values_fn = ~ paste0(.x, collapse = "; ")
+    ) %>%
     pivot_longer(cols = -"DEIDENTIFIED_MASTER_PATIENT_ID", names_to = "TYPE_OF_ENCOUNTER", values_to = "MEDICATIONS_AT_VISIT") %>%
     right_join(encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, TYPE_OF_ENCOUNTER)) %>%
     ungroup() %>%
-    filter(DATA_SOURCE == "RISK") %>% filter(
-      TYPE_OF_ENCOUNTER  %in%  c("Enrollment Visit",
-                                 "6-Month Follow-up Visit",
-                                 "12-Month Follow-up Visit",
-                                 "18-Month Follow-up Visit",
-                                 "24-Month Follow-up Visit",
-                                 "30-Month Follow-up Visit",
-                                 "36-Month Follow-up Visit",
-                                 "42-Month Follow-up Visit",
-                                 "48-Month Follow-up Visit",
-                                 "54-Month Follow-up Visit",
-                                 "60-Month Follow-up Visit",
-                                 "66-Month Follow-up Visit",
-                                 "72-Month Follow-up Visit",
-                                 "78-Month Follow-up Visit",
-                                 "84-Month Follow-up Visit",
-                                 "90-Month Follow-up Visit",
-                                 "96-Month Follow-up Visit")) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE,
-           VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER, MEDICATIONS_AT_VISIT, VISIT_ENCOUNTER_START_DATE,
-           VISIT_ENCOUNTER_END_DATE)
+    filter(DATA_SOURCE == "RISK") %>%
+    filter(
+      TYPE_OF_ENCOUNTER %in% c(
+        "Enrollment Visit",
+        "6-Month Follow-up Visit",
+        "12-Month Follow-up Visit",
+        "18-Month Follow-up Visit",
+        "24-Month Follow-up Visit",
+        "30-Month Follow-up Visit",
+        "36-Month Follow-up Visit",
+        "42-Month Follow-up Visit",
+        "48-Month Follow-up Visit",
+        "54-Month Follow-up Visit",
+        "60-Month Follow-up Visit",
+        "66-Month Follow-up Visit",
+        "72-Month Follow-up Visit",
+        "78-Month Follow-up Visit",
+        "84-Month Follow-up Visit",
+        "90-Month Follow-up Visit",
+        "96-Month Follow-up Visit"
+      )
+    ) %>%
+    select(
+      DEIDENTIFIED_MASTER_PATIENT_ID, DEIDENTIFIED_PATIENT_ID, DATA_SOURCE,
+      VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER, MEDICATIONS_AT_VISIT, VISIT_ENCOUNTER_START_DATE,
+      VISIT_ENCOUNTER_END_DATE
+    )
 }
 
 
@@ -157,8 +169,7 @@ risk_meds_at_visit <- function(prescriptions, encounter){
 #'
 
 med_search <- function(df, med_name, med_string) {
-
-  k = NULL
+  k <- NULL
 
   for (i in 1:length(med_name)) {
     k[[i]] <- df %>%

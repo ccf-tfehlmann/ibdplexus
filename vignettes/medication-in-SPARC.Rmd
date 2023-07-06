@@ -15,8 +15,6 @@ knitr::opts_chunk$set(
 )
 
 options(rmarkdown.html_vignette.check_title = FALSE)
-
-
 ```
 
 A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD) is a longitudinal study following adult IBD patients as they receive care at 17 different sites across the United States. To learn more about SPARC IBD and it's development please see [The Development and Initial Findings of A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD)] (<https://doi.org/10.1093/ibd/izab071>).
@@ -36,23 +34,21 @@ This vignette mainly focuses on the medication data from eCRF and EMR.
 Biosimilars are now in their own groups.
 
 ```{r eval = TRUE, warning = FALSE, message = FALSE}
-
 library(ibdplexus, quietly = T)
 library(tidyr, quietly = T)
 library(dplyr, quietly = T)
 library(lubridate, quietly = T)
 
 # Here is the table of the medication types in med_grp
-knitr::kable(med_grp %>% distinct(med_type)) 
+knitr::kable(med_grp %>% distinct(med_type))
 
 # Here is the first 5 rows of the med_grp data.frame
 
-knitr::kable(head(med_grp, 5)) 
+knitr::kable(head(med_grp, 5))
 
-# Here is how Infliximab and its' bio-similars are mapped 
+# Here is how Infliximab and its' bio-similars are mapped
 
 knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = T)))
-
 ```
 
 To see the entire med_grp data.frame click <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/data/med_grp.rda">`here`</a>
@@ -78,21 +74,19 @@ In the quarterly follow-up surveys, a patient is asked if they have had any chan
 `sparc med filter` uses grep to search through the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns in the prescription table. If the medication of interest is found, it subsets the data and maps the medication to the standardized name (new_med_name).
 
 ```{r}
-
-# Load EMR and eCRF data necessary for sparc_med_filter 
+# Load EMR and eCRF data necessary for sparc_med_filter
 
 data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("prescriptions", "observations", "demographics", "encounter"), data_type = "Both")
 
-# Filter SPARC IBD data for biologics & immunomodulators 
+# Filter SPARC IBD data for biologics & immunomodulators
 
 meds_of_interest <- sparc_med_filter(
   data$prescriptions,
   data$observations,
   data$demographics,
   data$encounter,
-  med_groups = c("Biologic","Immunomodulators")
+  med_groups = c("Biologic", "Immunomodulators")
 )
-
 ```
 
 # Finding the First Instance of a Medication
@@ -190,21 +184,17 @@ If no end date is given for a prescription, the duration of the overlap is calcu
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ```{r}
-
-
-# Find Medication Start Dates for Biologics and Immunomodulators. 
-# If export = TRUE then an excel spreadsheet is generated. 
+# Find Medication Start Dates for Biologics and Immunomodulators.
+# If export = TRUE then an excel spreadsheet is generated.
 
 medication_starts <- sparc_med_starts(
   data$prescriptions,
   data$observations,
   data$demographics,
   data$encounter,
-  med_groups = c("Biologic","Immunomodulators"),
+  med_groups = c("Biologic", "Immunomodulators"),
   export = TRUE
 )
-
-
 ```
 
 # Medication at a Specific Time-point
@@ -256,13 +246,11 @@ A data.frame and excel file is generated with the following columns:
 +-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 
 ```{r}
+# Load Data needed for sparc_medication function
 
+data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions"), data_type = "Both")
 
-# Load Data needed for sparc_medication function 
-
-data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c ("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping","prescriptions"), data_type = "Both")
-
-# Find Biologics and Immunomodulators a patient is on at enrollment. 
+# Find Biologics and Immunomodulators a patient is on at enrollment.
 
 med_at_enrollment <- sparc_medication(
   data = data,
@@ -279,5 +267,4 @@ med_at_enrollment <- sparc_medication(
   med_groups = c("Biologic", "Immunomodulators"),
   filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx"
 )
-
 ```

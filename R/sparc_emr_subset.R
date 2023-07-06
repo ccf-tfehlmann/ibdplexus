@@ -9,8 +9,6 @@
 #' @return A dataframe with the summary data and an excel file. If EMR codes are specified then a subset of those data are created for each domain where the code was found.
 #' @export
 sparc_emr <- function(datadir, filename = "SPARC_EMR.xlsx", emr_codes = NULL) {
-
-
   # LOAD FILES ----
 
   # GET FILES OF MOST RECENT DATA ----

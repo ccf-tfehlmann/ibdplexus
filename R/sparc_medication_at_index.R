@@ -1,5 +1,3 @@
-
-
 #' sparc_medication
 #'
 #' Finds the medications the participant is prescribed from the
@@ -22,12 +20,9 @@ sparc_medication <- function(data,
                              index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
                              med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
                              filename = "SPARC_MEDICATION.xlsx") {
-
-
-
   # Get all medication start dates ----
 
-  med <- sparc_med_journey(data$prescriptions, data$demographics, data$observations, data$encounter,med_groups, export = FALSE)
+  med <- sparc_med_journey(data$prescriptions, data$demographics, data$observations, data$encounter, med_groups, export = FALSE)
 
 
   # CONSENT INFORMATION ----
@@ -192,30 +187,30 @@ sparc_medication <- function(data,
 
   # REORDER COLUMNS & FORMAT SPREADSHEET ----
 
-#
-#   bionames <- med_grp %>%
-#     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
-#     arrange(new_med_name) %>%
-#     distinct(new_med_name) %>%
-#     rename(name = new_med_name) %>%
-#     add_row(name = c("MEDICATION_AT_INDEX")) %>%
-#     add_row(name = c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT")) %>%
-#     add_row(name = c("BIONAIVE")) %>%
-#     arrange(match(name, c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT", "MEDICATION_AT_INDEX", "BIONAIVE")))
-#
-#   if ("LATEST" %in% index_info) {
-#     names <- bind_rows(data.frame(name = names(cohort[1:9])), bionames) %>%
-#       distinct() %>%
-#       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-#       filter(name != "DIAGNOSIS_DATE")
-#   } else {
-#     names <- bind_rows(data.frame(name = names(cohort[1:8])), bionames) %>%
-#       distinct() %>%
-#       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-#       filter(name != "DIAGNOSIS_DATE")
-#   }
+  #
+  #   bionames <- med_grp %>%
+  #     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
+  #     arrange(new_med_name) %>%
+  #     distinct(new_med_name) %>%
+  #     rename(name = new_med_name) %>%
+  #     add_row(name = c("MEDICATION_AT_INDEX")) %>%
+  #     add_row(name = c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT")) %>%
+  #     add_row(name = c("BIONAIVE")) %>%
+  #     arrange(match(name, c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT", "MEDICATION_AT_INDEX", "BIONAIVE")))
+  #
+  #   if ("LATEST" %in% index_info) {
+  #     names <- bind_rows(data.frame(name = names(cohort[1:9])), bionames) %>%
+  #       distinct() %>%
+  #       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
+  #       filter(name != "DIAGNOSIS_DATE")
+  #   } else {
+  #     names <- bind_rows(data.frame(name = names(cohort[1:8])), bionames) %>%
+  #       distinct() %>%
+  #       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
+  #       filter(name != "DIAGNOSIS_DATE")
+  #   }
 
-  #cohort <- cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
+  # cohort <- cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
 
 
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
@@ -224,11 +219,15 @@ sparc_medication <- function(data,
   if ("OMICS" %in% index_info) {
     cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
 
-    final_cohort <- omics %>% left_join(table) %>% left_join(cohort)
+    final_cohort <- omics %>%
+      left_join(table) %>%
+      left_join(cohort)
   } else if ("BIOSAMPLE" %in% index_info) {
     cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
 
-    final_cohort <- biosample %>% left_join(table) %>% left_join(cohort)
+    final_cohort <- biosample %>%
+      left_join(table) %>%
+      left_join(cohort)
   } else {
     final_cohort <- cohort
   }
@@ -237,8 +236,7 @@ sparc_medication <- function(data,
 
   # CREATE HEADER STYLES----
 
-  if (!is.null(filename))
-  {
+  if (!is.null(filename)) {
     # orange
     style2 <- createStyle(bgFill = "#F8CBAD", textDecoration = "bold")
 

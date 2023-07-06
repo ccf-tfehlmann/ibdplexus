@@ -17,11 +17,11 @@
 #'
 #' @examples
 #'
-#' #example with predefined category (all cancer diagnoses excluding skin carcinomas)
+#' # example with predefined category (all cancer diagnoses excluding skin carcinomas)
 #'
-#' #cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
+#' # cancerdx_woutskin = diagnosis_emr_extract(data, inclusion="CANCER", exclusion = "SKIN CARCINOMA")
 #'
-#' #example with custom category (all cancer diagnoses excluding cervical carcinomas)
+#' # example with custom category (all cancer diagnoses excluding cervical carcinomas)
 
 #' #example with predefined category
 #'
@@ -126,8 +126,8 @@ emr_extract_diagnosis <- function(data,
   }
   if ("diagnosis" %in% names(data)) {
     dxemricd <- data$diagnosis %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,DIAG_CONCEPT_CODE,DIAGNOSIS_DATE) %>%
-      filter(row_number()==1) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, DIAG_CONCEPT_CODE, DIAGNOSIS_DATE) %>%
+      filter(row_number() == 1) %>%
       filter(DIAG_SYSTEM_NAME != "Local" & DATA_SOURCE == "EMR") %>%
       filter(grepl(inc, SRC_DIAG_CONCEPT_CODE, ignore.case = TRUE))
     if ("SKIN CARCINOMA" %in% exclusion1) {
@@ -161,9 +161,9 @@ emr_extract_diagnosis <- function(data,
     }
   }
   if ("patient_problem" %in% names(data)) {
-    ppemricd <- data$patient_problem  %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,SOURCE_PROB_CODE,PROBLEM_START_DATE) %>%
-      filter(row_number()==1) %>%
+    ppemricd <- data$patient_problem %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, SOURCE_PROB_CODE, PROBLEM_START_DATE) %>%
+      filter(row_number() == 1) %>%
       filter(SOURCE_PROB_CODE_SYSTEM_NAME != "Local" & DATA_SOURCE == "EMR") %>%
       filter(grepl(inc, SOURCE_PROB_CODE, ignore.case = TRUE))
     if ("SKIN CARCINOMA" %in% exclusion1) {
@@ -197,11 +197,11 @@ emr_extract_diagnosis <- function(data,
     }
   }
   if ("patient_history" %in% names(data)) {
-    phemricd <- data$patient_history  %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID,SRC_HISTORY_CONCEPT_CODE,EVENT_ONSET_DATE) %>%
-      filter(row_number()==1) %>%
-      filter(HISTORY_TYPE=="Medical_HX"&DATA_SOURCE=="EMR") %>%
-      filter(grepl(inc,SRC_HISTORY_CONCEPT_CODE,ignore.case=TRUE))
+    phemricd <- data$patient_history %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, SRC_HISTORY_CONCEPT_CODE, EVENT_ONSET_DATE) %>%
+      filter(row_number() == 1) %>%
+      filter(HISTORY_TYPE == "Medical_HX" & DATA_SOURCE == "EMR") %>%
+      filter(grepl(inc, SRC_HISTORY_CONCEPT_CODE, ignore.case = TRUE))
     if ("SKIN CARCINOMA" %in% exclusion1) {
       exc <- "C44.01|C44.02|C44.11|C44.12|C44.21|C44.22|C44.31|C44.32|C44.41|C44.42|C44.51|C44.52|C44.61|C44.62|C44.71|C44.72|C44.81|C44.82|C44.91|C44.92"
       phemricd1 <- phemricd
@@ -233,7 +233,7 @@ emr_extract_diagnosis <- function(data,
     }
   }
 
-#format lists of output depending on input file(s)
+  # format lists of output depending on input file(s)
   if ("diagnosis" %in% names(data) & !"patient_problem" %in% names(data) & !"patient_history" %in% names(data)) {
     result <- list(dxemricd)
     names(result) <- c("diagnosis")

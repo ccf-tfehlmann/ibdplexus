@@ -11,9 +11,9 @@
 #'
 #' @examples
 #'
-#' #example for patient family history
+#' # example for patient family history
 #'
-#' #famhist = familyibdhist_emr_extract(data)
+#' # famhist = familyibdhist_emr_extract(data)
 
 #' #example for only first degree family member history
 #'
@@ -22,17 +22,17 @@
 
 
 familyibdhist_emr_extract <- function(data,
-                                  relation = NULL) {
-  #look in history data for family history of ibd
+                                      relation = NULL) {
+  # look in history data for family history of ibd
   result <- data$patient_history %>%
-    filter(DATA_SOURCE=="EMR") %>%
-    filter(HISTORY_TYPE=="Family") %>%
-    filter(grepl("colitis|crohn|bowel dis",HISTORY_CONCEPT_NAME,ignore.case=TRUE))
-  if(is.null(relation)==FALSE){
-    if(relation=="FIRST_DEG"){
+    filter(DATA_SOURCE == "EMR") %>%
+    filter(HISTORY_TYPE == "Family") %>%
+    filter(grepl("colitis|crohn|bowel dis", HISTORY_CONCEPT_NAME, ignore.case = TRUE))
+  if (is.null(relation) == FALSE) {
+    if (relation == "FIRST_DEG") {
       result1 <- result
       result <- result1 %>%
-        filter(RELATION %in% c("Biological Father","Biological Mother","Brother","Child","Son","Sister","Daughter","Father of the baby","Father","Mother"))
+        filter(RELATION %in% c("Biological Father", "Biological Mother", "Brother", "Child", "Son", "Sister", "Daughter", "Father of the baby", "Father", "Mother"))
     }
   }
   return(result)

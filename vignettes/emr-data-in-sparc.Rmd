@@ -13,7 +13,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 options(rmarkdown.html_vignette.check_title = FALSE)
-
 ```
 
 Two studies in IBD Plexus have integrated electronic medical record (EMR) data:
@@ -29,8 +28,6 @@ library(ibdplexus, quietly = T)
 library(tidyr, quietly = T)
 library(dplyr, quietly = T)
 library(lubridate, quietly = T)
-
-
 ```
 
 # Calculating BMI

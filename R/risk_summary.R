@@ -15,41 +15,38 @@
 #' # export RISK Summary Table to xlsx
 #' # risk_summary(dir, data = dat, filename = "RISK_Summary.xlsx")
 #'
-#'
-
 risk_summary <- function(dir,
                          # header,
                          # data from load_data() ibdplexus function
                          data,
-                         filename    = "RISK_Summary.xlsx"){
-
+                         filename = "RISK_Summary.xlsx") {
   # create values for to_wide function
-  select.col = c("DIAG_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "LAB_TEST_CONCEPT_NAME", "ASSAY_NAME", "MEDICATION_NAME", "OBS_TEST_CONCEPT_NAME", "ANA_SITE_CONCEPT_NAME", "SRC_BIOSAMPLE_CONCEPT_NAME")
-  select.val  = c("DIAG_STATUS_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "TEST_RESULT_NUMERIC", "RAW_DATA_FILE_NAME", "MED_START_DATE", "TEST_RESULT_NUMERIC", "TEST_RESULT_NUMERIC", "SAMPLE_STATUS")
-  filter.col  = c("DIAG_CONCEPT_NAME", "OBS_TEST_CONCEPT_NAME")
-  filter.val  = c( "Disease Location", "Endoscopic Assessment - Deep Ulceration", "Endoscopic Assessment - Superficial Ulceration", "Endoscopic Assessment - Amount of Surface Ulcerated", "Endoscopic Assessment - Amount of Surface Involved", "Perianal Disease -", "EIM", "Disease Behavior - Stricturing/Fibrostenotic", "Disease Behavior - Internally Pentrating", "PCDAI")
+  select.col <- c("DIAG_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "LAB_TEST_CONCEPT_NAME", "ASSAY_NAME", "MEDICATION_NAME", "OBS_TEST_CONCEPT_NAME", "ANA_SITE_CONCEPT_NAME", "SRC_BIOSAMPLE_CONCEPT_NAME")
+  select.val <- c("DIAG_STATUS_CONCEPT_NAME", "DIAGNOSIS_DATE", "GENDER", "TYPE_OF_ENCOUNTER", "VISIT_ENCOUNTER_START_DATE", "AGE_AT_ENCOUNTER", "BIRTH_YEAR", "TEST_RESULT_NUMERIC", "RAW_DATA_FILE_NAME", "MED_START_DATE", "TEST_RESULT_NUMERIC", "TEST_RESULT_NUMERIC", "SAMPLE_STATUS")
+  filter.col <- c("DIAG_CONCEPT_NAME", "OBS_TEST_CONCEPT_NAME")
+  filter.val <- c("Disease Location", "Endoscopic Assessment - Deep Ulceration", "Endoscopic Assessment - Superficial Ulceration", "Endoscopic Assessment - Amount of Surface Ulcerated", "Endoscopic Assessment - Amount of Surface Involved", "Perianal Disease -", "EIM", "Disease Behavior - Stricturing/Fibrostenotic", "Disease Behavior - Internally Pentrating", "PCDAI")
 
 
-  #Read dictionary
+  # Read dictionary
   names <- header
-  names <- names[,,1]
+  names <- names[, , 1]
 
   # save data for wpcdai calculation and meds_at_visit calculation
   wpcdai_dat <- data
   prescriptions_med <- data$prescriptions
   encounter_med <- data$encounter
 
-  #rename list elements of data
+  # rename list elements of data
 
-  data$fam_hist_dem = data$family_history_demographics
-  data$fam_hist_diag = data$family_history_diagnosis
-  data$omics_patient = data$omics_patient_mapping
+  data$fam_hist_dem <- data$family_history_demographics
+  data$fam_hist_diag <- data$family_history_diagnosis
+  data$omics_patient <- data$omics_patient_mapping
 
-  data = within(data, rm(family_history_demographics, family_history_diagnosis,omics_patient_mapping))
+  data <- within(data, rm(family_history_demographics, family_history_diagnosis, omics_patient_mapping))
 
-  #Apply filters for each data table
+  # Apply filters for each data table
 
-  #Filter out other Data Sources besides RISK
+  # Filter out other Data Sources besides RISK
   data$labs <- data$labs %>% filter(DATA_SOURCE == "RISK")
   data$encounter <- data$encounter %>% filter(DATA_SOURCE == "RISK")
   data$demographics <- data$demographics %>% filter(DATA_SOURCE == "RISK")
@@ -57,93 +54,98 @@ risk_summary <- function(dir,
   data$fam_hist_diag <- data$fam_hist_diag %>% filter(DATA_SOURCE == "RISK")
   data$fam_hist_dem <- data$fam_hist_dem %>% filter(DATA_SOURCE == "RISK")
   data$observations <- data$observations %>% filter(DATA_SOURCE == "RISK")
-  #data$patient_problem <- data$patient_problem %>% filter(DATA_SOURCE == "RISK")
+  # data$patient_problem <- data$patient_problem %>% filter(DATA_SOURCE == "RISK")
   data$prescriptions <- data$prescriptions %>% filter(DATA_SOURCE == "RISK")
   data$procedures <- data$procedures %>% filter(DATA_SOURCE == "RISK")
 
   # # CLB: Create medications at visit table
   # meds <- risk_meds_at_visit(prescriptions = prescriptions_med, encounter = encounter_med)
 
-  #Filter diagnosis for patient's medical conditions (excluding leading question), extra-intestinal manifestations leading question (combining enrollment and follow-up), diagnosis date for IBD diseases at enrollment, and valid status concept name for Ankylising Spondlitis
+  # Filter diagnosis for patient's medical conditions (excluding leading question), extra-intestinal manifestations leading question (combining enrollment and follow-up), diagnosis date for IBD diseases at enrollment, and valid status concept name for Ankylising Spondlitis
   data$diagnosis$DIAG_CONCEPT_NAME[data$diagnosis$DIAG_CONCEPT_NAME %in% "Extra-Intestinal Manifestations Follow-up"] <- "Extra-Intestinal Manifestations"
-  data$diagnosis$DIAG_STATUS_CONCEPT_NAME[data$diagnosis$DIAG_STATUS_CONCEPT_NAME %in% c("Yes/unknown","Yes/Unknown")  & !data$diagnosis$DIAG_CONCEPT_NAME %in% "Extra-Intestinal Manifestations"] <- NA
+  data$diagnosis$DIAG_STATUS_CONCEPT_NAME[data$diagnosis$DIAG_STATUS_CONCEPT_NAME %in% c("Yes/unknown", "Yes/Unknown") & !data$diagnosis$DIAG_CONCEPT_NAME %in% "Extra-Intestinal Manifestations"] <- NA
   # CLB standardizing diagnosis table
   data$diagnosis <- data$diagnosis %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = ifelse(DIAG_CONCEPT_NAME == "IBD - Family History", gsub(".*_", "", DIAG_STATUS_CONCEPT_CODE), DIAG_STATUS_CONCEPT_NAME)) %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = str_to_title(DIAG_STATUS_CONCEPT_NAME)) %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = ifelse(DIAG_CONCEPT_NAME == "IBD - Family History" & DIAG_STATUS_CONCEPT_NAME == "Yes/Unknown",
-                                             "Yes/unknown", DIAG_STATUS_CONCEPT_NAME))
+      "Yes/unknown", DIAG_STATUS_CONCEPT_NAME
+    ))
   data$diagnosis <- data$diagnosis %>% filter(!is.na(DIAG_STATUS_CONCEPT_NAME))
-  data$diagnosis$DIAGNOSIS_DATE[!data$diagnosis$DIAG_CONCEPT_NAME  %in%  c("Crohn's Disease", "Crohn's disease", "Ulcerative colitis", "IBD unclassified", "Not IBD")] <- NA
-  #data$diagnosis <- data$diagnosis[!(data$diagnosis$DIAG_CONCEPT_NAME  %in% "Ankylosing Spondylitis" & !data$diagnosis$FAMILY_MEMBER  %in% "Pt"),]
-  data$diagnosis = data$diagnosis %>% filter(FAMILY_MEMBER == "Pt" | is.na(FAMILY_MEMBER))
+  data$diagnosis$DIAGNOSIS_DATE[!data$diagnosis$DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "Crohn's disease", "Ulcerative colitis", "IBD unclassified", "Not IBD")] <- NA
+  # data$diagnosis <- data$diagnosis[!(data$diagnosis$DIAG_CONCEPT_NAME  %in% "Ankylosing Spondylitis" & !data$diagnosis$FAMILY_MEMBER  %in% "Pt"),]
+  data$diagnosis <- data$diagnosis %>% filter(FAMILY_MEMBER == "Pt" | is.na(FAMILY_MEMBER))
   # CLB standardizing diagnosis table
   data$diagnosis <- data$diagnosis %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = ifelse(DIAG_STATUS_CONCEPT_NAME == "Around Dx", "Around DX", DIAG_STATUS_CONCEPT_NAME)) %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = ifelse(DIAG_STATUS_CONCEPT_NAME == "Pre Dx", "Pre DX", DIAG_STATUS_CONCEPT_NAME))
 
 
-  #Filter empty values in family history diagnosis
+  # Filter empty values in family history diagnosis
   data$fam_hist_diag <- data$fam_hist_diag %>% filter(!is.na(DIAG_STATUS_CONCEPT_NAME))
 
-  #Filter encounter for valid visit type
+  # Filter encounter for valid visit type
   names(data$encounter)[names(data$encounter) %in% "VISITENC_ID"] <- "VISIT_ENCOUNTER_ID"
   data$encounter <- data$encounter %>% filter(
-    TYPE_OF_ENCOUNTER  %in%  c("Enrollment Visit",
-                               "6-Month Follow-up Visit",
-                               "12-Month Follow-up Visit",
-                               "18-Month Follow-up Visit",
-                               "24-Month Follow-up Visit",
-                               "30-Month Follow-up Visit",
-                               "36-Month Follow-up Visit",
-                               "42-Month Follow-up Visit",
-                               "48-Month Follow-up Visit",
-                               "54-Month Follow-up Visit",
-                               "60-Month Follow-up Visit",
-                               "66-Month Follow-up Visit",
-                               "72-Month Follow-up Visit",
-                               "78-Month Follow-up Visit",
-                               "84-Month Follow-up Visit",
-                               "90-Month Follow-up Visit",
-                               "96-Month Follow-up Visit"))
-  #Remove time from visit encounter start date
+    TYPE_OF_ENCOUNTER %in% c(
+      "Enrollment Visit",
+      "6-Month Follow-up Visit",
+      "12-Month Follow-up Visit",
+      "18-Month Follow-up Visit",
+      "24-Month Follow-up Visit",
+      "30-Month Follow-up Visit",
+      "36-Month Follow-up Visit",
+      "42-Month Follow-up Visit",
+      "48-Month Follow-up Visit",
+      "54-Month Follow-up Visit",
+      "60-Month Follow-up Visit",
+      "66-Month Follow-up Visit",
+      "72-Month Follow-up Visit",
+      "78-Month Follow-up Visit",
+      "84-Month Follow-up Visit",
+      "90-Month Follow-up Visit",
+      "96-Month Follow-up Visit"
+    )
+  )
+  # Remove time from visit encounter start date
   data$encounter$VISIT_ENCOUNTER_START_DATE <- gsub(" 00:00:00.0", "", data$encounter$VISIT_ENCOUNTER_START_DATE)
 
-  #Filter out empty test results in labs
+  # Filter out empty test results in labs
   data$labs <- data$labs %>% filter(!is.na(TEST_RESULT_NUMERIC))
 
-  #Filter prescriptions for summary medication administrated and medication action concept name
-  data$prescriptions <- data$prescriptions %>% filter(MEDICATION_ADMINISTRATED  %in%  c("Yes", "Current", "No", "Not Current") | !is.na(MED_START_DATE) | !is.na(DOSE_OF_MEDICATION)) %>%
-    filter(MED_ACTION_CONCEPT_NAME  %in%  c("Started Since Last Review", "Ongoing Treatment", "Received","Administered Again Since Last Dose 1"))
+  # Filter prescriptions for summary medication administrated and medication action concept name
+  data$prescriptions <- data$prescriptions %>%
+    filter(MEDICATION_ADMINISTRATED %in% c("Yes", "Current", "No", "Not Current") | !is.na(MED_START_DATE) | !is.na(DOSE_OF_MEDICATION)) %>%
+    filter(MED_ACTION_CONCEPT_NAME %in% c("Started Since Last Review", "Ongoing Treatment", "Received", "Administered Again Since Last Dose 1"))
 
-  #Remove time from medication start date
+  # Remove time from medication start date
   data$prescriptions$MED_START_DATE <- gsub(" 00:00:00.0", "", data$prescriptions$MED_START_DATE)
-  #Medication administrated if medication start date is missing
+  # Medication administrated if medication start date is missing
   data$prescriptions$MED_START_DATE[is.na(data$prescriptions$MED_START_DATE)] <- data$prescriptions$MEDICATION_ADMINISTRATED[is.na(data$prescriptions$MED_START_DATE)]
-  #Divide prescriptions into started since last review and ongoing treatment
-  data$prescriptions1 <- data$prescriptions[data$prescriptions$MED_ACTION_CONCEPT_NAME  %in%  c("Started Since Last Review", "Received"),]
-  data$prescriptions2 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "SC/IM",]
-  data$prescriptions3 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "Oral",]
-  data$prescriptions1 <- data$prescriptions1[!data$prescriptions1$MEDICATION_NAME %in% "methotrexate",]
-  data$prescriptions4 <- data$prescriptions[data$prescriptions$MED_ACTION_CONCEPT_NAME  %in%  c("Ongoing Treatment","Administered Again Since Last Dose 1"),]
-  data$prescriptions5 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "SC/IM",]
-  data$prescriptions6 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "Oral",]
-  data$prescriptions4 <- data$prescriptions4[!data$prescriptions4$MEDICATION_NAME %in% "methotrexate",]
+  # Divide prescriptions into started since last review and ongoing treatment
+  data$prescriptions1 <- data$prescriptions[data$prescriptions$MED_ACTION_CONCEPT_NAME %in% c("Started Since Last Review", "Received"), ]
+  data$prescriptions2 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "SC/IM", ]
+  data$prescriptions3 <- data$prescriptions1[data$prescriptions1$MEDICATION_NAME %in% "methotrexate" & data$prescriptions1$ROUTE_OF_MEDICATION %in% "Oral", ]
+  data$prescriptions1 <- data$prescriptions1[!data$prescriptions1$MEDICATION_NAME %in% "methotrexate", ]
+  data$prescriptions4 <- data$prescriptions[data$prescriptions$MED_ACTION_CONCEPT_NAME %in% c("Ongoing Treatment", "Administered Again Since Last Dose 1"), ]
+  data$prescriptions5 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "SC/IM", ]
+  data$prescriptions6 <- data$prescriptions4[data$prescriptions4$MEDICATION_NAME %in% "methotrexate" & data$prescriptions4$ROUTE_OF_MEDICATION %in% "Oral", ]
+  data$prescriptions4 <- data$prescriptions4[!data$prescriptions4$MEDICATION_NAME %in% "methotrexate", ]
 
   data$prescriptions <- NULL
 
-  #Filter observations for valid test results
+  # Filter observations for valid test results
   data$observations <- data$observations %>% filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS) | !is.na(TEST_RESULT_NUMERIC))
-  #Select descriptive test results if numeric test results are not available
+  # Select descriptive test results if numeric test results are not available
   data$observations$TEST_RESULT_NUMERIC[is.na(data$observations$TEST_RESULT_NUMERIC)] <- data$observations$DESCRIPTIVE_SYMP_TEST_RESULTS[is.na(data$observations$TEST_RESULT_NUMERIC)]
-  data$observations1 <- data$observations[!grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME),]
-  data$observations2 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% c("Rectum", "RECTUM"),]
-  data$observations3 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Ileum",]
-  data$observations4 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Ascending Colon",]
-  data$observations5 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Descending Colon",]
-  data$observations6 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Sigmoid Colon",]
-  data$observations7 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Transverse Colon",]
-  data$observations8 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & is.na(data$observations$ANA_SITE_CONCEPT_NAME),]
+  data$observations1 <- data$observations[!grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME), ]
+  data$observations2 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% c("Rectum", "RECTUM"), ]
+  data$observations3 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Ileum", ]
+  data$observations4 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Ascending Colon", ]
+  data$observations5 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Descending Colon", ]
+  data$observations6 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Sigmoid Colon", ]
+  data$observations7 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & data$observations$ANA_SITE_CONCEPT_NAME %in% "Transverse Colon", ]
+  data$observations8 <- data$observations[grepl("Endoscopic", data$observations$OBS_TEST_CONCEPT_NAME) & is.na(data$observations$ANA_SITE_CONCEPT_NAME), ]
 
   data$observations1$ANA_SITE_CONCEPT_NAME[!data$observations1$OBS_TEST_CONCEPT_NAME %in% "Disease Location"] <- NA
   data$observations2$ANA_SITE_CONCEPT_NAME <- NULL
@@ -156,9 +158,9 @@ risk_summary <- function(dir,
 
   data$observations <- NULL
 
-  #remove those without birth year in demographics
+  # remove those without birth year in demographics
 
-  data$demographics = data$demographics %>% filter(!is.na(BIRTH_YEAR))
+  data$demographics <- data$demographics %>% filter(!is.na(BIRTH_YEAR))
 
   # Standardize biosamples DATA_SOURCE and column name for sample status
   data$biosample <- data$biosample %>%
@@ -167,18 +169,18 @@ risk_summary <- function(dir,
     mutate(SRC_BIOSAMPLE_CONCEPT_NAME = toupper(SRC_BIOSAMPLE_CONCEPT_NAME)) %>%
     mutate(SRC_BIOSAMPLE_CONCEPT_NAME = gsub(" ", "_", SRC_BIOSAMPLE_CONCEPT_NAME))
 
-  y.vars     <- select.col
+  y.vars <- select.col
   value.vars <- select.val
 
-  #Select and reshape tables based on the selected columns and values
-  wide <- lapply(data, function(df){
-    if(any(filter.col %in% names(df))){
+  # Select and reshape tables based on the selected columns and values
+  wide <- lapply(data, function(df) {
+    if (any(filter.col %in% names(df))) {
       col <- filter.col[filter.col %in% names(df)]
-      if(any(grepl(paste0(filter.val, collapse = "|"), df[,..col]))){
-        df <- df[grepl(paste0(filter.val, collapse = "|"), df[,..col]), ]
+      if (any(grepl(paste0(filter.val, collapse = "|"), df[, ..col]))) {
+        df <- df[grepl(paste0(filter.val, collapse = "|"), df[, ..col]), ]
       }
     }
-    if(any(y.vars %in% names(df))){
+    if (any(y.vars %in% names(df))) {
       y.var <- y.vars[y.vars %in% names(df)]
       value.var <- value.vars[value.vars %in% names(df)]
       s <- Reduce(left_join, lapply(1:length(y.var), function(x) to_wide(df, y.var[x], value.var[x])))
@@ -190,7 +192,7 @@ risk_summary <- function(dir,
   # summarize wide diagnosis table by VISIT_ENCOUNTER_ID
 
   coalesce_by_column <- function(df) {
-    return(coalesce(!!! as.list(df)))
+    return(coalesce(!!!as.list(df)))
   }
 
   wide$diagnosis <- wide$diagnosis %>%
@@ -198,7 +200,7 @@ risk_summary <- function(dir,
     summarize_all(coalesce_by_column)
 
 
-  #Rename columns
+  # Rename columns
   names(wide$prescriptions2)[5:length(wide$prescriptions2)] <- paste0(names(wide$prescriptions2)[5:length(wide$prescriptions2)], " - SC/IM")
   names(wide$prescriptions3)[5:length(wide$prescriptions3)] <- paste0(names(wide$prescriptions3)[5:length(wide$prescriptions3)], " - ORAL")
   names(wide$prescriptions4)[5:length(wide$prescriptions4)] <- paste0("ONGOING_", names(wide$prescriptions4)[5:length(wide$prescriptions4)])
@@ -213,17 +215,17 @@ risk_summary <- function(dir,
 
   wide <- Filter(Negate(is.null), wide)
 
-  for (i in 1:length(wide)){
-
-    wide[[i]] = wide[[i]] %>% ungroup() %>% distinct()
-
+  for (i in 1:length(wide)) {
+    wide[[i]] <- wide[[i]] %>%
+      ungroup() %>%
+      distinct()
   }
 
-  o = data.frame(o = names(wide)) %>% arrange(match(o, c("encounter")))
-  wide = wide[o$o]
+  o <- data.frame(o = names(wide)) %>% arrange(match(o, c("encounter")))
+  wide <- wide[o$o]
 
 
-  #rm(data)
+  # rm(data)
   gc()
 
   # drop columns that cause problems with join
@@ -232,30 +234,32 @@ risk_summary <- function(dir,
   wide$observations1 <- wide$observations1 %>%
     select(!`NA`)
 
-  #Join all tables together
+  # Join all tables together
 
   visit <- Reduce(left_join, wide)
 
-  if(any(names(visit) == "NA")){
+  if (any(names(visit) == "NA")) {
     visit$`NA` <- NULL
   }
   visit$`DISEASE LOCATION` <- NULL
   visit$`DISEASE LOCATION AND BEHAVIOR REASSESSED` <- NULL
 
-  #Collapse table by visit encounter id
-  if(any(names(visit)=="VISIT_ENCOUNTER_ID")){
+  # Collapse table by visit encounter id
+  if (any(names(visit) == "VISIT_ENCOUNTER_ID")) {
     visit <- data.table::as.data.table(visit)
-    visit <- visit[, lapply(.SD, function(x){paste0(unique(x[!is.na(x)]), collapse="; ")}), by = VISIT_ENCOUNTER_ID]
+    visit <- visit[, lapply(.SD, function(x) {
+      paste0(unique(x[!is.na(x)]), collapse = "; ")
+    }), by = VISIT_ENCOUNTER_ID]
   }
 
-  #Merge Crohn's Disease, Ulcerative Colitis,	IBD unclassified and Not IBD into one column
-  visit$`CROHN'S DISEASE`[visit$`CROHN'S DISEASE` %in% "Yes"]          <- "Crohn's Disease"
-  visit$`ULCERATIVE COLITIS`[visit$`ULCERATIVE COLITIS` %in% "Yes"]    <- "Ulcerative Colitis"
-  visit$`IBD UNCLASSIFIED`[visit$`IBD UNCLASSIFIED` %in% "Yes"]        <- "IBD Unclassified"
-  visit$`NOT IBD`[visit$`NOT IBD` %in% "Yes"]                          <- "Not IBD"
+  # Merge Crohn's Disease, Ulcerative Colitis,	IBD unclassified and Not IBD into one column
+  visit$`CROHN'S DISEASE`[visit$`CROHN'S DISEASE` %in% "Yes"] <- "Crohn's Disease"
+  visit$`ULCERATIVE COLITIS`[visit$`ULCERATIVE COLITIS` %in% "Yes"] <- "Ulcerative Colitis"
+  visit$`IBD UNCLASSIFIED`[visit$`IBD UNCLASSIFIED` %in% "Yes"] <- "IBD Unclassified"
+  visit$`NOT IBD`[visit$`NOT IBD` %in% "Yes"] <- "Not IBD"
 
   visit <- visit %>% mutate(DIAGNOSIS = paste0(visit$`CROHN'S DISEASE`, visit$`ULCERATIVE COLITIS`, visit$`IBD UNCLASSIFIED`, visit$`NOT IBD`))
-  visit[,c("CROHN'S DISEASE", "ULCERATIVE COLITIS", "IBD UNCLASSIFIED", "NOT IBD")] <- list(NULL)
+  visit[, c("CROHN'S DISEASE", "ULCERATIVE COLITIS", "IBD UNCLASSIFIED", "NOT IBD")] <- list(NULL)
 
   ## WPCDAI score calculation ----
   # pull dataframes necessary for wpcdai function
@@ -264,15 +268,17 @@ risk_summary <- function(dir,
   lab <- wpcdai_dat$labs
 
   # calls wpcdai function
-  wpcdai_calc <- wpcdai(observations = obs, encounter = enc, labs = lab) %>% select(starts_with("PCDAI"), "DEIDENTIFIED_MASTER_PATIENT_ID",
-                                               "VISIT_ENCOUNTER_ID", "WPCDAI")
+  wpcdai_calc <- wpcdai(observations = obs, encounter = enc, labs = lab) %>% select(
+    starts_with("PCDAI"), "DEIDENTIFIED_MASTER_PATIENT_ID",
+    "VISIT_ENCOUNTER_ID", "WPCDAI"
+  )
 
   # wont join with all of the pcdai columns
   visit <- visit %>% select(!starts_with("PCDAI"))
 
   visit <- visit %>% full_join(wpcdai_calc)
 
-  #Update database code values from PCDAI and other observation concepts to simpler Yes/No
+  # Update database code values from PCDAI and other observation concepts to simpler Yes/No
   visit[visit == "Dat_0_no"] <- "No"
   visit[visit == "Dat_1_yes"] <- "Yes"
   visit[visit == "Db_0_no"] <- "No"
@@ -337,8 +343,8 @@ risk_summary <- function(dir,
   # # join meds_at_visit table
   # visit <- left_join(visit, meds)
 
-  #Sort table by deidentified master patient ID and encounter date
-  visit <- visit[order(visit$DEIDENTIFIED_MASTER_PATIENT_ID, visit$VISIT_MONTH),]
+  # Sort table by deidentified master patient ID and encounter date
+  visit <- visit[order(visit$DEIDENTIFIED_MASTER_PATIENT_ID, visit$VISIT_MONTH), ]
 
   # drop patients if no DIAGNOSIS at Enrollment
   visit <- visit %>%
@@ -351,55 +357,73 @@ risk_summary <- function(dir,
 
   # create list with CD patient behavior to extract FIRST_BEHAVIOR from
   cd_journey_first <- visit %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER, FINAL_DIAGNOSIS,
-           `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
-           `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    select(
+      DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER, FINAL_DIAGNOSIS,
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
+      `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
+    ) %>%
     filter(FINAL_DIAGNOSIS == "Crohn's Disease") %>%
-    mutate(DISEASE_BEHAVIOR = case_when(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "No" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "No" ~ "B1",
-                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "No" ~ "B2",
-                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & is.na(`DISEASE BEHAVIOR - INTERNALLY PENTRATING`) ~ "B2",
-                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "No" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B3",
-                                        is.na(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`) & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B3",
-                                        `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B2+B3",
-                                        TRUE ~ NA
+    mutate(DISEASE_BEHAVIOR = case_when(
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "No" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "No" ~ "B1",
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "No" ~ "B2",
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & is.na(`DISEASE BEHAVIOR - INTERNALLY PENTRATING`) ~ "B2",
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "No" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B3",
+      is.na(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`) & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B3",
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes" & `DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes" ~ "B2+B3",
+      TRUE ~ NA
     )) %>%
-    mutate(STUDY_MONTH = case_when(`TYPE_OF_ENCOUNTER` == "Enrollment Visit" ~ 0,
-                                   TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`)))) %>%
-    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
-           VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)) %>%
+    mutate(STUDY_MONTH = case_when(
+      `TYPE_OF_ENCOUNTER` == "Enrollment Visit" ~ 0,
+      TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`))
+    )) %>%
+    mutate(
+      DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
+      VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)
+    ) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, FINAL_DIAGNOSIS, STUDY_MONTH, DISEASE_BEHAVIOR)
 
   # create list that pulls any stricturing or penetrating behavior so that final
   # behavior accurately represents an end point. If behavior starts as unknown
   # and switches to No, assume always had been No.
   cd_journey_final <- visit %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER,
-           FINAL_DIAGNOSIS, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
-           `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    select(
+      DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER,
+      FINAL_DIAGNOSIS, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
+      `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
+    ) %>%
     filter(FINAL_DIAGNOSIS == "Crohn's Disease") %>%
-    mutate(STUDY_MONTH = case_when(`TYPE_OF_ENCOUNTER` == "Enrollment Visit" ~ 0,
-                                   TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`)))) %>%
+    mutate(STUDY_MONTH = case_when(
+      `TYPE_OF_ENCOUNTER` == "Enrollment Visit" ~ 0,
+      TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`))
+    )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     # remove this and see how group counts change
-    mutate(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` = ifelse(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Unknown",
-                                                               NA, `DISEASE BEHAVIOR - INTERNALLY PENTRATING`),
-           `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` = ifelse(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Unknown",
-                                                               NA, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
+    mutate(
+      `DISEASE BEHAVIOR - INTERNALLY PENTRATING` = ifelse(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Unknown",
+        NA, `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
+      ),
+      `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` = ifelse(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Unknown",
+        NA, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`
+      )
+    ) %>%
     mutate(`stricturing` = ifelse(any(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes"),
-                                  "Yes", `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
+      "Yes", `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`
+    )) %>%
     mutate(`penetrating` = ifelse(any(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes"),
-                                  "Yes", `DISEASE BEHAVIOR - INTERNALLY PENTRATING`)) %>%
+      "Yes", `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
+    )) %>%
     filter(!is.na(`DISEASE BEHAVIOR - INTERNALLY PENTRATING`) & !is.na(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
-    mutate(DISEASE_BEHAVIOR = case_when(`stricturing` == "No" & `penetrating` == "No" ~ "B1",
-                                        `stricturing` == "Yes" & `penetrating` == "No" ~ "B2",
-                                        `stricturing` == "Yes" & is.na(`penetrating`) ~ "B2",
-                                        `stricturing` == "No" & `penetrating` == "Yes" ~ "B3",
-                                        is.na(`stricturing`) & `penetrating` == "Yes" ~ "B3",
-                                        `stricturing` == "Yes" & `penetrating` == "Yes" ~ "B2+B3",
-                                        stricturing == "No" & is.na(penetrating) ~ "B1",
-                                        is.na(stricturing) & penetrating == "No" ~ "B1",
-                                        is.na(stricturing) & is.na(penetrating) ~ "B1",
-                                        TRUE ~ NA
+    mutate(DISEASE_BEHAVIOR = case_when(
+      `stricturing` == "No" & `penetrating` == "No" ~ "B1",
+      `stricturing` == "Yes" & `penetrating` == "No" ~ "B2",
+      `stricturing` == "Yes" & is.na(`penetrating`) ~ "B2",
+      `stricturing` == "No" & `penetrating` == "Yes" ~ "B3",
+      is.na(`stricturing`) & `penetrating` == "Yes" ~ "B3",
+      `stricturing` == "Yes" & `penetrating` == "Yes" ~ "B2+B3",
+      stricturing == "No" & is.na(penetrating) ~ "B1",
+      is.na(stricturing) & penetrating == "No" ~ "B1",
+      is.na(stricturing) & is.na(penetrating) ~ "B1",
+      TRUE ~ NA
     )) %>%
     ungroup()
 
@@ -417,11 +441,13 @@ risk_summary <- function(dir,
   # get final behavior for all crohn's disease patients
   final_behavior <- cd_journey_final %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(end_point = case_when(DISEASE_BEHAVIOR == "B1" ~ 1,
-                                 DISEASE_BEHAVIOR == "B2" ~ 2,
-                                 DISEASE_BEHAVIOR == "B3" ~ 2,
-                                 DISEASE_BEHAVIOR == "B2+B3" ~ 3,
-                                 TRUE ~ 0)) %>%
+    mutate(end_point = case_when(
+      DISEASE_BEHAVIOR == "B1" ~ 1,
+      DISEASE_BEHAVIOR == "B2" ~ 2,
+      DISEASE_BEHAVIOR == "B3" ~ 2,
+      DISEASE_BEHAVIOR == "B2+B3" ~ 3,
+      TRUE ~ 0
+    )) %>%
     slice(which.max(end_point)) %>%
     rename("FINAL_BEHAVIOR" = "DISEASE_BEHAVIOR") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, FINAL_BEHAVIOR) %>%
@@ -446,10 +472,9 @@ risk_summary <- function(dir,
   # remove columns not necessary in summary table
   visit <- visit %>% select(all_of(names))
 
-  #change column order
+  # change column order
   data.table::setcolorder(visit, names)
 
-  #Write output file
+  # Write output file
   write.xlsx(visit, filename)
-
 }

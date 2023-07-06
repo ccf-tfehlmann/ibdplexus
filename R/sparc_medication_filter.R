@@ -1,7 +1,3 @@
-
-
-
-
 #' sparc_med_filter
 #'
 #' Logic to filter prescriptions table for medications of interest from the EMR and eCRF data sources.
@@ -17,9 +13,8 @@
 #' @return table with medications of interest from eCRF and EMR data
 #' @details Medication data is pulled forward if a patient answers "No" to the question "Are you currently taking any medication for your IBD?" on the quarterly survey.
 #' The \code{\link{med_grp}} dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
-#'@export
+#' @export
 sparc_med_filter <- function(prescriptions, observations, demographics, encounter, med_groups = c("Aminosalicylates", "Antibiotics", "Antidiarrheals", "Biologic", "Corticosteroids", "Immunomodulators", "Other", "Probiotic")) {
-
   # CONSENT INFORMATION ----
 
   consent <- extract_consent(demographics, "SPARC")
@@ -43,7 +38,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     filter(diff <= 30) %>%
     slice_min(diff) %>%
     filter(DESCRIPTIVE_SYMP_TEST_RESULTS == "No") %>%
-    left_join(prescriptions, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID",  "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
+    left_join(prescriptions, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
     left_join(med_grp, "MEDICATION_NAME") %>%
     filter(is.na(new_med_name) | med_type %in% c("Antibiotics", "Probiotic")) %>%
     mutate(NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT = 1) %>%
@@ -66,14 +61,18 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     left_join(consent, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
     # filter(DESCRIPTIVE_SYMP_TEST_RESULTS == "No") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
-           VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)) %>%
+    mutate(
+      DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
+      VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)
+    ) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID)
 
   ecrf_med_encounters <- ecrf_med_encounters %>%
     ungroup() %>%
-    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
-           VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)) %>%
+    mutate(
+      DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID),
+      VISIT_ENCOUNTER_ID = as.numeric(VISIT_ENCOUNTER_ID)
+    ) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID) %>%
     full_join(med_changes, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "VISIT_ENCOUNTER_ID")) %>%
     mutate(nochange = case_when(
@@ -83,16 +82,20 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
       is.na(DESCRIPTIVE_SYMP_TEST_RESULTS) & medication_survey_n != 1 ~ "No Answer"
     )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID) %>%
-      arrange(medication_survey_n, .by_group = TRUE) %>%
+    arrange(medication_survey_n, .by_group = TRUE) %>%
     mutate(c = row_number()) %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, medication_survey_n),
-                names_from = c,
-                values_from = nochange,
-                names_prefix = "nochange_") %>%
-    mutate(nochange = case_when(is.na(nochange_2) ~ nochange_1,
-                                nochange_2 == nochange_1 ~ nochange_1,
-                                nochange_2 == "Yes Change" | nochange_1 == "Yes Change" ~ "Yes Change",
-                                TRUE ~ nochange_1)) %>%
+    pivot_wider(
+      id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, medication_survey_n),
+      names_from = c,
+      values_from = nochange,
+      names_prefix = "nochange_"
+    ) %>%
+    mutate(nochange = case_when(
+      is.na(nochange_2) ~ nochange_1,
+      nochange_2 == nochange_1 ~ nochange_1,
+      nochange_2 == "Yes Change" | nochange_1 == "Yes Change" ~ "Yes Change",
+      TRUE ~ nochange_1
+    )) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, medication_survey_n, nochange) %>%
     ungroup()
 
@@ -139,7 +142,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     mutate(helper = paste0(DEIDENTIFIED_MASTER_PATIENT_ID, medication_survey_n)) %>%
     left_join(pull_forward_encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "helper")) %>%
     drop_na(new_encounter_id) %>%
-    left_join(prescriptions, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID","DATA_SOURCE",  "VISIT_ENCOUNTER_ID")) %>%
+    left_join(prescriptions, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")) %>%
     mutate(VISIT_ENCOUNTER_ID = new_encounter_id)
 
   pull_forward_prescriptions <- pull_forward_prescriptions %>%

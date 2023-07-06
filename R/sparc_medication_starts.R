@@ -1,4 +1,3 @@
-
 #' sparc_med_starts
 #'
 #' Extract medication first instance of medication start dates from SPARC patient reported and electronic medical record data.
@@ -19,8 +18,6 @@
 #'   eCRF data source is used.
 #'
 sparc_med_starts <- function(medication, encounter) {
-
-
   # ECRF DATA ----
 
   # Find Start Date in eCRF Data ----
@@ -37,9 +34,11 @@ sparc_med_starts <- function(medication, encounter) {
     slice(which.min(date)) %>%
     pivot_wider(names_from = type, values_from = date) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,  new_med_name, MED_START_DATE) %>%
-    rename(MEDICATION = new_med_name,
-           MED_START_DATE_ECRF = MED_START_DATE)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_START_DATE) %>%
+    rename(
+      MEDICATION = new_med_name,
+      MED_START_DATE_ECRF = MED_START_DATE
+    )
 
 
   # EMR Data ----
@@ -49,10 +48,12 @@ sparc_med_starts <- function(medication, encounter) {
 
   start_emr <- medication %>%
     left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
-    mutate(VISIT_ENCOUNTER_MED_START = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", 1, 0),
-           MED_START_DATE = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", (VISIT_ENCOUNTER_START_DATE), MED_START_DATE)) %>%
+    mutate(
+      VISIT_ENCOUNTER_MED_START = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", 1, 0),
+      MED_START_DATE = if_else(is.na(MED_START_DATE) & DATA_SOURCE == "EMR", (VISIT_ENCOUNTER_START_DATE), MED_START_DATE)
+    ) %>%
     filter(DATA_SOURCE == "EMR") %>%
-      mutate(drop = case_when(
+    mutate(drop = case_when(
       (!is.na(MED_END_DATE) & !is.na(MED_START_DATE)) & MED_END_DATE < MED_START_DATE ~ 1,
       TRUE ~ 0
     )) %>%
@@ -68,9 +69,11 @@ sparc_med_starts <- function(medication, encounter) {
     slice(which.min(date)) %>%
     pivot_wider(names_from = type, values_from = date) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,  new_med_name, MED_START_DATE,VISIT_ENCOUNTER_MED_START) %>%
-    rename(MEDICATION = new_med_name,
-           MED_START_DATE_EMR = MED_START_DATE)
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, MED_START_DATE, VISIT_ENCOUNTER_MED_START) %>%
+    rename(
+      MEDICATION = new_med_name,
+      MED_START_DATE_EMR = MED_START_DATE
+    )
 
   # Combine eCRF and EMR data ----
 
@@ -79,9 +82,11 @@ sparc_med_starts <- function(medication, encounter) {
   med_start <- full_join(start_ecrf, start_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, VISIT_ENCOUNTER_MED_START, MED_START_DATE_EMR, MED_START_DATE_ECRF) %>%
     rowwise() %>%
-    mutate(MED_START_DATE = case_when((VISIT_ENCOUNTER_MED_START == 0 | is.na(VISIT_ENCOUNTER_MED_START)) ~ min(c_across(MED_START_DATE_EMR:MED_START_DATE_ECRF), na.rm = T),
-                                      VISIT_ENCOUNTER_MED_START == 1 & !is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_ECRF,
-                                      VISIT_ENCOUNTER_MED_START == 1 & is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_EMR)) %>%
+    mutate(MED_START_DATE = case_when(
+      (VISIT_ENCOUNTER_MED_START == 0 | is.na(VISIT_ENCOUNTER_MED_START)) ~ min(c_across(MED_START_DATE_EMR:MED_START_DATE_ECRF), na.rm = T),
+      VISIT_ENCOUNTER_MED_START == 1 & !is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_ECRF,
+      VISIT_ENCOUNTER_MED_START == 1 & is.na(MED_START_DATE_ECRF) ~ MED_START_DATE_EMR
+    )) %>%
     ungroup()
 
 
