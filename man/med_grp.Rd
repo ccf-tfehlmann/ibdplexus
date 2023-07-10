@@ -8,7 +8,7 @@
 A data frame with 107 rows and 3 variables:
 \describe{
   \item{MEDICATION_NAME}{Medication Name as it appears in SF, ECRF or EMR}
-  \item{med_type}{The class of medication}
+  \item{med_type}{The class of medication. Medication classes include: Aminosalicylates, antibiotics, antidiarrheals, biologics, corticosteroids, immunomodulators, probiotics, and targeted synthetic small molecules}
   \item{new_med_name}{Standardized medication name}
 
 }
@@ -19,6 +19,13 @@ med_grp
 \description{
 A dataframe containing the coding for Medications. Allows to group the same
 medications together if they have different names (generic v. scientific)
-from different source. Infliximab Biosimilars added March 2022. Adalimumab Biosimilar added December 2022.
+from different source.
+}
+\details{
+Infliximab Biosimilars added March 2022.
+Adalimumab Biosimilar added December 2022.
+Additional Adalimumab Biosimilars added July 2023.
+Steroid list expanded July 2023.
+New targeted synthetic small molecules med_type added.
 }
 \keyword{datasets}
