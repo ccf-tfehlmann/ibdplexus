@@ -14,7 +14,7 @@
 #' @details Medication data is pulled forward if a patient answers "No" to the question "Are you currently taking any medication for your IBD?" on the quarterly survey.
 #' The \code{\link{med_grp}} dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
 #' @export
-sparc_med_filter <- function(prescriptions, observations, demographics, encounter, med_groups = c("Aminosalicylates", "Antibiotics", "Antidiarrheals", "Biologic", "Corticosteroids", "Immunomodulators", "Other", "Probiotic")) {
+sparc_med_filter <- function(prescriptions, observations, demographics, encounter, med_groups = c("Aminosalicylates", "Antibiotics", "Antidiarrheals", "Biologic", "Corticosteroids", "Immunomodulators", "Other", "Probiotic", "Targeted synthetic small molecules")) {
   # CONSENT INFORMATION ----
 
   consent <- extract_consent(demographics, "SPARC")

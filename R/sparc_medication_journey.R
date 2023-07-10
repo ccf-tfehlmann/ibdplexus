@@ -37,7 +37,7 @@
 #'
 #' @export
 #'
-sparc_med_journey <- function(prescriptions, demographics, observations, encounter, med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"), export = FALSE) {
+sparc_med_journey <- function(prescriptions, demographics, observations, encounter, med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators", "Targeted synthetic small molecules"), export = FALSE) {
   # Get medications of interest
 
   medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups)
