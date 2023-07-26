@@ -821,7 +821,7 @@ sparc_summary <- function(data,
 
 
   tobacco <- data$observations %>%
-    # filter(DATA_SOURCE == "SF_SPARC") %>%
+     filter(DATA_SOURCE == "SF_SPARC") %>%
     filter(grepl("Tobacco", OBS_TEST_CONCEPT_NAME)) %>%
     filter(!is.na(DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
     left_join(cohort_index_info) %>%
