@@ -9,7 +9,8 @@ sparc_med_journey(
   demographics,
   observations,
   encounter,
-  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
+  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators",
+    "Targeted synthetic small molecules"),
   export = FALSE
 )
 }

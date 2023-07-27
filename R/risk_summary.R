@@ -104,7 +104,12 @@ risk_summary <- function(dir,
       "78-Month Follow-up Visit",
       "84-Month Follow-up Visit",
       "90-Month Follow-up Visit",
-      "96-Month Follow-up Visit"
+      "96-Month Follow-up Visit",
+      "Enrollment (Biosample)",
+      "12-Month Follow-up (Biosample)",
+      "24-Month Follow-up (Biosample)",
+      "36-Month Follow-up (Biosample)",
+      "Follow-up (Omics)"
     )
   )
   # Remove time from visit encounter start date
@@ -467,7 +472,15 @@ risk_summary <- function(dir,
 
   visit <- visit %>%
     left_join(CD_behaviors, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-    relocate(c(FIRST_BEHAVIOR:DISEASE_JOURNEY), .after = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`)
+    relocate(c(FIRST_BEHAVIOR:DISEASE_JOURNEY), .after = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    # order by group, put follow-up omics last
+    mutate(order = ifelse(is.na(VISIT_MONTH), 100, VISIT_MONTH)) %>%
+    mutate(order = ifelse(str_detect(TYPE_OF_ENCOUNTER, "Biosample"), order + 0.1, order)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    arrange(order, .by_group = T) %>%
+    ungroup() %>%
+    # remove patient that only has enrollment (biosample)
+    filter(DEIDENTIFIED_MASTER_PATIENT_ID != "9029267")
 
   # remove columns not necessary in summary table
   visit <- visit %>% select(all_of(names))
