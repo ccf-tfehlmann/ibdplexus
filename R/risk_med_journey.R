@@ -146,6 +146,7 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   antitnfs <- meds %>%
     filter(MOA == "antiTNF") %>%
+    filter(MEDICATION_NAME != "Infliximab (Unspecified)" & MEDICATION_NAME != "Natalizumab") %>%
     # join encounter table here right now, if do it earlier can remove
     left_join(encounter %>%
       select(
@@ -205,6 +206,40 @@ risk_med_journey <- function(prescriptions, encounter) {
     # drug, use one day before med start date as previous med end date
     mutate(MED_END_DATE = if_else(flag == 1, lead(MED_START_DATE) - 1, MED_END_DATE)) %>%
     select(-flag)
+
+  # use last day administrated as end date for infliximab and natalizumab if
+  # other antiTNF is not started
+  inflix_nata <- meds %>%
+    filter(MEDICATION_NAME == "Infliximab (Unspecified)" | MEDICATION_NAME == "Natalizumab") %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
+    filter(!is.na(MED_START_DATE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
+    arrange(MED_START_DATE, .by_group = T)
+
+  # end dates for infliximab and natalizumab are the latest medication administrated date
+  inflix_nata_end <- inflix_nata %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
+    slice(which.max(MED_START_DATE)) %>%
+    mutate(MED_END_DATE = MED_START_DATE) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MOA, MED_END_DATE)
+
+  # infliximab and natalizumab start dates, select earliest
+  inflix_nata_start <- inflix_nata %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
+    slice(which.min(MED_START_DATE)) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MOA, MED_START_DATE)
+
+  # FINAL infliximab/natalizumab dates
+  inflix_nata_final <- inflix_nata_start %>%
+    left_join(inflix_nata_end, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MOA))
+
+  # join infliximab and natalizumab to other antitfs
+  antitnf_dates <- antitnf_dates %>%
+    select(-order) %>%
+    rbind(inflix_nata_final) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    arrange(MED_START_DATE, .by_group = T) %>%
+    mutate(order = row_number())
 
   #### MULTIPLE MED END DATES  ----
 
