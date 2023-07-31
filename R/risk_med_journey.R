@@ -28,7 +28,8 @@
 risk_med_journey <- function(prescriptions, encounter) {
   # filter data
   prescriptions <- prescriptions %>%
-    filter(DATA_SOURCE == "RISK")
+    filter(DATA_SOURCE == "RISK") %>%
+    mutate(END_DATE_IMPUTED = ifelse(is.na(MED_END_DATE), 1, 0))
 
   # find columns to keep
   keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
@@ -731,6 +732,15 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   # make the med end date for all other patients the day of their last visit
   # encounter ID
+
+  # create table with last visit encounter
+  last_visit_encounter <- encounter %>%
+    filter(DATA_SOURCE == "RISK") %>%
+    filter(TYPE_OF_ENCOUNTER != "IBD HOSPITALIZATION") %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    slice(which.max(VISIT_ENCOUNTER_END_DATE)) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE)
+
   missing_ends_other <- table %>%
     filter(is.na(MED_END_DATE)) %>%
     anti_join(
@@ -738,26 +748,8 @@ risk_med_journey <- function(prescriptions, encounter) {
         select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME),
       by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)
     ) %>%
-    left_join(
-      prescriptions %>% select(
-        DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, MEDICATION_NAME,
-        MED_ACTION_CONCEPT_NAME, MEDICATION_ADMINISTRATED
-      ),
-      multiple = "all",
-      by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)
-    ) %>%
-    left_join(
-      encounter %>%
-        select(
-          DEIDENTIFIED_MASTER_PATIENT_ID,
-          VISIT_ENCOUNTER_START_DATE
-        ),
-      by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID),
-      multiple = "all"
-    ) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
-    slice(which.max(VISIT_ENCOUNTER_START_DATE)) %>%
-    # flag if med is after max visit encounter start date
+    left_join(last_visit_encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    # # flag if med is after max visit encounter start date
     mutate(flag = if_else(MED_START_DATE > VISIT_ENCOUNTER_START_DATE, 1, 0)) %>%
     # all flagged patients only have one visit encounter, just use med_start_date
     # as the med_end_date
@@ -869,6 +861,29 @@ risk_med_journey <- function(prescriptions, encounter) {
     # fill with 0's
     mutate(STEROID_OVERLAP = ifelse(is.na(STEROID_OVERLAP), 0, STEROID_OVERLAP))
 
+  # if the end date is the same as the end date for a different interval for
+  # that medication for that patient, use most recent visit encounter start date
+  # instead (they all are incorrect interval)
+  table <- table %>%
+    # need to arrange so the second row is the incorrect one
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    arrange(MED_START_DATE, .by_group = T) %>%
+    mutate(MED_ORDER = row_number()) %>%
+    arrange(MED_ORDER, .by_group = T) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE) %>%
+    mutate(wrong_date = row_number()) %>%
+    left_join(last_visit_encounter, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    mutate(MED_END_DATE = if_else(wrong_date == 2, VISIT_ENCOUNTER_START_DATE, MED_END_DATE)) %>%
+    select(-c(wrong_date, VISIT_ENCOUNTER_START_DATE))
+
+  #### MED END DATE IMPUTED COLUMN
+
+  med_end_date_imputed <- prescriptions %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE,
+           END_DATE_IMPUTED) %>%
+    filter(END_DATE_IMPUTED == 0) %>%
+    mutate(MED_END_DATE = dmy(MED_END_DATE))
+
   #### FINAL ARRANGE ----
   table <- table %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -881,5 +896,8 @@ risk_med_journey <- function(prescriptions, encounter) {
     ungroup() %>%
     # CLB: DROP THE DATE ERROR FLAG AND SAME START DATE FLAG FOR NOW, USE LATER
     # DROP interval column, same as med start and end
-    select(-c(date_error_flag, same_start_date_flag, INTERVAL))
+    select(-c(date_error_flag, same_start_date_flag, INTERVAL)) %>%
+    # left join the med date imputed and fill in for imputed dates
+    left_join(med_end_date_imputed, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE)) %>%
+    mutate(END_DATE_IMPUTED = ifelse(is.na(END_DATE_IMPUTED), 1, END_DATE_IMPUTED))
 }
