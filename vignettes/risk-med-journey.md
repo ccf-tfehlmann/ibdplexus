@@ -9,8 +9,8 @@ the RISK study. The columns included in the RISK medication journey are:
 
 <table>
 <colgroup>
-<col style="width: 26%" />
-<col style="width: 73%" />
+<col style="width: 27%" />
+<col style="width: 72%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -41,7 +41,8 @@ was administered.</td>
 medication end dates but only one medication start date, the latest
 medication end date is used. If the patient has multiple medication
 start and end dates, each interval for the medication is a separate row
-in the medication journey table.</td>
+in the medication journey table. The logic for the imputed medication
+end date is explained further below.</td>
 </tr>
 <tr class="odd">
 <td>MED_ORDER</td>
@@ -82,8 +83,25 @@ medication interval.</td>
 <td>1 if the patient was also on steroids at any point in the medication
 interval.</td>
 </tr>
+<tr class="even">
+<td>END_DATE_IMPUTED</td>
+<td>1 if the medication end date was imputed, 0 if the medication end
+date was directly reported on a CRF.</td>
+</tr>
 </tbody>
 </table>
+
+### Medication End Date Logic
+
+For all medications other than Natalizumab and Infliximab, there is an
+option on the RISK case report form to report a medication end date.
+When that end date is reported, that is the MED\_END\_DATE used in the
+med journey table and the column END\_DATE\_IMPUTED will have a 0.
+
+For all medications other than Natalizumab and Infliximab if no end date
+is reported, the last RISK visit encounter date is used as the
+medication end date. The column END\_DATE\_IMPUTED will be 1 for these
+rows.
 
 #### Anti-TNF Logic
 
@@ -92,11 +110,18 @@ some point in their medication journey. In the case that there was no
 reported medication end date for one anti-TNF medication and another
 anti-TNF medication was started, then the day before the start date of
 the next anti-TNF is used as the medication end date for the prior
-medication.
+medication. The column END\_DATE\_IMPUTED will be 1 for these rows.
 
-#### Overlapping Medications
+For Natalizumab and Infliximab there was no option on the RISK case
+report form to report the medication end date. If the end date for these
+medications was not imputed because of the start of another anti-TNF
+medication, the last reported medication administered date is used as
+the medication end date. The column END\_DATE\_IMPUTED will be 1 for
+these rows.
+
+### Overlapping Medications
 
 Medications are considered overlapping if there is at least 1 day where
 the medication intervals overlap. If a medication was started on the
-same day another medication was stopped, these medications are not
+same day of another medication end date, these medications are not
 considered overlapping.

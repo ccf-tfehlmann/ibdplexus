@@ -720,9 +720,10 @@ risk_med_journey <- function(prescriptions, encounter) {
     filter(flag != 1) %>%
     select(-flag) %>%
     # if the medication is ongoing and medication administrated is no, choose that
-    # visit encounter start date as the med end date
-    mutate(MED_END_DATE = if_else(MED_ACTION_CONCEPT_NAME == "Ongoing Treatment" &
-      MEDICATION_ADMINISTRATED == "No", VISIT_ENCOUNTER_START_DATE, NA)) %>%
+    # visit encounter start date as the med end date:
+    #### CLB change this logic ----
+    # mutate(MED_END_DATE = if_else(MED_ACTION_CONCEPT_NAME == "Ongoing Treatment" &
+    #   MEDICATION_ADMINISTRATED == "No", VISIT_ENCOUNTER_START_DATE, NA)) %>%
     filter(!is.na(MED_END_DATE)) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE,
