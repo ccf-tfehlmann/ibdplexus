@@ -1,0 +1,60 @@
+---
+title: "SPARC Summary Table Overview"
+author: "Crohn's & Colitis Foundation"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SPARC Summary Table Overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD) is a longitudinal study following adult IBD patients as they receive care at 17 different sites across the United States. To learn more about SPARC IBD and it's development please see [The Development and Initial Findings of A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD)] (<https://doi.org/10.1093/ibd/izab071>).
+
+Data from patient reported surveys (eCRFs), IBD Smartform and electronic medication records (EMR) are integrated into IBD Plexus. The ibdplexus package was created to synthesize this data into research ready formats. This vignette focuses on the sparc_summary function in the ibdplexus package.
+
+## sparc_summary() components
+
+The sparc_summary() function generates a table with the information collected on patient surveys, Smartform and from EMR around a specific index date for each patient. It collapses the raw data from multiple domains in the DDM into one research ready data set.
+
+The index date can be a data frame with the DEIDENTIFIED_MASTER_PATIENT_ID and a field called "index_date" which is any date of interest. The function also has built in dates of interest including time of enrollment, enodscopy, biosample collection, omics date, and the most recent Smartform or patient survey date.
+
+The function allows for a 'index range' in days, which specifies how far out from the index date to gather the relevant data. The default is 30 days.
+
+It requires a list of data frames to be loaded using the load_data() function. This list of data frames must include demographics, diagnosis, encounter, procedures, observations, biosample, omics_patient_mapping, prescriptions and labs.
+
+## Resulting Table
+
+The function produces a table with the following columns. The sparc_scores() function produces a subset of this table but with only the disease activity scores and some other Smartform data, noted in the following table.
+
+-   ORDER - the column number in the table
+
+-   COLUMN_NAME - the column in the sparc_summary() or sparc_scores() table
+
+-   COLUMN_LOCATION - which table the column can be found in
+
+-   DEFINITION - an explanation of the column name
+
+-   DERVIVED_VARIABLE - if this variable is derived from multiple fields in the raw data
+
+-   DDM_TABLE - what table the column is found in the ddm
+
+-   DDM_DATA_SOURCE - the data source of the field
+
+-   OTHER_DDM_FILTERS - any other filters that need to be performed to generate this column.
+
+-   DDM_VARIABLE  - the variable that is reflected by this column
+
+-   NOTES - any notes regarding the column
+
+```{r}
+#| echo: false
+DT::datatable(ibdplexus:::summary_fields, rownames = FALSE,extensions = 'Buttons', options = list(dom = 'Bfrtip', buttons = c('copy', 'excel')))
+```
