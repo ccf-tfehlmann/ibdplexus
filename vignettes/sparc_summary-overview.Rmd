@@ -1,10 +1,10 @@
 ---
-title: "SPARC Summary Table Overview"
+title: "sparc_summary-overview"
 author: "Crohn's & Colitis Foundation"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{SPARC Summary Table Overview}
+  %\VignetteIndexEntry{sparc_summary-overview}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -50,7 +50,7 @@ The function produces a table with the following columns. The sparc_scores() fun
 
 -   OTHER_DDM_FILTERS - any other filters that need to be performed to generate this column.
 
--   DDM_VARIABLE  - the variable that is reflected by this column
+-   DDM_VARIABLE - the variable that is reflected by this column
 
 -   NOTES - any notes regarding the column
 

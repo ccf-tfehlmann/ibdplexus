@@ -5,26 +5,26 @@ knitr::opts_chunk$set(
   eval = FALSE
 )
 
+options(rmarkdown.html_vignette.check_title = FALSE)
 
 ## ----eval = TRUE, warning = FALSE, message = FALSE----------------------------
-
 library(ibdplexus, quietly = T)
-library(tidyverse, quietly = T)
+library(tidyr, quietly = T)
+library(dplyr, quietly = T)
+library(lubridate, quietly = T)
 
 # Here is the table of the medication types in med_grp
-knitr::kable(med_grp %>% distinct(med_type)) 
+knitr::kable(med_grp %>% distinct(med_type))
 
 # Here is the first 5 rows of the med_grp data.frame
 
-knitr::kable(head(med_grp, 5)) 
+knitr::kable(head(med_grp, 5))
 
-# Here is how Infliximab and its' bio-similars are mapped 
+# Here is how Infliximab and its' bio-similars are mapped
 
-knitr::kable(med_grp %>% filter(new_med_name == "Infliximab"))
-
+knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = T)))
 
 ## -----------------------------------------------------------------------------
-#  
 #  # Load EMR and eCRF data necessary for sparc_med_filter
 #  
 #  data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("prescriptions", "observations", "demographics", "encounter"), data_type = "Both")
@@ -36,13 +36,10 @@ knitr::kable(med_grp %>% filter(new_med_name == "Infliximab"))
 #    data$observations,
 #    data$demographics,
 #    data$encounter,
-#    med_groups = c("Biologic","Immunomodulators")
+#    med_groups = c("Biologic", "Immunomodulators")
 #  )
-#  
 
 ## -----------------------------------------------------------------------------
-#  
-#  
 #  # Find Medication Start Dates for Biologics and Immunomodulators.
 #  # If export = TRUE then an excel spreadsheet is generated.
 #  
@@ -51,18 +48,14 @@ knitr::kable(med_grp %>% filter(new_med_name == "Infliximab"))
 #    data$observations,
 #    data$demographics,
 #    data$encounter,
-#    med_groups = c("Biologic","Immunomodulators"),
+#    med_groups = c("Biologic", "Immunomodulators"),
 #    export = TRUE
 #  )
-#  
-#  
 
 ## -----------------------------------------------------------------------------
-#  
-#  
 #  # Load Data needed for sparc_medication function
 #  
-#  data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c ("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping","prescriptions"), data_type = "Both")
+#  data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions"), data_type = "Both")
 #  
 #  # Find Biologics and Immunomodulators a patient is on at enrollment.
 #  
@@ -81,5 +74,4 @@ knitr::kable(med_grp %>% filter(new_med_name == "Infliximab"))
 #    med_groups = c("Biologic", "Immunomodulators"),
 #    filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx"
 #  )
-#  
 

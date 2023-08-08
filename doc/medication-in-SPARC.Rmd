@@ -1,6 +1,6 @@
 ---
-title: "medication-in-SPARC"
-output: rmarkdown::github_document
+title: "Medication Data in SPARC IBD"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{medication-in-SPARC}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
   eval = FALSE
 )
 
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD) is a longitudinal study following adult IBD patients as they receive care at 17 different sites across the United States. To learn more about SPARC IBD and it's development please see [The Development and Initial Findings of A Study of a Prospective Adult Research Cohort with Inflammatory Bowel Disease (SPARC IBD)] (<https://doi.org/10.1093/ibd/izab071>).
@@ -28,26 +29,26 @@ This vignette mainly focuses on the medication data from eCRF and EMR.
 
 `sparc_med_filter` filters through the eCRF and EMR data for medications of interest that are listed in the data.frame `med_grp`.
 
-`med grp` contains the medication name of interest, the type of medication and a standardized name. The MEDICATION_NAME column includes generic and brand names. the new_med_name column is the standardized name for each MEDICATION_NAME. Currently, all biosimilars are mapped to the generic name.
+`med grp` contains the medication name of interest, the type of medication and a standardized name. The MEDICATION_NAME column includes generic and brand names. the new_med_name column is the standardized name for each MEDICATION_NAME.
 
-A future iteration will parse out biosimilars into their own group.
+Biosimilars are now in their own groups.
 
 ```{r eval = TRUE, warning = FALSE, message = FALSE}
-
 library(ibdplexus, quietly = T)
-library(tidyverse, quietly = T)
+library(tidyr, quietly = T)
+library(dplyr, quietly = T)
+library(lubridate, quietly = T)
 
 # Here is the table of the medication types in med_grp
-knitr::kable(med_grp %>% distinct(med_type)) 
+knitr::kable(med_grp %>% distinct(med_type))
 
 # Here is the first 5 rows of the med_grp data.frame
 
-knitr::kable(head(med_grp, 5)) 
+knitr::kable(head(med_grp, 5))
 
-# Here is how Infliximab and its' bio-similars are mapped 
+# Here is how Infliximab and its' bio-similars are mapped
 
-knitr::kable(med_grp %>% filter(new_med_name == "Infliximab"))
-
+knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = T)))
 ```
 
 To see the entire med_grp data.frame click <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/data/med_grp.rda">`here`</a>
@@ -73,21 +74,19 @@ In the quarterly follow-up surveys, a patient is asked if they have had any chan
 `sparc med filter` uses grep to search through the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns in the prescription table. If the medication of interest is found, it subsets the data and maps the medication to the standardized name (new_med_name).
 
 ```{r}
-
-# Load EMR and eCRF data necessary for sparc_med_filter 
+# Load EMR and eCRF data necessary for sparc_med_filter
 
 data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("prescriptions", "observations", "demographics", "encounter"), data_type = "Both")
 
-# Filter SPARC IBD data for biologics & immunomodulators 
+# Filter SPARC IBD data for biologics & immunomodulators
 
 meds_of_interest <- sparc_med_filter(
   data$prescriptions,
   data$observations,
   data$demographics,
   data$encounter,
-  med_groups = c("Biologic","Immunomodulators")
+  med_groups = c("Biologic", "Immunomodulators")
 )
-
 ```
 
 # Finding the First Instance of a Medication
@@ -108,98 +107,88 @@ If no end date is given for a prescription, the duration of the overlap is calcu
 
 `sparc_med_starts` creates a table with the following columns:
 
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Column                                  | Description                                                                                                                                                                                                  |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DEIDENTIFIED_MASTER_PATIENT_ID          | Unique patient id                                                                                                                                                                                            |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MEDICATION                              | Corresponds to new_med_name in the med_grp data.frame                                                                                                                                                        |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MED_START_DATE_ECRF                     | Medication Start Date from the eCRF data source                                                                                                                                                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MED_END_DATE_ECRF                       | Medication End Date from the eCRF data source                                                                                                                                                                |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CURRENT_MEDICATION_ECRF                 | YES if the medication is current, NO if the medication has been stopped                                                                                                                                      |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| NUMBER_OF_DOSE_CHANGES_ECRF             | Counts the number of times a patient reported a change in dose. This field is free text and the r script only parses out numbers.                                                                            |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| NUMBER_OF_FREQ_CHANGES_ECRF             | Counts the number of times a patient reported a change in medication frequency.                                                                                                                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| REASON_STOPPED_ECRF                     | Lists the reason stopped if available. A medication may be current, but have a reason stopped populated because of a dose and/or frequency change.                                                           |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| VISIT_ENCOUNTER_MED_START               | For EMR data, flags if a medication start date is missing and the visit encounter start date was used instead                                                                                                |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MED_START_DATE_EMR                      | Medication Start Date from the EMR data source                                                                                                                                                               |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MED_END_DATE_EMR                        | Medication End Date from the EMR data source                                                                                                                                                                 |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| LOADING_DOSE_EMR                        | 1 if a patients prescription pattern for specific biologics represents the loading pattern of that medication.                                                                                               |
-|                                         |                                                                                                                                                                                                              |
-|                                         | +--------------------+---------------------------------------------------------------------------------+                                                                                                     |
-|                                         | | Biologic           | Criteria                                                                        |                                                                                                     |
-|                                         | +====================+=================================================================================+                                                                                                     |
-|                                         | | Infliximab         | Prescriptions at 0,2,6 and then every 8 weeks                                   |                                                                                                     |
-|                                         | +--------------------+---------------------------------------------------------------------------------+                                                                                                     |
-|                                         | | Adalimumab         | Every 2 weeks with the first dose as 160mg, then 80 mg, then 40mg going forward |                                                                                                     |
-|                                         | +--------------------+---------------------------------------------------------------------------------+                                                                                                     |
-|                                         | | Certolizumab Pegol | Prescriptions at 0,2,4 and then every 4 weeks                                   |                                                                                                     |
-|                                         | +--------------------+---------------------------------------------------------------------------------+                                                                                                     |
-|                                         | | VedolizInumab      | Prescriptions at 0,2,6 and then every 8 weeks                                   |                                                                                                     |
-|                                         | +--------------------+---------------------------------------------------------------------------------+                                                                                                     |
-|                                         | | Ustekinumab        | Initial dose as an IV and then subcutaneous injection every 8 weeks             |                                                                                                     |
-|                                         | +--------------------+---------------------------------------------------------------------------------+                                                                                                     |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| PRESCRIPTION_NUMBER_EMR                 | Number of rows for this medication in the prescription emr data                                                                                                                                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MEDICATION_REFILLS_EMR                  | Number of refills from most recent prescription in the EMR data                                                                                                                                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ECRF_PRESCRIPTION_DATA                  | 1 if data for this medication is available in the eCRF data source                                                                                                                                           |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MED_START_DATE                          | If ECRF_PRESCRIPTION_DATA = 1, then from MED_START_DATE_ECRF, else from MED_START_DATE_EMR.                                                                                                                  |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MED_END_DATE                            | If ECRF_PRESCRIPTION_DATA = 1, then from MED_END_DATE_ECRF, else from MED_END_DATE_EMR.                                                                                                                      |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MOA                                     | The mechanism of action for each medication. Includes, antiTNF, Aminosalicylates, Immunomodulators, Interleukin-12 and -23 Antagonist, JAKi, Integrin Receptor Antagonists, S1P                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| MEDICATION_NUMBER                       | counts the number of different medications in a patients' journey. Only medications in the selected med_groups are considered. The medication with with earliest start date will have MEDICATION_NUMBER = 1. |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| OVERLAPPING_MOA                         | If multiple medications overlap, the overlapping MOA is listed here                                                                                                                                          |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| OVERLAPPING_DAYS                        | The number of days the medication overlaps with another MOA                                                                                                                                                  |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DATE_OF_CONSENT                         | The date of enrollment into SPARC for the patient                                                                                                                                                            |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DATE_OF_CONSENT_WITHDRAWN               | The date of withdrawal from SPARC, if applicable                                                                                                                                                             |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| STARTED_AFTER_ENROLLMENT                | is 1 if the medication start date is after the date of consent.                                                                                                                                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT | 1 if a patient indicates "No" to "Are you currently on any IBD medications?" at their baseline survey.                                                                                                       |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| BIOLOGIC                                | is 1 if the record is for a biologic                                                                                                                                                                         |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FIRST_BIOLOGIC                          | is 1 if a medication record is the first biologic a patient receives.                                                                                                                                        |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FIRST_BIOLOGIC_NUMBER                   |  If a record is the first biologic a patient receives, FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.                                                                                              |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| BIONAIVE                                | is 1 if patient has no prior reported biologic use                                                                                                                                                           |
-+-----------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Column                                  | Description                                                                                                                                                                                                                                              |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DEIDENTIFIED_MASTER_PATIENT_ID          | Unique patient id                                                                                                                                                                                                                                        |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MEDICATION                              | Corresponds to new_med_name in the med_grp data.frame                                                                                                                                                                                                    |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MED_START_DATE_ECRF                     | Medication Start Date from the eCRF data source                                                                                                                                                                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MED_END_DATE_ECRF                       | Medication End Date from the eCRF data source                                                                                                                                                                                                            |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CURRENT_MEDICATION_ECRF                 | YES if the medication is current, NO if the medication has been stopped                                                                                                                                                                                  |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| NUMBER_OF_DOSE_CHANGES_ECRF             | Counts the number of times a patient reported a change in dose. This field is free text and the r script only parses out numbers.                                                                                                                        |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| NUMBER_OF_FREQ_CHANGES_ECRF             | Counts the number of times a patient reported a change in medication frequency.                                                                                                                                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| REASON_STOPPED_ECRF                     | Lists the reason stopped if available. A medication may be current, but have a reason stopped populated because of a dose and/or frequency change.                                                                                                       |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| VISIT_ENCOUNTER_MED_START               | For EMR data, flags if a medication start date is missing and the visit encounter start date was used instead                                                                                                                                            |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MED_START_DATE_EMR                      | Medication Start Date from the EMR data source                                                                                                                                                                                                           |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MED_END_DATE_EMR                        | Medication End Date from the EMR data source                                                                                                                                                                                                             |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| LOADING_DOSE_EMR                        | 1 if a patients prescription pattern for specific biologics represents the loading pattern of that medication.                                                                                                                                           |
+|                                         |                                                                                                                                                                                                                                                          |
+|                                         | | Biologic           | Criteria                                                                        |                                                                                                                                                 |
+|                                         | |--------------------|---------------------------------------------------------------------------------|                                                                                                                                                 |
+|                                         | | Infliximab         | Prescriptions at 0,2,6 and then every 8 weeks                                   |                                                                                                                                                 |
+|                                         | | Adalimumab         | Every 2 weeks with the first dose as 160mg, then 80 mg, then 40mg going forward |                                                                                                                                                 |
+|                                         | | Certolizumab Pegol | Prescriptions at 0,2,4 and then every 4 weeks                                   |                                                                                                                                                 |
+|                                         | | VedolizInumab      | Prescriptions at 0,2,6 and then every 8 weeks                                   |                                                                                                                                                 |
+|                                         | | Ustekinumab        | Initial dose as an IV and then subcutaneous injection every 8 weeks             |                                                                                                                                                 |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| PRESCRIPTION_NUMBER_EMR                 | Number of rows for this medication in the prescription emr data                                                                                                                                                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MEDICATION_REFILLS_EMR                  | Number of refills from most recent prescription in the EMR data                                                                                                                                                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ECRF_PRESCRIPTION_DATA                  | 1 if data for this medication is available in the eCRF data source                                                                                                                                                                                       |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MED_START_DATE                          | If ECRF_PRESCRIPTION_DATA = 1, then from MED_START_DATE_ECRF, else from MED_START_DATE_EMR.                                                                                                                                                              |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MED_END_DATE                            | If ECRF_PRESCRIPTION_DATA = 1, then from MED_END_DATE_ECRF, else from MED_END_DATE_EMR.                                                                                                                                                                  |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MOA                                     | The mechanism of action for each medication. Includes, antiTNF, Aminosalicylates, Immunomodulators, Interleukin-12 and -23 Antagonist, JAKi, Integrin Receptor Antagonists, S1P                                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MEDICATION_NUMBER                       | counts the number of different medications in a patients' journey. Only medications in the selected med_groups are considered. The medication with with earliest start date will have MEDICATION_NUMBER = 1.                                             |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| OVERLAPPING_MOA                         | If multiple medications overlap, the overlapping MOA is listed here                                                                                                                                                                                      |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| OVERLAPPING_DAYS                        | The number of days the medication overlaps with another MOA                                                                                                                                                                                              |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DATE_OF_CONSENT                         | The date of enrollment into SPARC for the patient                                                                                                                                                                                                        |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DATE_OF_CONSENT_WITHDRAWN               | The date of withdrawal from SPARC, if applicable                                                                                                                                                                                                         |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| STARTED_AFTER_ENROLLMENT                | is 1 if the medication start date is after the date of consent.                                                                                                                                                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT | 1 if a patient indicates "No" to "Are you currently on any IBD medications?" at their baseline survey.                                                                                                                                                   |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ADVANCED_MED                            | is 1 if the record is for an advanced medication including Adalimumab, Certolizumab Pegol, Golimumab, Infliximab, Natalizumab, Other Biologic, Ustekinumab, Vedolizumab, Tofacitinib, Upadacitinib, Ozanimod, or Risankizumab. Biosimilars are included. |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FIRST_ADVANCED_MED                      | is 1 if a medication record is the first advanced medication a patient receives.                                                                                                                                                                         |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FIRST_ADVANCED_MED_NUMBER               |  If a record is the first advanced medication a patient receives, FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.                                                                                                                               |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| BIONAIVE                                | is 1 if patient has no prior reported advanced medication use                                                                                                                                                                                            |
++-----------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ```{r}
-
-
-# Find Medication Start Dates for Biologics and Immunomodulators. 
-# If export = TRUE then an excel spreadsheet is generated. 
+# Find Medication Start Dates for Biologics and Immunomodulators.
+# If export = TRUE then an excel spreadsheet is generated.
 
 medication_starts <- sparc_med_starts(
   data$prescriptions,
   data$observations,
   data$demographics,
   data$encounter,
-  med_groups = c("Biologic","Immunomodulators"),
+  med_groups = c("Biologic", "Immunomodulators"),
   export = TRUE
 )
-
-
 ```
 
 # Medication at a Specific Time-point
@@ -214,50 +203,32 @@ Currently, this function does not support steroid or antibiotic use. Functions t
 
 A data.frame and excel file is generated with the following columns:
 
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+|                                         |                                                                                                                                   |
+|-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | **Column**                              | **Description**                                                                                                                   |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | DEIDENTIFIED_MASTER_PATIENT_ID          | Unique patient id                                                                                                                 |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | DATE_OF_CONSENT                         | The date of enrollment into SPARC for the patient                                                                                 |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | DATE_OF_CONSENT_WITHDRAWN               | The date of withdrawal from SPARC, if applicable                                                                                  |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | BIRTH_YEAR                              | Year of patients birth                                                                                                            |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | SEX                                     | Male, Female or Unknown                                                                                                           |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | DIAGNOSIS                               | Crohn's Disease, Ulcerative Colitis, or IBD Unclassified                                                                          |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | DIAGNOSIS_DATE                          | Date of IBD Diagnosis                                                                                                             |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | INDEX_DATE                              | Date of interest as specified in "index_info"                                                                                     |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT | 1 if a patient indicates "No" to "Are you currently on any IBD medications?" at their baseline survey.                            |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | MEDICATION_AT_INDEX                     | A concatenated list of medications the patient is on based on if the index date falls between the medication start and stop date. |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | BIONAIVE                                | is 1 if patient has no prior reported biologic use                                                                                |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | MED_START_DATE_ECRF_XXX                 | The start date in the ECRF for medication XXX                                                                                     |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | MED_END_DATE_ECRF_XXX                   | The end date in the ECRF for medication XXX                                                                                       |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | MED_START_DATE_EMR_XXX                  | The start date in the EMR for medication XXX                                                                                      |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | MED_END_DATE_EMR_XXX                    | The end date in the EMR for medication XXX                                                                                        |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 | CURRENT_MEDICATION_ECRF_XXX             | The current medication flag (yes/no) from eCRF for medication XXX                                                                 |
-+-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 
 ```{r}
+# Load Data needed for sparc_medication function
 
+data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions"), data_type = "Both")
 
-# Load Data needed for sparc_medication function 
-
-data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c ("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping","prescriptions"), data_type = "Both")
-
-# Find Biologics and Immunomodulators a patient is on at enrollment. 
+# Find Biologics and Immunomodulators a patient is on at enrollment.
 
 med_at_enrollment <- sparc_medication(
   data = data,
@@ -274,5 +245,4 @@ med_at_enrollment <- sparc_medication(
   med_groups = c("Biologic", "Immunomodulators"),
   filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx"
 )
-
 ```
