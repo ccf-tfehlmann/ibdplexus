@@ -1326,7 +1326,7 @@ sparc_summary <- function(data,
           `PERIANAL ABCESS` == "No" &
           `PERIANAL FISTULA - COMPLEX FISTULA` == "No" &
           `LARGE SKIN TAGS` == "No" &
-          `RECTOVAGINAL FISTULA` == "No") |
+          `RECTOVAGINAL FISTULA` == "No") &
           `PERIANAL FISTULA` == "No" ~ "No",
         TRUE ~ "Unknown"
       ),
