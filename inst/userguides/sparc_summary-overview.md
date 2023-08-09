@@ -64,8 +64,4 @@ following table.
 
 -   NOTES - any notes regarding the column
 
-<!-- -->
-
-    #> PhantomJS not found. You can install it with webshot::install_phantomjs(). If it is installed, please make sure the phantomjs executable can be found via the PATH variable.
-
-![](sparc_summary-overview_files/figure-markdown_strict/unnamed-chunk-1-1.png)
+![](sparc_summary-overview_files/figure-markdown_strict/unnamed-chunk-2-1.png)
