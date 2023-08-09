@@ -64,4 +64,4 @@ following table.
 
 -   NOTES - any notes regarding the column
 
-![](sparc_summary-overview_files/figure-markdown_strict/unnamed-chunk-2-1.png)
+![](C:/Users/tfehlmann/AppData/Local/Temp/2/RtmpuyZalA/preview-e02ca633eb.dir/sparc_summary-overview_files/figure-markdown_strict/unnamed-chunk-1-1.png)
