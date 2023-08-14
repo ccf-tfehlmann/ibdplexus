@@ -69,7 +69,7 @@ risk_summary <- function(dir,
     mutate(DIAG_STATUS_CONCEPT_NAME = ifelse(DIAG_CONCEPT_NAME == "IBD - Family History", gsub(".*_", "", DIAG_STATUS_CONCEPT_CODE), DIAG_STATUS_CONCEPT_NAME)) %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = str_to_title(DIAG_STATUS_CONCEPT_NAME)) %>%
     mutate(DIAG_STATUS_CONCEPT_NAME = ifelse(DIAG_CONCEPT_NAME == "IBD - Family History" & DIAG_STATUS_CONCEPT_NAME == "Yes/Unknown",
-      "Yes/unknown", DIAG_STATUS_CONCEPT_NAME
+                                             "Yes/unknown", DIAG_STATUS_CONCEPT_NAME
     ))
   data$diagnosis <- data$diagnosis %>% filter(!is.na(DIAG_STATUS_CONCEPT_NAME))
   data$diagnosis$DIAGNOSIS_DATE[!data$diagnosis$DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "Crohn's disease", "Ulcerative colitis", "IBD unclassified", "Not IBD")] <- NA
@@ -405,17 +405,17 @@ risk_summary <- function(dir,
     # CLB  - remove this and see how group counts change
     mutate(
       `DISEASE BEHAVIOR - INTERNALLY PENTRATING` = ifelse(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Unknown",
-        NA, `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
+                                                          NA, `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
       ),
       `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` = ifelse(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Unknown",
-        NA, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`
+                                                              NA, `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`
       )
     ) %>%
     mutate(`stricturing` = ifelse(any(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC` == "Yes"),
-      "Yes", `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`
+                                  "Yes", `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`
     )) %>%
     mutate(`penetrating` = ifelse(any(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Yes"),
-      "Yes", `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
+                                  "Yes", `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
     )) %>%
     filter(!is.na(`DISEASE BEHAVIOR - INTERNALLY PENTRATING`) & !is.na(`DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`)) %>%
     mutate(DISEASE_BEHAVIOR = case_when(
@@ -522,3 +522,5 @@ risk_summary <- function(dir,
   # Write output file
   write.xlsx(visit, filename)
 }
+
+

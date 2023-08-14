@@ -28,17 +28,16 @@
 risk_med_journey <- function(prescriptions, encounter) {
   # filter data
   prescriptions <- prescriptions %>%
-    filter(DATA_SOURCE == "RISK")
-
-  # table with med end dates imputed to join at the end
-  prescriptions_med_end_date_imputed <- prescriptions %>%
+    filter(DATA_SOURCE == "RISK") %>%
     mutate(END_DATE_IMPUTED = ifelse(is.na(MED_END_DATE), 1, 0))
 
   # find columns to keep
-  keep_cols <- prescriptions %>% remove_empty("cols") %>%
-    as_tibble()
+  keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
+    pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
+    filter(full == T) %>%
+    select(cols)
 
-  keep_cols <- names(keep_cols)
+  keep_cols <- keep_cols$cols
 
   # eventually: left join encounter table to use visit encounter start date when medication
   # administrated is Yes but there is no med start date? Need to pull forward
@@ -55,9 +54,9 @@ risk_med_journey <- function(prescriptions, encounter) {
     # select out all of the medication names that are just leading questions at
     # enrollment
     filter(MEDICATION_NAME != "Immunomodulators" & MEDICATION_NAME != "Corticosteroids" &
-      MEDICATION_NAME != "Antibiotics" & MEDICATION_NAME != "5-ASA Oral" &
-      MEDICATION_NAME != "Biologic Agents" & MEDICATION_NAME != "Exclusive Enteral Therapy" &
-      MEDICATION_NAME != "Supplemental Enteral Therapy") %>%
+             MEDICATION_NAME != "Antibiotics" & MEDICATION_NAME != "5-ASA Oral" &
+             MEDICATION_NAME != "Biologic Agents" & MEDICATION_NAME != "Exclusive Enteral Therapy" &
+             MEDICATION_NAME != "Supplemental Enteral Therapy") %>%
     mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
     mutate(MED_GROUP = case_when(
       MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
@@ -93,7 +92,7 @@ risk_med_journey <- function(prescriptions, encounter) {
     # to just filter for rows that have start or end date because think there is
     # something with Ongoing I will want to check
     filter(MEDICATION_ADMINISTRATED == "No" | MEDICATION_ADMINISTRATED == "Yes" |
-      is.na(MEDICATION_ADMINISTRATED)) %>%
+             is.na(MEDICATION_ADMINISTRATED)) %>%
     # two rows that are NA for MEDICATION_ADMINISTRATED but have a dosage amount,
     # not being included at this point
     mutate(
@@ -151,20 +150,20 @@ risk_med_journey <- function(prescriptions, encounter) {
     filter(MEDICATION_NAME != "Infliximab (Unspecified)" & MEDICATION_NAME != "Natalizumab") %>%
     # join encounter table here right now, if do it earlier can remove
     left_join(encounter %>%
-      select(
-        DEIDENTIFIED_MASTER_PATIENT_ID,
-        VISIT_ENCOUNTER_ID,
-        VISIT_ENCOUNTER_START_DATE
-      ), by = join_by(
-      DEIDENTIFIED_MASTER_PATIENT_ID,
-      VISIT_ENCOUNTER_ID
-    )) %>%
+                select(
+                  DEIDENTIFIED_MASTER_PATIENT_ID,
+                  VISIT_ENCOUNTER_ID,
+                  VISIT_ENCOUNTER_START_DATE
+                ), by = join_by(
+                  DEIDENTIFIED_MASTER_PATIENT_ID,
+                  VISIT_ENCOUNTER_ID
+                )) %>%
     # use visit encounter start date if medication administrated is yes and there
     # is no med start date. will slice for earliest med start date later so it is
     # okay if the first medication administrated date is earlier than visit
     # encounter start
     mutate(MED_START_DATE = if_else(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes" & is.na(MED_END_DATE),
-      VISIT_ENCOUNTER_START_DATE, MED_START_DATE
+                                    VISIT_ENCOUNTER_START_DATE, MED_START_DATE
     ))
 
   # get starts of antiTNFS to create interval with end date, and choose end date if pt started new antiTNF
@@ -249,7 +248,7 @@ risk_med_journey <- function(prescriptions, encounter) {
     # filter(MOA != "antiTNF") %>%
     filter(!is.na(MED_END_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE,
-      .keep_all = T
+             .keep_all = T
     ) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     add_count() %>%
@@ -478,8 +477,8 @@ risk_med_journey <- function(prescriptions, encounter) {
   # get earliest med date for these patients
   earliest_start_multiple_end <- meds %>%
     right_join(multiple_end_dates %>%
-      select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
-      distinct(), by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)) %>%
+                 select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
+                 distinct(), by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     slice(which.min(MED_START_DATE)) %>%
@@ -504,30 +503,30 @@ risk_med_journey <- function(prescriptions, encounter) {
     # join all patients with two med ends dates
     left_join(second_med_end_dates, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME)) %>%
     left_join(third_med_end_dates,
-      by = join_by(
-        DEIDENTIFIED_MASTER_PATIENT_ID,
-        MEDICATION_NAME
-      )
+              by = join_by(
+                DEIDENTIFIED_MASTER_PATIENT_ID,
+                MEDICATION_NAME
+              )
     ) %>%
     # join fourth med end dates
     left_join(fourth_med_end_dates,
-      by = join_by(
-        DEIDENTIFIED_MASTER_PATIENT_ID,
-        MEDICATION_NAME
-      )
+              by = join_by(
+                DEIDENTIFIED_MASTER_PATIENT_ID,
+                MEDICATION_NAME
+              )
     ) %>%
     # MULTIPLE END DATES, FEWER START DATES, USE LAST END DATE AVAILABLE
     # CLB: use last end date if two end dates and no second start date
     mutate(MED_END_DATE_1 = if_else(is.na(MED_START_DATE_2) & !is.na(MED_END_DATE_2),
-      MED_END_DATE_2, MED_END_DATE_1
+                                    MED_END_DATE_2, MED_END_DATE_1
     )) %>%
     # CLB: use last end date if three end dates and no third start date
     mutate(MED_END_DATE_2 = if_else(is.na(MED_START_DATE_3) & !is.na(MED_END_DATE_3),
-      MED_END_DATE_3, MED_END_DATE_2
+                                    MED_END_DATE_3, MED_END_DATE_2
     )) %>%
     # CLB: use last end date if four end dates and no fourth start date
     mutate(MED_END_DATE_3 = if_else(is.na(MED_START_DATE_4) & !is.na(MED_END_DATE_4),
-      MED_END_DATE_4, MED_END_DATE_3
+                                    MED_END_DATE_4, MED_END_DATE_3
     )) %>%
     # pivot table longer
     pivot_longer(cols = starts_with("MED_START"), names_to = "order", values_to = "MED_START_DATE") %>%
@@ -602,20 +601,20 @@ risk_med_journey <- function(prescriptions, encounter) {
     # medication was administrated but no start or end date in the row. flag these
     # and slice for actual min start date?
     left_join(encounter %>%
-      select(
-        DEIDENTIFIED_MASTER_PATIENT_ID,
-        VISIT_ENCOUNTER_ID,
-        VISIT_ENCOUNTER_START_DATE
-      ), by = join_by(
-      DEIDENTIFIED_MASTER_PATIENT_ID,
-      VISIT_ENCOUNTER_ID
-    )) %>%
+                select(
+                  DEIDENTIFIED_MASTER_PATIENT_ID,
+                  VISIT_ENCOUNTER_ID,
+                  VISIT_ENCOUNTER_START_DATE
+                ), by = join_by(
+                  DEIDENTIFIED_MASTER_PATIENT_ID,
+                  VISIT_ENCOUNTER_ID
+                )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     # creating flag here to see how many times visit_encounter_start_date is used
     # as the med_start_date
     mutate(flag = if_else(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes" & is.na(MED_END_DATE), 1, 0)) %>%
     mutate(MED_START_DATE = if_else(is.na(MED_START_DATE) & MEDICATION_ADMINISTRATED == "Yes" & is.na(MED_END_DATE),
-      VISIT_ENCOUNTER_START_DATE, MED_START_DATE
+                                    VISIT_ENCOUNTER_START_DATE, MED_START_DATE
     )) %>%
     slice(which.min(MED_START_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE) %>%
@@ -643,10 +642,10 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   table <- meds_dates_final %>%
     rbind(antitnf_dates_final %>%
-      select(
-        DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
-        MED_END_DATE
-      )) %>%
+            select(
+              DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
+              MED_END_DATE
+            )) %>%
     rbind(multiple_end_dates_final) %>%
     # create med order number
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -671,9 +670,9 @@ risk_med_journey <- function(prescriptions, encounter) {
     arrange(MED_START_DATE) %>%
     # create flag for patients that have a med that has two rows with the same start date
     mutate(same_start_date_flag = if_else(lead(MEDICATION_NAME) == MEDICATION_NAME &
-      lead(MED_START_DATE) == MED_START_DATE, 1, 0)) %>%
+                                            lead(MED_START_DATE) == MED_START_DATE, 1, 0)) %>%
     mutate(same_start_date_flag = if_else(lag(MEDICATION_NAME) == MEDICATION_NAME &
-      lag(MED_START_DATE) == MED_START_DATE, 1, same_start_date_flag)) %>%
+                                            lag(MED_START_DATE) == MED_START_DATE, 1, same_start_date_flag)) %>%
     mutate(same_start_date_flag = ifelse(is.na(same_start_date_flag), 0, same_start_date_flag)) %>%
     ungroup() %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, same_start_date_flag) %>%
@@ -681,8 +680,8 @@ risk_med_journey <- function(prescriptions, encounter) {
     fill(MED_END_DATE, .direction = "downup") %>%
     # going to use the later med end date for everything
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
-      MED_END_DATE,
-      .keep_all = T
+             MED_END_DATE,
+             .keep_all = T
     ) %>%
     # remake the order of meds with the filtered out duplicates
     ungroup() %>%
@@ -723,9 +722,9 @@ risk_med_journey <- function(prescriptions, encounter) {
     # if the medication is ongoing and medication administrated is no, choose that
     # visit encounter start date as the med end date:
     #### CLB change this logic ----
-    # mutate(MED_END_DATE = if_else(MED_ACTION_CONCEPT_NAME == "Ongoing Treatment" &
-    #   MEDICATION_ADMINISTRATED == "No", VISIT_ENCOUNTER_START_DATE, NA)) %>%
-    filter(!is.na(MED_END_DATE)) %>%
+  # mutate(MED_END_DATE = if_else(MED_ACTION_CONCEPT_NAME == "Ongoing Treatment" &
+  #   MEDICATION_ADMINISTRATED == "No", VISIT_ENCOUNTER_START_DATE, NA)) %>%
+  filter(!is.na(MED_END_DATE)) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE,
       MED_ORDER, date_error_flag, same_start_date_flag, MED_GROUP
@@ -756,7 +755,7 @@ risk_med_journey <- function(prescriptions, encounter) {
     # all flagged patients only have one visit encounter, just use med_start_date
     # as the med_end_date
     mutate(MED_END_DATE = if_else(flag != 1, VISIT_ENCOUNTER_START_DATE,
-      MED_START_DATE
+                                  MED_START_DATE
     )) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE,
@@ -822,8 +821,8 @@ risk_med_journey <- function(prescriptions, encounter) {
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, INTERVAL) %>%
     # right now filter out antibiotics that have a date error flag
     right_join(antibiotic_rounds,
-      by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID),
-      multiple = "all"
+               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID),
+               multiple = "all"
     ) %>%
     mutate(ANTIBIOTICS_OVERLAP = if_else(int_overlaps(INTERVAL, ANTIBIOTICS_INTERVAL), 1, 0)) %>%
     filter(ANTIBIOTICS_OVERLAP == 1) %>%
@@ -849,8 +848,8 @@ risk_med_journey <- function(prescriptions, encounter) {
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, INTERVAL) %>%
     # right now filter out antibiotics that have a date error flag
     right_join(steroid_rounds,
-      by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID),
-      multiple = "all"
+               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID),
+               multiple = "all"
     ) %>%
     mutate(STEROID_OVERLAP = if_else(int_overlaps(INTERVAL, STEROID_INTERVAL), 1, 0)) %>%
     filter(STEROID_OVERLAP == 1) %>%
@@ -880,7 +879,7 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   #### MED END DATE IMPUTED COLUMN
 
-  med_end_date_imputed <- prescriptions_med_end_date_imputed %>%
+  med_end_date_imputed <- prescriptions %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE,
            END_DATE_IMPUTED) %>%
     filter(END_DATE_IMPUTED == 0) %>%
@@ -903,3 +902,5 @@ risk_med_journey <- function(prescriptions, encounter) {
     left_join(med_end_date_imputed, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE)) %>%
     mutate(END_DATE_IMPUTED = ifelse(is.na(END_DATE_IMPUTED), 1, END_DATE_IMPUTED))
 }
+
+
