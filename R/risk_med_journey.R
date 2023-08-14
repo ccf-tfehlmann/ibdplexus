@@ -32,12 +32,16 @@ risk_med_journey <- function(prescriptions, encounter) {
     mutate(END_DATE_IMPUTED = ifelse(is.na(MED_END_DATE), 1, 0))
 
   # find columns to keep
-  keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
-    pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
-    filter(full == T) %>%
-    select(cols)
+  # keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
+  #   pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
+  #   filter(full == T) %>%
+  #   select(cols)
 
-  keep_cols <- keep_cols$cols
+  keep_cols <- prescriptions %>%
+    remove_empty("cols") %>%
+    names()
+
+  # keep_cols <- keep_cols$cols
 
   # eventually: left join encounter table to use visit encounter start date when medication
   # administrated is Yes but there is no med start date? Need to pull forward
@@ -786,9 +790,10 @@ risk_med_journey <- function(prescriptions, encounter) {
   #### OVERLAPPING MEDS ----
   # will only be immunomodulating medications, will not be steroids or antibiotics
 
-  overlapping_medications <- overlapping_meds(table)
+  overlapping_medications <- ibdplexus:::overlapping_meds(table)
+  # CLB: why is this a right join
   table <- table %>%
-    right_join(overlapping_medications, by = join_by(
+    left_join(overlapping_medications, by = join_by(
       DEIDENTIFIED_MASTER_PATIENT_ID,
       MEDICATION_NAME, MED_START_DATE, MED_END_DATE, MED_ORDER,
       INTERVAL
