@@ -331,7 +331,7 @@ overlapping_meds <- function(table) {
       names_from = MED, names_prefix = "OVERLAP_DAYS_", values_from = OVERLAP_DAYS,
       values_fn = ~ paste0(.x, collapse = "; ")
     ) %>%
-    rename_with(str_to_upper)
+    rename_with(stringr::str_to_upper)
 
   final <- all_overlaps %>%
     left_join(all_overlaps_int, by = join_by(
@@ -346,13 +346,13 @@ overlapping_meds <- function(table) {
     ungroup() %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE) %>%
     mutate(
-      MEDS_OVERLAP = ifelse(!is.na(meds1) & str_detect(MEDS_OVERLAP, meds1),
+      MEDS_OVERLAP = ifelse(!is.na(meds1) & stringr::str_detect(MEDS_OVERLAP, meds1),
         gsub(meds1, " ", MEDS_OVERLAP), MEDS_OVERLAP
       ),
-      MEDS_OVERLAP = ifelse(!is.na(meds2) & str_detect(MEDS_OVERLAP, meds2),
+      MEDS_OVERLAP = ifelse(!is.na(meds2) & stringr::str_detect(MEDS_OVERLAP, meds2),
         gsub(meds2, " ", MEDS_OVERLAP), MEDS_OVERLAP
       ),
-      MEDS_OVERLAP = ifelse(!is.na(meds3) & str_detect(MEDS_OVERLAP, meds3),
+      MEDS_OVERLAP = ifelse(!is.na(meds3) & stringr::str_detect(MEDS_OVERLAP, meds3),
         gsub(meds3, " ", MEDS_OVERLAP), MEDS_OVERLAP
       )
     ) %>%
@@ -414,7 +414,7 @@ risk_steroid_rounds <- function(prescriptions, encounter) {
     ) %>%
     filter(flag == 1 | is.na(flag)) %>%
     select(-flag) %>%
-    mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
+    mutate(MEDICATION_NAME = stringr::str_to_title(MEDICATION_NAME)) %>%
     filter(MEDICATION_NAME %in% c(
       "Budesonide", "Methylprednisolone",
       "Prednisolone", "Hydrocortisone",
@@ -958,7 +958,7 @@ risk_antibiotic_rounds <- function(prescriptions, encounter) {
     ) %>%
     filter(flag == 1 | is.na(flag)) %>%
     select(-flag) %>%
-    mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
+    mutate(MEDICATION_NAME = stringr::str_to_title(MEDICATION_NAME)) %>%
     filter(MEDICATION_NAME %in% c("Ciprofloxacin", "Metronidazole", "Rifaximin"))
 
   #### GET FIRST START DATE ----
