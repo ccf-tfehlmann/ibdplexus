@@ -38,7 +38,7 @@ risk_med_journey <- function(prescriptions, encounter) {
   #   select(cols)
 
   keep_cols <- prescriptions %>%
-    remove_empty("cols") %>%
+    janitor::remove_empty("cols") %>%
     names()
 
   # keep_cols <- keep_cols$cols
