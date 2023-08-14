@@ -61,7 +61,7 @@ risk_med_journey <- function(prescriptions, encounter) {
              MEDICATION_NAME != "Antibiotics" & MEDICATION_NAME != "5-ASA Oral" &
              MEDICATION_NAME != "Biologic Agents" & MEDICATION_NAME != "Exclusive Enteral Therapy" &
              MEDICATION_NAME != "Supplemental Enteral Therapy") %>%
-    mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
+    mutate(MEDICATION_NAME = stringr::str_to_title(MEDICATION_NAME)) %>%
     mutate(MED_GROUP = case_when(
       MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
       MEDICATION_NAME %in% c(
@@ -108,7 +108,7 @@ risk_med_journey <- function(prescriptions, encounter) {
     select(-flag) %>%
     # filter for the meds in sparc script first. Try to work on prednisone/on-off
     # meds later
-    mutate(MEDICATION_NAME = str_to_title(MEDICATION_NAME)) %>%
+    mutate(MEDICATION_NAME = stringr::str_to_title(MEDICATION_NAME)) %>%
     mutate(MED_GROUP = case_when(
       MEDICATION_NAME %in% c("Mesalamine", "Olsalazine", "Sulfasalazine") ~ "Aminosalicylates",
       MEDICATION_NAME %in% c(
