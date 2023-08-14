@@ -381,7 +381,7 @@ risk_steroid_rounds <- function(prescriptions, encounter) {
     filter(DATA_SOURCE == "RISK")
 
   # keep only certain columns from prescriptions
-  keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
+  keep_cols <- as_tibble(as.list(remove_empty(prescriptions, "cols"))) %>%
     pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
     filter(full == T) %>%
     select(cols)
@@ -925,7 +925,7 @@ risk_antibiotic_rounds <- function(prescriptions, encounter) {
   prescriptions <- prescriptions %>%
     filter(DATA_SOURCE == "RISK")
 
-  keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
+  keep_cols <- as_tibble(as.list(remove_empty(prescriptions, "cols"))) %>%
     pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
     filter(full == T) %>%
     select(cols)

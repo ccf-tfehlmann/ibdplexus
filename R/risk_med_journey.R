@@ -28,16 +28,17 @@
 risk_med_journey <- function(prescriptions, encounter) {
   # filter data
   prescriptions <- prescriptions %>%
-    filter(DATA_SOURCE == "RISK") %>%
+    filter(DATA_SOURCE == "RISK")
+
+  # table with med end dates imputed to join at the end
+  prescriptions_med_end_date_imputed <- prescriptions %>%
     mutate(END_DATE_IMPUTED = ifelse(is.na(MED_END_DATE), 1, 0))
 
   # find columns to keep
-  keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
-    pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
-    filter(full == T) %>%
-    select(cols)
+  keep_cols <- prescriptions %>% remove_empty("cols") %>%
+    as_tibble()
 
-  keep_cols <- keep_cols$cols
+  keep_cols <- names(keep_cols)
 
   # eventually: left join encounter table to use visit encounter start date when medication
   # administrated is Yes but there is no med start date? Need to pull forward
@@ -879,7 +880,7 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   #### MED END DATE IMPUTED COLUMN
 
-  med_end_date_imputed <- prescriptions %>%
+  med_end_date_imputed <- prescriptions_med_end_date_imputed %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE,
            END_DATE_IMPUTED) %>%
     filter(END_DATE_IMPUTED == 0) %>%
