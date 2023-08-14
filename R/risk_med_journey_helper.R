@@ -63,14 +63,14 @@ overlapping_meds <- function(table) {
 
   # make the values NA when they are checking for a lead for a different patient ID
   for (i in name_1) {
-    overlaps_lead[[i]] <- ifelse(overlaps_lead$num_end <= parse_number(i), NA, overlaps_lead[[i]])
+    overlaps_lead[[i]] <- ifelse(overlaps_lead$num_end <= readr::parse_number(i), NA, overlaps_lead[[i]])
   }
 
   # replace 1's with the actual med name
   for (i in name_1) {
     overlaps_lead[[i]] <- ifelse(overlaps_lead[[i]] == 1, paste0(lead(
       overlaps_lead$MEDICATION_NAME,
-      parse_number(i)
+      readr::parse_number(i)
     )), overlaps_lead[[i]])
   }
 
@@ -113,14 +113,14 @@ overlapping_meds <- function(table) {
 
   # make the values NA when they are checking for a lead for a different patient ID
   for (i in name_1) {
-    overlaps_lag[[i]] <- ifelse(overlaps_lag$MED_ORDER <= parse_number(i), NA, overlaps_lag[[i]])
+    overlaps_lag[[i]] <- ifelse(overlaps_lag$MED_ORDER <= readr::parse_number(i), NA, overlaps_lag[[i]])
   }
 
   # replace 1's with the actual med name
   for (i in name_1) {
     overlaps_lag[[i]] <- ifelse(overlaps_lag[[i]] == 1, paste0(lag(
       overlaps_lag$MEDICATION_NAME,
-      parse_number(i)
+      readr::parse_number(i)
     )), overlaps_lag[[i]])
   }
 
@@ -193,7 +193,7 @@ overlapping_meds <- function(table) {
 
   # make the values NA when they are checking for a lead for a different patient ID
   for (i in name_1) {
-    overlaps_lead_ints[[i]] <- ifelse(overlaps_lead_ints$num_end <= parse_number(i), NA, overlaps_lead_ints[[i]])
+    overlaps_lead_ints[[i]] <- ifelse(overlaps_lead_ints$num_end <= readr::parse_number(i), NA, overlaps_lead_ints[[i]])
   }
 
   # paste med interval after the med name
@@ -201,12 +201,12 @@ overlapping_meds <- function(table) {
     overlaps_lead_ints[[i]] <- ifelse(overlaps_lead_ints[[i]] == 1, paste0(
       lead(
         overlaps_lead_ints$INTERVAL,
-        parse_number(i)
+        readr::parse_number(i)
       ),
       "; ",
       lead(
         overlaps_lead_ints$MEDICATION_NAME,
-        parse_number(i)
+        readr::parse_number(i)
       )
     ), overlaps_lead_ints[[i]])
   }
@@ -249,7 +249,7 @@ overlapping_meds <- function(table) {
 
   # make the values NA when they are checking for a lead for a different patient ID
   for (i in name_1) {
-    overlaps_lag_ints[[i]] <- ifelse(overlaps_lag_ints$MED_ORDER <= parse_number(i), NA, overlaps_lag_ints[[i]])
+    overlaps_lag_ints[[i]] <- ifelse(overlaps_lag_ints$MED_ORDER <= readr::parse_number(i), NA, overlaps_lag_ints[[i]])
   }
 
   # replace 1's with the actual med name
@@ -257,12 +257,12 @@ overlapping_meds <- function(table) {
     overlaps_lag_ints[[i]] <- ifelse(overlaps_lag_ints[[i]] == 1, paste0(
       lag(
         overlaps_lag_ints$INTERVAL,
-        parse_number(i)
+        readr::parse_number(i)
       ),
       "; ",
       lag(
         overlaps_lag_ints$MEDICATION_NAME,
-        parse_number(i)
+        readr::parse_number(i)
       )
     ),
     overlaps_lag_ints[[i]]
@@ -798,8 +798,8 @@ risk_steroid_rounds <- function(prescriptions, encounter) {
     pivot_longer(cols = starts_with("MED_START"), names_to = "order", values_to = "MED_START_DATE") %>%
     pivot_longer(cols = starts_with("MED_END"), names_to = "order2", values_to = "MED_END_DATE") %>%
     mutate(
-      order = parse_number(order),
-      order2 = parse_number(order2)
+      order = readr::parse_number(order),
+      order2 = readr::parse_number(order2)
     ) %>%
     # create flag to match start and end dates, drop all other pairings
     mutate(flag = ifelse(order == order2, 1, 0)) %>%
@@ -1292,8 +1292,8 @@ risk_antibiotic_rounds <- function(prescriptions, encounter) {
     pivot_longer(cols = starts_with("MED_START"), names_to = "order", values_to = "MED_START_DATE") %>%
     pivot_longer(cols = starts_with("MED_END"), names_to = "order2", values_to = "MED_END_DATE") %>%
     mutate(
-      order = parse_number(order),
-      order2 = parse_number(order2)
+      order = readr::parse_number(order),
+      order2 = readr::parse_number(order2)
     ) %>%
     # create flag to match start and end dates, drop all other pairings
     mutate(flag = ifelse(order == order2, 1, 0)) %>%
