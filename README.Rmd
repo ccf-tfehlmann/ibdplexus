@@ -48,11 +48,9 @@ devtools::install_github("ccf-tfehlmann/ibdplexus")
 * <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/SPARC_Summary_userguide_updated_102221.pdf">`sparc_summary()`</a>  
 
 
-* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/sparc_scores_at_index_userguide.pdf">`sparc_scores()`</a>  
-
 * <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/RISK_Extract_Clinical_Data_User_Guide_v1.1.pdf">`risk_extract_clinical_data()`</a>  
 
-* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/inst/userguides/Diagnosis_EMR_Extract.md">`Diagnosis_EMR_Extract`</a>  
+* <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/master/inst/userguides/Diagnosis_EMR_Extract.md">`Diagnosis_EMR_Extract`</a>  
 
 
 ## Example

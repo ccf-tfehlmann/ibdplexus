@@ -15,11 +15,10 @@
 #' The \code{\link{med_grp}} dataframe has the medication names to search for in the MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns.
 #' @export
 sparc_med_filter <- function(prescriptions, observations, demographics, encounter, med_groups = c("aminosalicylates", "antibiotics", "antidiarrheals", "biologic", "corticosteroids", "immunomodulators", "other", "probiotic", "targeted synthetic small molecules")) {
-  # CLB: changing these med groups so function will run, check with Tara when she is back.
-
-  med_groups_clb = c("aminosalicylates", "antibiotics", "antidiarrheals", "biologic", "corticosteroids", "immunomodulators", "other", "probiotic", "targeted synthetic small molecules")
 
   # CONSENT INFORMATION ----
+
+  med_groups <- tolower(med_groups)
 
   consent <- extract_consent(demographics, "SPARC")
 
@@ -28,7 +27,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
 
 
   obs_med <- observations %>%
-    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF")) %>%
     left_join(encounter, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID", "ADMISSION_STATUS")) %>%
     filter(TYPE_OF_ENCOUNTER == "IBD Medication Survey")
 
@@ -44,7 +43,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     filter(DESCRIPTIVE_SYMP_TEST_RESULTS == "No") %>%
     left_join(prescriptions, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "VISIT_ENCOUNTER_ID", "ADMISSION_TYPE", "SOURCE_OF_ADMISSION")) %>%
     left_join(med_grp, "MEDICATION_NAME") %>%
-    filter(is.na(new_med_name) | med_type %in% c("Antibiotics", "Probiotic")) %>%
+    filter(is.na(new_med_name) | med_type %in% c("antibiotics", "probiotic")) %>%
     mutate(NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT = 1) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT)
 
@@ -153,12 +152,14 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     select(intersect(names(pull_forward_prescriptions), names(prescriptions)))
   # Find Medications of Interest in eCRF and EMR Data ----
 
-  meds <- med_grp %>% filter(med_type %in% med_groups_clb)
+
+  meds <- med_grp  %>% filter(med_type %in% med_groups)
+
 
   scripts <- prescriptions %>%
     bind_rows(pull_forward_prescriptions) %>%
     distinct() %>%
-    filter(DATA_SOURCE == "EMR" | DATA_SOURCE == "ECRF_SPARC" | DATA_SOURCE == "ECRF") %>%
+    filter(DATA_SOURCE %in% c("EMR", "ECRF_SPARC", "ECRF")) %>%
     mutate(
       med1 = ifelse(MEDICATION_NAME == "Other (IBD Medication)", OTHER_MEDICATION, MEDICATION_NAME),
       med2 = paste0(MEDICATION_NAME, "; ", OTHER_MEDICATION),
@@ -184,4 +185,14 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
       MED_START_DATE = dmy(MED_START_DATE),
       MED_END_DATE = dmy(MED_END_DATE)
     )
+
+  if("corticosteroids" %in% med_groups){
+
+    medication <- steroid_filter(medication)
+
+  } else {medication <- medication}
+
+
+
+
 }
