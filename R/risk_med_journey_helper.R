@@ -381,12 +381,9 @@ risk_steroid_rounds <- function(prescriptions, encounter) {
     filter(DATA_SOURCE == "RISK")
 
   # keep only certain columns from prescriptions
-  keep_cols <- as_tibble(as.list(remove_empty(prescriptions, "cols"))) %>%
-    pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
-    filter(full == T) %>%
-    select(cols)
-
-  keep_cols <- keep_cols$cols
+  keep_cols <- prescriptions %>%
+    janitor::remove_empty("cols") %>%
+    names()
 
   #### FILTER PRESCRIPTIONS TABLE FOR STEROIDS ----
 
@@ -925,12 +922,9 @@ risk_antibiotic_rounds <- function(prescriptions, encounter) {
   prescriptions <- prescriptions %>%
     filter(DATA_SOURCE == "RISK")
 
-  keep_cols <- as_tibble(as.list(remove_empty(prescriptions, "cols"))) %>%
-    pivot_longer(everything(), names_to = "cols", values_to = "full") %>%
-    filter(full == T) %>%
-    select(cols)
-
-  keep_cols <- keep_cols$cols
+  keep_cols <- prescriptions %>%
+    janitor::remove_empty("cols") %>%
+    names()
 
   #### FILTER PRESCRIPTIONS TABLE FOR ANTIBIOTICS ----
 
