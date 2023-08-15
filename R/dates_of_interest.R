@@ -25,7 +25,7 @@ extract_endoscopy <- function(procedures) {
     mutate(c = 1) %>%
     pivot_wider(names_from = c, values_from = INDICATION, values_fn = ~paste0(.x, collapse = "; ")) %>%
     mutate(INDICATION_FOR_ENDOSCOPY = ifelse(`1` == "NA", as.character(NA), `1`)) %>%
-    select(-1)
+    select(-`1`)
 }
 
 
