@@ -229,8 +229,11 @@ sparc_scores <- function(data,
       right_join(cohort) %>%
       filter(DIAGNOSIS == "Crohn's Disease") %>%
       mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
-      # mutate(keep = case_when(diff <= t ~ "keep")) %>%
-      # filter(keep == "keep") %>%
+      mutate(keep = case_when(
+        diff <= t ~ "keep",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & diff > t ~ "keep",
+      )) %>%
+      filter(keep == "keep") %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
       slice(which.min(abs(diff))) %>%
       ungroup() %>%
@@ -298,8 +301,11 @@ sparc_scores <- function(data,
       right_join(cohort) %>%
       filter(DIAGNOSIS == "Crohn's Disease") %>%
       mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
-      mutate(keep = case_when(diff <= t ~ "keep")) %>%
-      filter(keep == "keep") %>%
+      mutate(keep = case_when(
+        diff <= t ~ "keep",
+        DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & diff > t ~ "keep",
+      )) %>%
+      filter(keep == "keep") %>%      filter(keep == "keep") %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
       slice(which.min(abs(diff))) %>%
       ungroup() %>%
