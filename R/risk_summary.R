@@ -104,7 +104,12 @@ risk_summary <- function(dir,
       "78-Month Follow-up Visit",
       "84-Month Follow-up Visit",
       "90-Month Follow-up Visit",
-      "96-Month Follow-up Visit"
+      "96-Month Follow-up Visit",
+      "Enrollment (Biosample)",
+      "12-Month Follow-up (Biosample)",
+      "24-Month Follow-up (Biosample)",
+      "36-Month Follow-up (Biosample)",
+      "Follow-up (Omics)"
     )
   )
   # Remove time from visit encounter start date
@@ -397,7 +402,7 @@ risk_summary <- function(dir,
       TRUE ~ as.numeric(gsub("\\D", "", `TYPE_OF_ENCOUNTER`))
     )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    # remove this and see how group counts change
+    # CLB  - remove this and see how group counts change
     mutate(
       `DISEASE BEHAVIOR - INTERNALLY PENTRATING` = ifelse(`DISEASE BEHAVIOR - INTERNALLY PENTRATING` == "Unknown",
         NA, `DISEASE BEHAVIOR - INTERNALLY PENTRATING`
@@ -454,20 +459,59 @@ risk_summary <- function(dir,
     mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     ungroup()
 
+  # find if there are any middle behaviors for pts who end with B2+B3
+  middle_behaviors <- cd_journey_final %>%
+    mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.numeric(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    right_join(final_behavior %>% filter(FINAL_BEHAVIOR == "B2+B3") %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID),
+               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    select(-c(stricturing, penetrating)) %>%
+    rename(stricturing = `DISEASE BEHAVIOR - STRICTURING/FIBROSTENOTIC`,
+           penetrating = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    mutate(DISEASE_BEHAVIOR = case_when(
+      `stricturing` == "No" & `penetrating` == "No" ~ "B1",
+      `stricturing` == "Yes" & `penetrating` == "No" ~ "B2",
+      `stricturing` == "Yes" & is.na(`penetrating`) ~ "B2",
+      `stricturing` == "No" & `penetrating` == "Yes" ~ "B3",
+      is.na(`stricturing`) & `penetrating` == "Yes" ~ "B3",
+      `stricturing` == "Yes" & `penetrating` == "Yes" ~ "B2+B3",
+      stricturing == "No" & is.na(penetrating) ~ "B1",
+      is.na(stricturing) & penetrating == "No" ~ "B1",
+      is.na(stricturing) & is.na(penetrating) ~ "B1",
+      TRUE ~ NA
+    )) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    mutate(mid_behavior = case_when(any(DISEASE_BEHAVIOR == "B2") ~ "B2",
+                                    any(DISEASE_BEHAVIOR == "B3") ~ "B3",
+                                    TRUE ~ NA)) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, mid_behavior) %>%
+    filter(!is.na(mid_behavior))
+
+
   # join behaviors, create variable that maps the disease journey
   CD_behaviors <- first_behavior %>%
-    full_join(final_behavior) %>%
-    mutate(DISEASE_JOURNEY = paste0(FIRST_BEHAVIOR, " -> ", FINAL_BEHAVIOR)) %>%
+    full_join(final_behavior, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    left_join(middle_behaviors, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    mutate(DISEASE_JOURNEY = paste0(FIRST_BEHAVIOR, " -> ", mid_behavior, " -> ", FINAL_BEHAVIOR)) %>%
+    mutate(DISEASE_JOURNEY = gsub("NA -> ", "", DISEASE_JOURNEY)) %>%
     # can't go backwards, so can assume Unknown to B1 is B1
     mutate(DISEASE_JOURNEY = ifelse(DISEASE_JOURNEY == "Unknown -> B1", "B1 -> B1", DISEASE_JOURNEY)) %>%
     ## CLB fix: know this one patient is stricturing at enrollment and unknown at
     ## enrollment for penetrating, so hand code
-    # mutate(DISEASE_JOURNEY = ifelse(DISEASE_JOURNEY == "Unknown -> B3", "B3 -> B3", DISEASE_JOURNEY))
+    mutate(DISEASE_JOURNEY = ifelse(DISEASE_JOURNEY == "Unknown -> B3", "B3 -> B3", DISEASE_JOURNEY)) %>%
     mutate(DEIDENTIFIED_MASTER_PATIENT_ID = as.character(DEIDENTIFIED_MASTER_PATIENT_ID))
 
   visit <- visit %>%
     left_join(CD_behaviors, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
-    relocate(c(FIRST_BEHAVIOR:DISEASE_JOURNEY), .after = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`)
+    relocate(c(FIRST_BEHAVIOR:DISEASE_JOURNEY), .after = `DISEASE BEHAVIOR - INTERNALLY PENTRATING`) %>%
+    # order by group, put follow-up omics last
+    mutate(order = ifelse(is.na(VISIT_MONTH), 100, VISIT_MONTH)) %>%
+    mutate(order = ifelse(str_detect(TYPE_OF_ENCOUNTER, "Biosample"), order + 0.1, order)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    arrange(order, .by_group = T) %>%
+    ungroup() %>%
+    # remove patient that only has enrollment (biosample)
+    filter(DEIDENTIFIED_MASTER_PATIENT_ID != "9029267")
 
   # remove columns not necessary in summary table
   visit <- visit %>% select(all_of(names))
