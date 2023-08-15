@@ -22,7 +22,10 @@ extract_endoscopy <- function(procedures) {
     fill(INDICATION, .direction = "downup") %>%
     ungroup() %>%
     distinct() %>%
-    rename(INDICATION_FOR_ENDOSCOPY = INDICATION)
+    mutate(c = 1) %>%
+    pivot_wider(names_from = c, values_from = INDICATION, values_fn = ~paste0(.x, collapse = "; ")) %>%
+    mutate(INDICATION_FOR_ENDOSCOPY = ifelse(`1` == "NA", as.character(NA), `1`)) %>%
+    select(-1)
 }
 
 
