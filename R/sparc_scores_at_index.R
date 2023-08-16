@@ -376,7 +376,6 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(-datediff) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_scdai(data$observations))))
 
 
@@ -396,7 +395,6 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(-datediff) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pro2(data$observations))))
 
 
@@ -415,7 +413,6 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(-datediff) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pro3(data$observations)))) %>%
     select(-LIQUID_BM)
 
@@ -436,7 +433,6 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(-datediff) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mayo(data$observations))))
 
 
