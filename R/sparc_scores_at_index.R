@@ -437,7 +437,7 @@ sparc_scores <- function(data,
     distinct() %>%
     ungroup() %>%
     select(-datediff) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mayo(data$observations)))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mayo(data$observations))))
 
 
   cohort <- cohort %>% left_join(mayo)
@@ -458,7 +458,7 @@ sparc_scores <- function(data,
     distinct() %>%
     ungroup() %>%
     select(-datediff)  %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pga(data$observations)))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pga(data$observations))))
 
 
   cohort <- cohort %>% left_join(pga)
