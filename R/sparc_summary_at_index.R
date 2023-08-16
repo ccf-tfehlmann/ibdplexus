@@ -1062,6 +1062,8 @@ sparc_summary <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pro2(data$observations)))) %>%
+
     select(-datediff)
 
   cohort <- cohort %>% left_join(pro2)
@@ -1079,7 +1081,10 @@ sparc_summary <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(-datediff)
+    select(-datediff) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pro3(data$observations)))) %>%
+
+    select(-LIQUID_BM)
 
   cohort <- cohort %>% left_join(pro3)
 
