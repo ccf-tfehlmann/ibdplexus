@@ -229,7 +229,7 @@ sparc_scores <- function(data,
       arrange(OBS_TEST_RESULT_DATE, .by_group = TRUE) %>%
       mutate(result = case_when(OBS_TEST_RESULT_DATE > lag(OBS_TEST_RESULT_DATE) & DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & lag(DESCRIPTIVE_SYMP_TEST_RESULTS) == "Yes" & OBS_TEST_CONCEPT_NAME == lag(OBS_TEST_CONCEPT_NAME) ~ "Yes", TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
       ungroup() %>%
-      right_join(cohort_index_info) %>%
+      right_join(cohort) %>%
       filter(DIAGNOSIS == "Crohn's Disease") %>%
       mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
       mutate(keep = case_when(
