@@ -252,7 +252,6 @@ sparc_scores <- function(data,
 
     # PERIANAL INVOLVEMENT ----
 
-
     perianal <- data$observations %>%
       filter(DATA_SOURCE == "SF_SPARC") %>%
       filter(OBS_TEST_CONCEPT_NAME %in% c(
@@ -265,21 +264,26 @@ sparc_scores <- function(data,
         "Anal Fissure",
         "Large Skin Tags"
       )) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_CONCEPT_NAME) %>%
       drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      arrange(OBS_TEST_RESULT_DATE, .by_group = TRUE) %>%
+      mutate(result = case_when(OBS_TEST_RESULT_DATE > lag(OBS_TEST_RESULT_DATE) & DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & lag(DESCRIPTIVE_SYMP_TEST_RESULTS) == "Yes" & OBS_TEST_CONCEPT_NAME == lag(OBS_TEST_CONCEPT_NAME) ~ "Yes", TRUE ~ DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
+      ungroup() %>%
       right_join(cohort) %>%
       filter(DIAGNOSIS == "Crohn's Disease") %>%
       mutate(diff = OBS_TEST_RESULT_DATE - index_date) %>%
       mutate(keep = case_when(
         diff <= t ~ "keep",
-        DESCRIPTIVE_SYMP_TEST_RESULTS == "No" & diff > t ~ "keep",
+        result == "No" & diff > t ~ "keep"
       )) %>%
-      filter(keep == "keep") %>%      filter(keep == "keep") %>%
+      filter(keep == "keep") %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME) %>%
       slice(which.min(abs(diff))) %>%
       ungroup() %>%
-      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
-      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+      distinct(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, OBS_TEST_CONCEPT_NAME, result) %>%
+      pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = OBS_TEST_CONCEPT_NAME, values_from = result) %>%
       ungroup()
+
 
     cohort <- left_join(cohort, perianal)
 
@@ -360,11 +364,8 @@ sparc_scores <- function(data,
 
   # SCORES ----
 
-  scores <- calculate_disease_scores(data$demographics, data$diagnosis, data$procedures, data$encounter, data$observations, export = FALSE)
-
-
   # scdai
-  scdai <- scores$scdai %>%
+  scdai <- calculate_scdai(data$observations) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(SCDAI_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -375,15 +376,16 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$scdai)))
+    select(-datediff) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_scdai(data$observations))))
+
 
 
   cohort <- cohort %>% left_join(scdai)
 
 
-
   # pro2
-  pro2 <- scores$pro2 %>%
+  pro2 <- calculate_pro2(data$observations) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(PRO2_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -394,14 +396,15 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$pro2)))
+    select(-datediff) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pro2(data$observations))))
 
 
   cohort <- cohort %>% left_join(pro2)
 
   # pr03
 
-  pro3 <- scores$pro3 %>%
+  pro3 <- calculate_pro3(data$observations) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(PRO3_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -412,7 +415,9 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$pro3)))
+    select(-datediff) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pro3(data$observations)))) %>%
+    select(-LIQUID_BM)
 
 
   cohort <- cohort %>% left_join(pro3)
@@ -420,7 +425,7 @@ sparc_scores <- function(data,
 
   # 6pt mayo
 
-  mayo <- scores$mayo %>%
+  mayo <- calculate_mayo(data$observations) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(MAYO_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
@@ -431,7 +436,8 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$mayo)))
+    select(-datediff) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mayo(data$observations)))) %>%
 
 
   cohort <- cohort %>% left_join(mayo)
@@ -440,7 +446,7 @@ sparc_scores <- function(data,
 
 
 
-  pga <- scores$pga %>%
+  pga <- calculate_pga(data$observations) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(PGA_DATE - index_date)) %>%
     filter(datediff <= t) %>%
@@ -451,17 +457,19 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$pga)))
+    select(-datediff)  %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_pga(data$observations)))) %>%
 
 
   cohort <- cohort %>% left_join(pga)
+
 
   # ENDOSCOPY SCORES WITHIN t of INDEX DATE ----
 
   # SES CD
 
 
-  ses <- scores$ses %>%
+  ses <- calculate_ses(data$procedures) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
@@ -472,7 +480,7 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$ses))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_ses(data$procedures)))) %>%
     rename(
       ENDO_DATE = SCORE_DATE,
       ENDO_CATEGORY = SES_CATEGORY
@@ -484,7 +492,7 @@ sparc_scores <- function(data,
 
   # Mayo Endocscopy Score - source: https://academic.oup.com/ecco-jcc/article/9/10/846/425061
 
-  mes <- scores$mes %>%
+  mes <- calculate_mes(data$procedures) %>%
     left_join(cohort) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
@@ -495,7 +503,7 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(scores$mes))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mes(data$procedures)))) %>%
     rename(
       ENDO_DATE = SCORE_DATE,
       ENDO_CATEGORY = MES_CATGORY
