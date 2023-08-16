@@ -288,6 +288,7 @@ sparc_scores <- function(data,
     #  CALCULATE DISEASE LOCATION ----
 
     disease_location <- cohort %>%
+      setNames(toupper(names(.))) %>%
       filter(DIAGNOSIS == "Crohn's Disease") %>%
       mutate(
         ileal = ifelse(`ILEAL PHENOTYPE` == "Yes", 1, 0),
@@ -347,7 +348,10 @@ sparc_scores <- function(data,
         TRUE ~ Location
       )) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID, INDEX_DATE, Location, UpperGI, Perianal) %>%
-      dplyr::rename(DISEASE_LOCATION = Location, UPPERGI = UpperGI, PERIANAL = Perianal)
+      dplyr::rename(DISEASE_LOCATION = Location, UPPERGI = UpperGI, PERIANAL = Perianal, index_date = INDEX_DATE)
+
+    cohort <- left_join(cohort, disease_location)
+
   }
 
 
