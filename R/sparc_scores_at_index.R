@@ -395,10 +395,10 @@ sparc_scores <- function(data,
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, LIQUID_BM, starts_with("PRO2"))
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("PRO2"))
 
 
-  cohort <- cohort %>% left_join(pro2)
+  cohort <- cohort %>% left_join(pro2, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date))
 
   # pr03
 
@@ -417,7 +417,7 @@ sparc_scores <- function(data,
 
 
 
-  cohort <- cohort %>% left_join(pro3)
+  cohort <- cohort %>% left_join(pro3, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date))
 
 
   # 6pt mayo
