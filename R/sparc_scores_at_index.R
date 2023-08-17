@@ -385,7 +385,7 @@ sparc_scores <- function(data,
 
   # pro2
   pro2 <- calculate_pro2(data$observations) %>%
-    left_join(cohort) %>%
+    left_join(cohort, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     mutate(datediff = abs(PRO2_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(PRO2_SCORE) %>%
@@ -403,7 +403,7 @@ sparc_scores <- function(data,
   # pr03
 
   pro3 <- calculate_pro3(data$observations) %>%
-    left_join(cohort) %>%
+    left_join(cohort, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     mutate(datediff = abs(PRO3_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
     drop_na(PRO3_SCORE) %>%
