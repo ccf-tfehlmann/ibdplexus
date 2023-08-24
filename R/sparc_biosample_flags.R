@@ -14,10 +14,9 @@
 #'
 
 
-sparc_biosample_flags <- function(data,
-                          index_range = "30") {
+sparc_biosample_flags <- function(data, index_range) {
 
-  index_range <- as.numeric(index_range)
+  r <- as.numeric(index_range)
 
   encounter <- data$encounter
   biosample <- data$biosample
@@ -52,8 +51,8 @@ sparc_biosample_flags <- function(data,
   # get endoscopies
   endoscopy <- ibdplexus:::extract_endoscopy(procedures) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    mutate(ENDO_INT = interval(index_date - index_range, index_date + index_range)) %>%
-    mutate(DAYS90_INT = interval(index_date + (90 - index_range), index_date + (90 + index_range))) %>%
+    mutate(ENDO_INT = interval(index_date - r, index_date + r)) %>%
+    mutate(DAYS90_INT = interval(index_date + (90 - r), index_date + (90 + r))) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, ENDO_INT, DAYS90_INT) %>%
     distinct()
 
@@ -62,7 +61,7 @@ sparc_biosample_flags <- function(data,
     filter(!is.na(DATE_OF_CONSENT)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT) %>%
     mutate(DATE_OF_CONSENT = dmy(DATE_OF_CONSENT)) %>%
-    mutate(ENR_INT = interval(DATE_OF_CONSENT - index_range, DATE_OF_CONSENT + index_range)) %>%
+    mutate(ENR_INT = interval(DATE_OF_CONSENT - r, DATE_OF_CONSENT + r)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, ENR_INT) %>%
     distinct() %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -110,7 +109,7 @@ sparc_biosample_flags <- function(data,
                 mutate(SAMPLE_DATE_COLLECTED = dmy(DATE_SAMPLE_COLLECTED)),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
     mutate(days_between = MED_START_DATE - SAMPLE_DATE_COLLECTED) %>%
-    filter(days_between <= (90 + index_range) & days_between >= (90 - index_range)) %>%
+    filter(days_between <= (90 + r) & days_between >= (90 - r)) %>%
     mutate(`3 MONTHS POST MED CHANGE` = 1) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_SAMPLE_COLLECTED, `3 MONTHS POST MED CHANGE`) %>%
     distinct()
