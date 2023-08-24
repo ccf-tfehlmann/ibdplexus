@@ -1357,7 +1357,7 @@ sparc_summary <- function(data,
     cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
     # for biosample summary table add flags
 
-    cohort <- biosample %>% left_join(biosample_flags,
+    cohort <- cohort %>% left_join(biosample_flags,
                                   by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, SRC_BIOSAMPLE_CONCEPT_NAME,
                                                SAMPLE_STATUS, DATE_SAMPLE_COLLECTED, BIOSAMPLE_LOCATION, MACROSCOPIC_APPEARANCE, SUB_LOCATION__C, VISIT_TYPE__C,
                                                SAMPLE_NUMBER))
