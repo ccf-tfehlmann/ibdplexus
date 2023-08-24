@@ -17,6 +17,8 @@
 sparc_biosample_flags <- function(data,
                           index_range = "30") {
 
+  index_range <- as.numeric(index_range)
+
   encounter <- data$encounter
   biosample <- data$biosample
   procedures <- data$procedures
