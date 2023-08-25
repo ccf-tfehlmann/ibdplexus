@@ -2,7 +2,7 @@
 title: "sparc_summary-overview"
 author: "Crohn's & Colitis Foundation"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: md_document
 vignette: >
   %\VignetteIndexEntry{sparc_summary-overview}
   %\VignetteEngine{knitr::rmarkdown}
@@ -63,6 +63,6 @@ The function produces a table with the following columns. The sparc_scores() fun
 #| echo: false
 # DT::datatable(ibdplexus:::summary_fields, rownames = FALSE,extensions = 'Buttons', options = list(dom = 'Bfrtip', buttons = c('copy', 'excel')))
 
-knitr::kable(ibdplexus:::summary_fields, format = "latex")
+knitr::kable(ibdplexus:::summary_fields)
 
 ```
