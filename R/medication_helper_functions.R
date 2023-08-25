@@ -50,11 +50,11 @@ reason_stopped <- function(prescriptions) {
 
 current_med <- function(medication) {
   current <- medication %>%
-    filter(DATA_SOURCE == "ECRF_SPARC" | DATA_SOURCE == "ECRF") %>%
+    filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF")) %>%
     filter(CURRENT_MEDICATION == "YES") %>%
     mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
+      MED_START_DATE = if_else(year(MED_START_DATE) > 1900, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
+      MED_END_DATE = if_else(year(MED_END_DATE) > 1900, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
     ) %>%
     pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE, match(type, c("MED_END_DATE", "MED_START_DATE"))) %>%

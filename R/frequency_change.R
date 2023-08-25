@@ -10,12 +10,12 @@
 
 
 frequency_change <- function(medication) {
-  medication %>%
+medication %>%
     filter(!grepl("both eyes|Each Eye|external|Eyes (Each)|feeding tube|gastric tube|left eye|Misc.(Non-Drug; Combo Route)|MISCELLANEOUS|Mouth/Throat|nasogastric tube|ophthalmic|Per NG / OG tube|Per NG Tube|PO/NG/OG|Rectal|rectal|Topical|TOPICAL (LOTION OR CREAM)|Vaginal", ROUTE_OF_MEDICATION, ignore.case = T) | is.na(ROUTE_OF_MEDICATION)) %>%
     mutate(
       MED_START_DATE = if_else(year(MED_START_DATE) >
-        1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980,
+        1900, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
+      MED_END_DATE = if_else(year(MED_END_DATE) > 1900,
         MED_END_DATE, as.Date(NA, format = "%d-%m-%y")
       )
     ) %>%
@@ -28,8 +28,9 @@ frequency_change <- function(medication) {
       GENERIC_MEDICINE_FLAG, SUBSTITUTE_MED_INDICATION_FLAG, PLACE_OF_SERVICE, MEDICATION_REFILLS
     ) %>%
     distinct() %>%
-    filter(new_med_name %in% c("Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab", "Natalizumab", "Ozanimod", "Risankizumab", "Tofacitinib", "Upadacitinib", "Ustekinumab", "Vedolizumab")) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
+    filter(grepl("Adalimumab|Certolizumab Pegol|Golimumab|Infliximab|Natalizumab|Ozanimod|Risankizumab|Tofacitinib|Upadacitinib|Ustekinumab|Vedolizumab", new_med_name, ignore.case = T)) %>%
+  arrange(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE, MED_START_DATE) %>%
+  group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
     mutate(weeks_between_med = difftime(MED_START_DATE, lag(MED_START_DATE), units = "weeks")) %>%
     mutate(
       freq1 = str_extract(SUMMARY, "Frequency.*"),
@@ -52,10 +53,11 @@ frequency_change <- function(medication) {
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE) %>%
     mutate(count = seq_along(helper)) %>%
     mutate(freq_weeks = as.numeric(freq_weeks)) %>%
+  ungroup() %>%
     pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name, DATA_SOURCE), names_from = c(count), values_from = c(freq_weeks), names_prefix = "weeks_between_med_") %>%
     dplyr::bind_rows(dplyr::tibble(weeks_between_med_3 = numeric())) %>%
     mutate(loading_dose = case_when(
-      new_med_name == "Infliximab" & weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 & weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5 ~ 1,
+      str_detect("Infliximab", new_med_name) & weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 & weeks_between_med_3 >= 3.5 & weeks_between_med_3 < 5.5 ~ 1,
       new_med_name == "Certolizumab Pegol" & weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &
         weeks_between_med_3 >= 1.5 & weeks_between_med_3 < 3.5 ~ 1,
       new_med_name == "Vedolizumab" & weeks_between_med_2 >= 2 & weeks_between_med_2 < 3 &

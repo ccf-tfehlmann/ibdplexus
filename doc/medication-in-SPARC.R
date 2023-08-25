@@ -43,7 +43,7 @@ knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = 
 #  # Find Medication Start Dates for Biologics and Immunomodulators.
 #  # If export = TRUE then an excel spreadsheet is generated.
 #  
-#  medication_starts <- sparc_med_starts(
+#  medication_starts <- sparc_med_journey(
 #    data$prescriptions,
 #    data$observations,
 #    data$demographics,
@@ -68,7 +68,7 @@ knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = 
 #  
 #  # Find Biologics and Immunomodulators a patient is on at endoscopy
 #  
-#  med_at_enrollment <- sparc_medication(
+#  med_at_endoscopy<- sparc_medication(
 #    data = data,
 #    index_info = "Endoscopy",
 #    med_groups = c("Biologic", "Immunomodulators"),

@@ -12,8 +12,8 @@ dose_escalation <- function(medication) {
     filter(!grepl("both eyes|Each Eye|external|Eyes (Each)|feeding tube|gastric tube|left eye|Misc.(Non-Drug; Combo Route)|MISCELLANEOUS|Mouth/Throat|nasogastric tube|ophthalmic|Per NG / OG tube|Per NG Tube|PO/NG/OG|Rectal|rectal|Topical|TOPICAL (LOTION OR CREAM)|Vaginal", ROUTE_OF_MEDICATION, ignore.case = T) | is.na(ROUTE_OF_MEDICATION)) %>%
     mutate(
       MED_START_DATE = if_else(year(MED_START_DATE) >
-        1980, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1980,
+        1900, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
+      MED_END_DATE = if_else(year(MED_END_DATE) > 1900,
         MED_END_DATE, as.Date(NA, format = "%d-%m-%y")
       )
     ) %>%

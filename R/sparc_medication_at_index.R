@@ -18,8 +18,13 @@
 #' @export
 sparc_medication <- function(data,
                              index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
-                             med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
+                             med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators", "Targeted synthetic small molecules"),
                              filename = "SPARC_MEDICATION.xlsx") {
+
+  med_groups <- tolower(med_groups)
+  if("character" %in% class(index_info)){index_info = toupper(index_info)}
+
+
   # Get all medication start dates ----
 
   med <- sparc_med_journey(data$prescriptions, data$demographics, data$observations, data$encounter, med_groups, export = FALSE)
@@ -98,9 +103,9 @@ sparc_medication <- function(data,
 
   # FIND MEDICATION AT INDEX DATE ----
 
-  if ("ENROLLMENT" %in% index_info) {
-    cohort <- sparc_medication_enrollment(cohort, med)
-  } else {
+  # if ("ENROLLMENT" %in% index_info) {
+  #   cohort <- sparc_medication_enrollment(cohort, med)
+  # } else {
     # MEDICATIONS AT OTHER INDEX DATES ----
 
     med_index <- med %>%
@@ -180,37 +185,17 @@ sparc_medication <- function(data,
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT)
 
     cohort <- cohort %>% left_join(no_med)
-  }
+ # }
+
+# On Steroid At Index ----
+
+  steroid <- steroid_use_at_index(data, cohort)
+
+  cohort <- cohort %>% left_join(steroid)
 
 
 
 
-  # REORDER COLUMNS & FORMAT SPREADSHEET ----
-
-  #
-  #   bionames <- med_grp %>%
-  #     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
-  #     arrange(new_med_name) %>%
-  #     distinct(new_med_name) %>%
-  #     rename(name = new_med_name) %>%
-  #     add_row(name = c("MEDICATION_AT_INDEX")) %>%
-  #     add_row(name = c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT")) %>%
-  #     add_row(name = c("BIONAIVE")) %>%
-  #     arrange(match(name, c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT", "MEDICATION_AT_INDEX", "BIONAIVE")))
-  #
-  #   if ("LATEST" %in% index_info) {
-  #     names <- bind_rows(data.frame(name = names(cohort[1:9])), bionames) %>%
-  #       distinct() %>%
-  #       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-  #       filter(name != "DIAGNOSIS_DATE")
-  #   } else {
-  #     names <- bind_rows(data.frame(name = names(cohort[1:8])), bionames) %>%
-  #       distinct() %>%
-  #       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-  #       filter(name != "DIAGNOSIS_DATE")
-  #   }
-
-  # cohort <- cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
 
 
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
@@ -232,7 +217,32 @@ sparc_medication <- function(data,
     final_cohort <- cohort
   }
 
+
+  # REORDER COLUMNS & FORMAT SPREADSHEET ----
+
+
   names(final_cohort) <- toupper(names(final_cohort))
+  names(final_cohort) <- gsub(" ", "_", names(final_cohort))
+  names(final_cohort) <- gsub("\\(|\\)", "", names(final_cohort))
+
+  #assign col names into new tibble
+  col_names <- tibble(x=final_cohort %>% names()) %>% filter(grepl("^MED_|^CURRENT_", x))
+
+  #extract out into new columns name components
+  col_names_order <- col_names %>%
+    mutate(order = case_when(grepl("END", x) ~ 2,
+                             grepl("START", x) ~ 1,
+                             grepl("CURRENT", x) ~ 3)) %>%
+    mutate(before=str_extract(x,".*(?=_)"),
+           after=str_extract(x,"_(?!.*_).*")
+    ) %>%
+    arrange(before,desc(after)) %>%
+    pull(x)
+
+  #rearrange colnames by this logic
+  final_cohort %>% select(col_names_order)
+
+
 
   # CREATE HEADER STYLES----
 

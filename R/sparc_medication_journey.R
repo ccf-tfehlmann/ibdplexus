@@ -40,6 +40,8 @@
 sparc_med_journey <- function(prescriptions, demographics, observations, encounter, med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators", "Targeted synthetic small molecules"), export = FALSE) {
   # Get medications of interest
 
+  med_groups <- tolower(med_groups)
+
   medication <- sparc_med_filter(prescriptions, observations, demographics, encounter, med_groups)
 
   # Find medication start date ----
@@ -94,7 +96,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   # Loading Dose Pattern in EMR ----
   # does prescription pattern in EMR follow the loading dose of the biologic
 
-
+if("biologic" %in% med_groups){
   loading_emr <- medication %>%
     filter(DATA_SOURCE == "EMR") %>%
     filter(!is.na(MED_START_DATE) | !is.na(MED_END_DATE)) %>%
@@ -183,7 +185,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     select(-first_use_emr)
 
   med <- med %>%
-    left_join(first_use_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_EMR"))
+    left_join(first_use_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_EMR"))}
 
 
 
@@ -191,7 +193,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
 
   moa <- med_grp %>%
-    filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
+    filter(med_type %in% c("biologic", "aminosalicylates", "immunomodulators", "targeted synthetic small molecules")) %>%
     distinct(new_med_name, med_type) %>%
     rename(MEDICATION = new_med_name) %>%
     mutate(MOA = case_when(
@@ -206,7 +208,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   med <- med %>% left_join(moa, by = "MEDICATION")
 
-
+.0
 
   # Flags a Dose Escalation ----
 
@@ -214,7 +216,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   dose_escalation <- dose_escalation(medication) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION) %>%
     right_join(moa) %>%
-    filter(!(MOA %in% c("Aminosalicylates", "Immunomodulators"))) %>%
+    filter(!(MOA %in% c("aminosalicylates", "immunomodulators"))) %>%
     distinct() %>%
     filter(DOSE_ESCALATION == 1) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION)
@@ -223,15 +225,23 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Flags a Frequency Change ----
 
+  if("biologic" %in% med_groups){
   frequency_change <- frequency_change(medication) %>%
     ungroup() %>%
     left_join(moa) %>%
-    filter(!(MOA %in% c("Aminosalicylates", "Immunomodulators"))) %>%
+    filter(!(MOA %in% c("aminosalicylates", "immunomodulators"))) %>%
     distinct() %>%
     filter(DECREASE_IN_FREQUENCY == 1) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DECREASE_IN_FREQUENCY)
 
-  med <- med %>% left_join(frequency_change, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
+  med <- med %>% left_join(frequency_change, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))}
+
+
+  # Flag if on Steroids at the Same time ----
+
+  med <- med %>%
+    left_join(steroid_use(prescriptions, observations, demographics, encounter,med))
+
 
 
   # Create order of medications ----
@@ -315,7 +325,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   no_med_enroll <- medication %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT)
 
   med <- med %>%
-    left_join(no_med_enroll, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
+    full_join(no_med_enroll, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
 
   # Flag if bionaive at medication start ----
   # Update to account for patients that have no biologic information in the eCRF and EMR and then incorporate Smartform Ever/Never data
@@ -339,6 +349,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(bionaive) # %>%
   # rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
 
+
+  names(med) <- gsub(" ", "_", toupper(names(med)))
 
   if (export == "TRUE") {
     write.xlsx(med, paste0("SPARC_medication_journey_", Sys.Date(), ".xlsx"), colnames = T)
