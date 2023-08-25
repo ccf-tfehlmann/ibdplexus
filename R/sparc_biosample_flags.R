@@ -96,7 +96,8 @@ sparc_biosample_flags <- function(data, index_range) {
     select(-flag) %>%
     select(-ends_with("_INT")) %>%
     select(-c(ENROLL_INT_1, ENROLL_INT_2)) %>%
-    mutate(ENDOSCOPY_AT_ENROLLMENT = ifelse(ENROLLMENT == 1 & ENDOSCOPY == 1, 1, 0))
+    mutate(ENDOSCOPY_AT_ENROLLMENT = ifelse(ENROLLMENT == 1 & ENDOSCOPY == 1, 1, 0)) %>%
+    ungroup()
 
   # get medication start dates to find biosamples ~90 days after start
   sparc_meds <- sparc_meds  %>%
