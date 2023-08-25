@@ -2,7 +2,7 @@
 title: "sparc_summary-overview"
 author: "Crohn's & Colitis Foundation"
 date: "`r Sys.Date()`"
-output: md_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{sparc_summary-overview}
   %\VignetteEngine{knitr::rmarkdown}
