@@ -1347,9 +1347,9 @@ sparc_summary <- function(data,
   # CREATE BIOSAMPLE FLAGS TABLE
 
   biosample_flags <- sparc_biosample_flags(data, index_range) %>%
-    ungroup() %>%
-    select(-index_date) %>%
-    select(-SAMPLE_DATE_COLLECTED)
+    ungroup() # %>%
+    # select(-index_date) %>%
+    # select(-SAMPLE_DATE_COLLECTED)
 
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
 
