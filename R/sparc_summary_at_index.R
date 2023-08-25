@@ -1346,7 +1346,10 @@ sparc_summary <- function(data,
 
   # CREATE BIOSAMPLE FLAGS TABLE
 
-  biosample_flags <- sparc_biosample_flags(data, index_range)
+  biosample_flags <- sparc_biosample_flags(data, index_range) %>%
+    ungroup() %>%
+    select(-index_date) %>%
+    select(-SAMPLE_DATE_COLLECTED)
 
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
 
@@ -1354,13 +1357,12 @@ sparc_summary <- function(data,
   if ("OMICS" %in% index_info) {
     cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
   } else if ("BIOSAMPLE" %in% index_info) {
-    cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
+    cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE")) %>%
+      left_join(biosample_flags, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, SRC_BIOSAMPLE_CONCEPT_NAME,
+                                              SAMPLE_STATUS, DATE_SAMPLE_COLLECTED,
+                                              BIOSAMPLE_LOCATION, MACROSCOPIC_APPEARANCE, SUB_LOCATION__C, VISIT_TYPE__C, SAMPLE_NUMBER))
     # for biosample summary table add flags
 
-    cohort <- cohort %>% left_join(biosample_flags,
-                                  by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, SRC_BIOSAMPLE_CONCEPT_NAME,
-                                               SAMPLE_STATUS, DATE_SAMPLE_COLLECTED, BIOSAMPLE_LOCATION, MACROSCOPIC_APPEARANCE, SUB_LOCATION__C, VISIT_TYPE__C,
-                                               SAMPLE_NUMBER))
   } else {
     cohort <- cohort
   }
