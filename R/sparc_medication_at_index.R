@@ -202,13 +202,13 @@ sparc_medication <- function(data,
 
 
   if ("OMICS" %in% index_info) {
-    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
+    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"), intersect(names(.), names(steroid)))
 
     final_cohort <- omics %>%
       left_join(table) %>%
       left_join(cohort)
   } else if ("BIOSAMPLE" %in% index_info) {
-    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
+    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"), intersect(names(.), names(steroid)))
 
     final_cohort <- biosample %>%
       left_join(table) %>%
@@ -233,14 +233,15 @@ sparc_medication <- function(data,
     mutate(order = case_when(grepl("END", x) ~ 2,
                              grepl("START", x) ~ 1,
                              grepl("CURRENT", x) ~ 3)) %>%
-    mutate(before=str_extract(x,".*(?=_)"),
-           after=str_extract(x,"_(?!.*_).*")
-    ) %>%
-    arrange(before,desc(after)) %>%
-    pull(x)
+    separate_wider_delim(x,delim = "_", too_few = "align_start", names_sep = "_",cols_remove = FALSE) %>%
+    # mutate(before=str_extract(x,".*(?=_)"),
+    #        after=str_extract(x,"_(?!.*_).*")
+    # ) %>%
+    arrange(x_5,x_6,match(x_4, c("ECRF","EMR")), match(x_2, c("START", "END"))) %>%
+    pull(x_x)
 
   #rearrange colnames by this logic
-  final_cohort %>% select(col_names_order)
+  final_cohort <- final_cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID:MEDICATION_AT_INDEX, any_of(col_names_order), everything())
 
 
 
@@ -279,5 +280,5 @@ sparc_medication <- function(data,
 
     saveWorkbook(wb, file = paste0(filename), overwrite = TRUE)
   }
-  return(cohort)
+  return(final_cohort)
 }
