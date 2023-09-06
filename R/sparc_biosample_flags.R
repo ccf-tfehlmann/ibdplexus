@@ -23,8 +23,9 @@ sparc_biosample_flags <- function(data, index_range) {
   procedures <- data$procedures
   demographics <- data$demographics
   prescriptions <- data$prescriptions
+  observations <- data$observations
 
-  sparc_meds <- sparc_med_journey(prescriptions, demographics, dat$observations, encounter)
+  sparc_meds <- sparc_med_journey(prescriptions, demographics, observations, encounter)
 
   # rm(dat)
 
