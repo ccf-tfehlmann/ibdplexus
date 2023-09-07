@@ -29,7 +29,8 @@ extract_consent <- function(demographics, study) {
     mutate(c = seq_along(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     pivot_wider(names_from = c, values_from = c(DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN)) %>%
     mutate(DATE_OF_CONSENT = DATE_OF_CONSENT_1) %>%
-    mutate(DATE_OF_CONSENT_WITHDRAWN = if_else(is.na(DATE_OF_CONSENT_2), DATE_OF_CONSENT_WITHDRAWN_1, DATE_OF_CONSENT_WITHDRAWN_2)) %>%
+    mutate(DATE_OF_CONSENT_WITHDRAWN = case_when("DATE_OF_CONSENT_2" %in% names(.) & is.na(DATE_OF_CONSENT_2) ~ DATE_OF_CONSENT_WITHDRAWN_1
+                                                 TRUE ~ DATE_OF_CONSENT_WITHDRAWN_2)) %>%
     ungroup() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, everything())
 }
