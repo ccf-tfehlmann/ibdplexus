@@ -313,7 +313,7 @@ risk_summary <- function(dir,
 
   visit <- visit %>%
     left_join(finaldiagnosis) %>%
-    rename(`RNASEQ` = `RNASEQ FFPE SLIDES`)
+    rename(`RNASEQ FFPE SLIDES` = `RNASEQ`)
 
   # Biosample available anytime, 1 is available flag
   visit <- visit %>%
