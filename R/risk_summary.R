@@ -511,7 +511,7 @@ risk_summary <- function(dir,
     mutate(order = ifelse(str_detect(TYPE_OF_ENCOUNTER, "Biosample"), order + 0.1, order)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     arrange(order, .by_group = T) %>%
-    ungroup() %>%
+    ungroup()
     # remove patient that only has enrollment (biosample)
     # filter(DEIDENTIFIED_MASTER_PATIENT_ID != "9029267")
 
