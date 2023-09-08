@@ -28,8 +28,7 @@ risk_summary <- function(dir,
 
 
   # Read dictionary
-  names <- header %>%
-    filter(`...1` != "MEDICATIONS_AT_VISIT")
+  names <- header
   names <- names[, , 1]
 
   # save data for wpcdai calculation and meds_at_visit calculation
