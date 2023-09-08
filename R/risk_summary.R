@@ -313,7 +313,8 @@ risk_summary <- function(dir,
     ungroup()
 
   visit <- visit %>%
-    left_join(finaldiagnosis)
+    left_join(finaldiagnosis) %>%
+    rename(`RNASEQ` = `RNASEQ FFPE SLIDES`)
 
   # Biosample available anytime, 1 is available flag
   visit <- visit %>%
@@ -340,6 +341,7 @@ risk_summary <- function(dir,
     mutate(`ITS2 SEQUENCING_ANYTIME` = ifelse(any(`ITS2 SEQUENCING` != ""), 1, 0)) %>%
     mutate(`PROTEOMIC BIOMARKER PANELS (OLINK)_ANYTIME` = ifelse(any(`PROTEOMIC BIOMARKER PANELS (OLINK)` != ""), 1, 0)) %>%
     mutate(`VIRAL METAGENOMICS SEQUENCING (VIROME)_ANYTIME` = ifelse(any(`VIRAL METAGENOMICS SEQUENCING (VIROME)` != ""), 1, 0)) %>%
+    mutate(`RNASEQ FFPE SLIDES_ANYTIME` = ifelse(any(`RNASEQ FFPE SLIDES` != ""), 1, 0)) %>%
     ungroup()
 
   # until all is updated, make visit date columns Date not character class for join
@@ -512,7 +514,7 @@ risk_summary <- function(dir,
     arrange(order, .by_group = T) %>%
     ungroup() %>%
     # remove patient that only has enrollment (biosample)
-    filter(DEIDENTIFIED_MASTER_PATIENT_ID != "9029267")
+    # filter(DEIDENTIFIED_MASTER_PATIENT_ID != "9029267")
 
   # remove columns not necessary in summary table
   visit <- visit %>% select(all_of(names))
