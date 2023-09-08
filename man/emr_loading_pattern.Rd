@@ -4,10 +4,10 @@
 \alias{emr_loading_pattern}
 \title{emr_loading_pattern}
 \usage{
-emr_loading_pattern(prescriptions, encounter)
+emr_loading_pattern(medication, encounter)
 }
 \arguments{
-\item{prescriptions}{A dataframe with prescriptions data usually generated using load_data.}
+\item{medication}{A dataframe with filtered prescriptions data usually generated using load_data.}
 
 \item{encounter}{a dataframe with encounter data usually generated using load_data.}
 }
