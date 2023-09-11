@@ -102,3 +102,55 @@ folder_fix <- function(folder) {
     paste0(folder, "/")
   }
 }
+
+
+#' fix_col_names
+#'
+#' standardize column names for summary tables
+#'
+#' @param df The dataframe created for the summary table
+#'
+#' @return The dataframe with corrected names
+fix_col_names <- function(df){
+
+  # get current names, make all uppercase
+  names_start <- names(df) %>%
+    str_to_upper()
+
+  # replace periods followed by letters with "_", leave periods when specifying volume
+  names_fix <- NA
+
+  for (i in names_start){
+    if (grepl("\\.[a-zA-Z]", i)) {
+
+      names_fix[i] <- gsub("\\.", "_", i)
+
+    } else {
+
+      names_fix[i] <- i
+
+    }
+  }
+
+  # replace multiple instances of underscores and replace spaces with underscores
+  names_final <- names_fix[2:length(names_fix)] %>%
+    unname() %>%
+    str_replace("__", "_") %>%
+    str_replace("___", "_") %>%
+    str_replace_all(" ", "_") %>%
+    as.tibble()
+
+  # rename old column names new column names
+  df_colnames <- tibble(
+    "new_name" = names_final$value,
+    "old_name" = names(df)
+  )
+
+  var_names <- deframe(df_colnames)
+
+  df_new <- df %>%
+    rename(!!!var_names)
+
+  return(df_new)
+
+}
