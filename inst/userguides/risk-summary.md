@@ -129,8 +129,8 @@ Classification</a>.<span class="math inline"><sup>1</sup></span></td>
 <tr class="even">
 <td style="text-align: left;">DISEASE_JOURNEY</td>
 <td style="text-align: left;">The Montreal Classification disease
-journey for Crohn’s Disease patients, FIRST_BEHAVIOR -&gt;
-FINAL_BEHAVIOR</td>
+journey for Crohn’s Disease patients, FIRST_BEHAVIOR -&gt; MIDDLE
+BEHAVIOR (when available) -&gt; FINAL_BEHAVIOR</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">IBD - FAMILY HISTORY</td>
@@ -139,7 +139,7 @@ family have a known history of IBD</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EXTRAINTESTINAL MANIFESTATIONS COLUMNS -
-20:38</td>
+20:39</td>
 <td style="text-align: left;">Does the patient present with a new
 extraintestinal manifestation since last review</td>
 </tr>
@@ -154,13 +154,7 @@ hematocrit, neutrophil, platelet count, urea, white blood cell count,
 GM-CSF, IgA ASCA, IgG ASCA, I2, OMPC, CBIR FLA, ANCA</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">MEDICATIONS_AT_VISIT</td>
-<td style="text-align: left;">List of medications patient had been on
-since last encounter. Created using risk_meds_at_visit ibdplexus
-function</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">MEDICATION COLUMNS - 64:139</td>
+<td style="text-align: left;">MEDICATION COLUMNS - 63:138</td>
 <td style="text-align: left;">Information about the medications a
 patient was on at a visit encounter. ANTIBIOTICS, CORTICOSTEROIDS,
 IMMUNOMODULATORS, BIOLOGIC AGENTS, 5-ASA ORAL are filled out as Yes/No
@@ -170,34 +164,34 @@ medication, otherwise the column is left blank or filled with
 <code>No</code>. <code>Yes</code> is used when date is not
 available.</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">PCDAI COLUMNS - 140:166</td>
+<tr class="odd">
+<td style="text-align: left;">PCDAI COLUMNS - 139:165</td>
 <td style="text-align: left;">Columns with the values required for PCDAI
 and/or wPCDAI calculations. Any numerical categorization of values is
 done to calculate wPCDAI.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">WPCDAI</td>
 <td style="text-align: left;">Weighted pediatric Crohn’s disease
 activity index, created using the wpcdai function in ibdplexus.
 Remission is &lt; 12.5. Mild is 12.5 to 40. Moderate is &gt;40 to 57.5.
 Severe is &gt; 57.5.</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">DISEASE LOCATION COLUMNS - 168:179</td>
+<tr class="odd">
+<td style="text-align: left;">DISEASE LOCATION COLUMNS - 167:178</td>
 <td style="text-align: left;">Disease involvement at all listed
 locations. Values are: Normal, Macroscopic Disease, Microscopic Disease
 only, Not Assessed, Unknown</td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;">PERIANAL DISEASE COLUMNS - 180:187</td>
+<tr class="even">
+<td style="text-align: left;">PERIANAL DISEASE COLUMNS - 179:186</td>
 <td style="text-align: left;">Does the patient exhibit any aspects of
 perianal disease at this encounter. Aspects of perianal disease
 available: large skin tags, ulcers, fissure(s), isolated abscess,
 multiple abscesses, perianal fistula/e, recto-vaginal fistula/e,
 ano-vaginal fistula/e</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">ENDOSCOPIC ASSESSMENT DATA COLLECTION
 METHOD</td>
 <td style="text-align: left;">Method of endoscopic data collection for
@@ -205,9 +199,9 @@ results presented in following endoscopic assessment columns. Possible
 values are: Not Obtainable, Retrospective Chart Review, Proceduralist
 (Retrospective), Proceduralist (Contemporaneous)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">ENDOSCOPIC ASSESSMENT COLUMNS -
-189:214</td>
+188:213</td>
 <td style="text-align: left;">Results for various endoscopic assessment
 values. Possible areas assessed include: rectum, ileum, ascending colon,
 descending colon, sigmoid, transverse colon, and any non-ulcerated or
@@ -215,8 +209,8 @@ ulcerated stenoisis anywhere. Yes/No for columns assessing deep or
 superficial ulceration. Numeric values for columns assessing amount of
 surface involved and amount of surface ulcerated.</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">OMICS COLUMNS - 215:224</td>
+<tr class="odd">
+<td style="text-align: left;">OMICS COLUMNS - 214:223</td>
 <td style="text-align: left;">Lists of files for omics data if generated
 from biosamples collected at that visit. Possible omics include:
 Immunochip high-density array, ITS2 sequencing, RNASeq (paired-end
@@ -225,20 +219,20 @@ sequencing (virome), whole shotgun sequencing (WGS), 16S, DNA
 methylation, genotyping (global screening array), proteomic biomarker
 panels (Olink)</td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;">BIOSAMPLE COLUMNS - 225:231</td>
+<tr class="even">
+<td style="text-align: left;">BIOSAMPLE COLUMNS - 224:230</td>
 <td style="text-align: left;">Status (Stored/In Lab) for the biosamples
 a patient might have available from that visit. Possible biosamples
 available include: plasma, mucosal RNA, blood DNA, mucosal DNA, and
 stool.</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">OMICS_ANYTIME COLUMNS - 232:241</td>
+<tr class="odd">
+<td style="text-align: left;">OMICS_ANYTIME COLUMNS - 231:240</td>
 <td style="text-align: left;">1 if the patient has omics data at any
 visit, 0 if no omics data is available for that patient</td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;">BIOSAMPLE_ANYTIME COLUMNS 242:248</td>
+<tr class="even">
+<td style="text-align: left;">BIOSAMPLE_ANYTIME COLUMNS 241:247</td>
 <td style="text-align: left;">1 if the patient has a biosample at any
 visit, 0 if biosamples not available for that patient</td>
 </tr>
