@@ -101,14 +101,14 @@ Diagnosis can change with each visit</td>
 Linked to patient, not visit</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">DISEASE BEHAVIOR -
-STRICTURING/FIBROSTENOTIC</td>
+<td
+style="text-align: left;">DISEASE_BEHAVIOR_STRICTURING/FIBROSTENOTIC</td>
 <td style="text-align: left;">Does the patient exhibit
 stricturing/fibrostenotic disease behavior at encounter</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">DISEASE BEHAVIOR - INTERNALLY
-PENTRATING</td>
+<td
+style="text-align: left;">DISEASE_BEHAVIOR_INTERNALLY_PENTRATING</td>
 <td style="text-align: left;">Does the patient exhibit internally
 penetrating disease behavior at encounter</td>
 </tr>
@@ -133,7 +133,7 @@ journey for Crohn’s Disease patients, FIRST_BEHAVIOR -&gt; MIDDLE
 BEHAVIOR (when available) -&gt; FINAL_BEHAVIOR</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">IBD - FAMILY HISTORY</td>
+<td style="text-align: left;">IBD_FAMILY_HISTORY</td>
 <td style="text-align: left;">Any first-degree member of the subject’s
 family have a known history of IBD</td>
 </tr>
@@ -192,8 +192,8 @@ multiple abscesses, perianal fistula/e, recto-vaginal fistula/e,
 ano-vaginal fistula/e</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">ENDOSCOPIC ASSESSMENT DATA COLLECTION
-METHOD</td>
+<td
+style="text-align: left;">ENDOSCOPIC_ASSESSMENT_DATA_COLLECTION_METHOD</td>
 <td style="text-align: left;">Method of endoscopic data collection for
 results presented in following endoscopic assessment columns. Possible
 values are: Not Obtainable, Retrospective Chart Review, Proceduralist
