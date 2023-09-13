@@ -135,10 +135,20 @@ fix_col_names <- function(df){
   # replace multiple instances of underscores and replace spaces with underscores
   names_final <- names_fix[2:length(names_fix)] %>%
     unname() %>%
+    str_replace_all("-", "_") %>%
+    str_replace_all(" ", "_") %>%
+    str_replace_all(":", "_") %>%
+    str_replace_all(">", "_") %>%
+    str_replace_all("<", "_") %>%
+    str_replace_all("%", "PCT") %>%
     str_replace("__", "_") %>%
     str_replace("___", "_") %>%
-    str_replace_all(" ", "_") %>%
-    as.tibble()
+    str_replace_all("'", "") %>%
+    str_replace_all("__", "_") %>%
+    str_replace_all(",", "") %>%
+    str_replace_all("\\(", "") %>%
+    str_replace_all("\\)", "") %>%
+    as_tibble()
 
   # rename old column names new column names
   df_colnames <- tibble(
@@ -146,7 +156,7 @@ fix_col_names <- function(df){
     "old_name" = names(df)
   )
 
-  var_names <- deframe(df_colnames)
+  var_names <- tibble::deframe(df_colnames)
 
   df_new <- df %>%
     rename(!!!var_names)

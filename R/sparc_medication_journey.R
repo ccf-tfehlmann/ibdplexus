@@ -266,7 +266,10 @@ if("biologic" %in% med_groups){
   # rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
 
 
-  names(med) <- gsub(" ", "_", toupper(names(med)))
+  # names(med) <- gsub(" ", "_", toupper(names(med)))
+
+  # fix col names
+  med <- fix_col_names(med)
 
   if (export == "TRUE") {
     write.xlsx(med, paste0("SPARC_medication_journey_", Sys.Date(), ".xlsx"), colnames = T)

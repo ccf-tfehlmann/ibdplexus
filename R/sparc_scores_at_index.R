@@ -611,14 +611,18 @@ sparc_scores <- function(data,
 
 
 
-  cohort <- cohort %>%
-    distinct() %>%
-    setNames((gsub("\\(|\\)|\\-|\\'|\\.", " ", names(.)))) %>%
-    setNames((gsub("  ", " ", names(.)))) %>%
-    setNames((gsub("^ *| *$", "", names(.)))) %>%
-    setNames((gsub(" ", "_", names(.))))
+  # cohort <- cohort %>%
+  #   distinct() %>%
+  #   setNames((gsub("\\(|\\)|\\-|\\'|\\.", " ", names(.)))) %>%
+  #   setNames((gsub("  ", " ", names(.)))) %>%
+  #   setNames((gsub("^ *| *$", "", names(.)))) %>%
+  #   setNames((gsub(" ", "_", names(.))))
+  #
+  # names(cohort) <- toupper(names(cohort))
 
-  names(cohort) <- toupper(names(cohort))
+  #### FIX COL NAMES ----
+
+  cohort <- fix_col_names(cohort)
 
 
   # ===============================

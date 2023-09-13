@@ -911,6 +911,9 @@ risk_med_journey <- function(prescriptions, encounter) {
     # left join the med date imputed and fill in for imputed dates
     left_join(med_end_date_imputed, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE)) %>%
     mutate(END_DATE_IMPUTED = ifelse(is.na(END_DATE_IMPUTED), 1, END_DATE_IMPUTED))
+
+  # fix column names
+   table <- fix_col_names(table)
 }
 
 
