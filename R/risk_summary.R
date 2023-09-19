@@ -521,6 +521,9 @@ risk_summary <- function(dir,
   # change column order
   data.table::setcolorder(visit, names)
 
+  # fix column names
+  visit <- fix_col_names(visit)
+
   # Write output file
   write.xlsx(visit, filename)
 }

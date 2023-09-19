@@ -1369,15 +1369,16 @@ sparc_summary <- function(data,
 
   # FORMAT AND EXPORT ----
 
+  cohort <- fix_col_names(cohort)
 
-  cohort <- cohort %>%
-    distinct() %>%
-    setNames((gsub("\\(|\\)|\\-|\\'|\\.", " ", names(.)))) %>%
-    setNames((gsub("  ", " ", names(.)))) %>%
-    setNames((gsub("^ *| *$", "", names(.)))) %>%
-    setNames((gsub(" ", "_", names(.))))
-
-  names(cohort) <- toupper(names(cohort))
+  # cohort <- cohort %>%
+  #   distinct() %>%
+  #   setNames((gsub("\\(|\\)|\\-|\\'|\\.", " ", names(.)))) %>%
+  #   setNames((gsub("  ", " ", names(.)))) %>%
+  #   setNames((gsub("^ *| *$", "", names(.)))) %>%
+  #   setNames((gsub(" ", "_", names(.))))
+  #
+  # names(cohort) <- toupper(names(cohort))
 
 
 
