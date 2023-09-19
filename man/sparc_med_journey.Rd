@@ -51,8 +51,11 @@ The following columns are convenience flags and indices to facilitate easy filte
   \item{MEDICATION_NUMBER}{counts the number of different medications in a patients' journey. Only medications in the selected med_groups are considered.
 The medication with with earliest start date will have MEDICATION_NUMBER = 1.}
   \item{BIONAIVE}{is 1 if a patient has no prior reported biologics.}
-  \item{FIRST_BIOLOGIC}{is 1 if a medication record is the first biologic a patient receives. If a record is the first biologic a patient receives, FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.}
+  \item{FIRST_ADVANCED_MED}{is 1 if a medication record is the first advanced medication a patient receives. If a record is the first advanced medication a patient receives, FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.}
   \item{STARTED_AFTER_ENROLLMENT}{is 1 if the medication start date is after the date of consent.}
-  \item{BIOLOGIC}{is 1 if the record is for a biologic}
+  \item{ADVANCED_MED}{is 1 if the record is for an advanced medication}
+  \item{ANY_STEROID}{1 if on any steroid at the time of medication listed}
+  \item{RECTAL_STEROID}{1 if on any rectal steroid at the time of medication listed}
+  \item{ORAL_IV_STEROID}{1 if on any oral or iv steroid at the time of medication listed}
 }
 }
