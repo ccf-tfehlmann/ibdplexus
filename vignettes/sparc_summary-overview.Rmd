@@ -45,6 +45,8 @@ The function produces a table with the following columns. The sparc_scores() fun
 
 -   COLUMN_LOCATION - which table the column can be found in
 
+-   COLUMN_TYPE - describes if the information in this column is patient-level or within X days of the index date ("indexed column")
+
 -   DEFINITION - an explanation of the column name
 
 -   DERVIVED_VARIABLE - if this variable is derived from multiple fields in the raw data
@@ -61,8 +63,8 @@ The function produces a table with the following columns. The sparc_scores() fun
 
 ```{r}
 #| echo: false
-# DT::datatable(ibdplexus:::summary_fields, rownames = FALSE,extensions = 'Buttons', options = list(dom = 'Bfrtip', buttons = c('copy', 'excel')))
+DT::datatable(ibdplexus:::summary_fields, rownames = FALSE,extensions = 'Buttons', options = list(dom = 'Bfrtip', buttons = c('copy', 'excel')))
 
-knitr::kable(ibdplexus:::summary_fields)
+#knitr::kable(ibdplexus:::summary_fields)
 
 ```

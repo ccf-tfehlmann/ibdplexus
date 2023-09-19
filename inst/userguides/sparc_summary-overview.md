@@ -48,6 +48,9 @@ following table.
 
 -   COLUMN\_LOCATION - which table the column can be found in
 
+-   COLUMN\_TYPE - describes if the information in this column is
+    patient-level or within X days of the index date (“indexed column”)
+
 -   DEFINITION - an explanation of the column name
 
 -   DERVIVED\_VARIABLE - if this variable is derived from multiple
