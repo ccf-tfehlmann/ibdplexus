@@ -158,6 +158,7 @@ if("biologic" %in% med_groups){
 
   # Add last medication verification date ----
 
+  if(0){
   verified <- medication %>%
     drop_na(LAST_MEDICATION_VERIFICATION_DATE__C) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID,new_med_name, LAST_MEDICATION_VERIFICATION_DATE__C) %>%
@@ -192,7 +193,7 @@ if("biologic" %in% med_groups){
         TRUE ~ NA_character_
       )
     )
-
+}
 
   # Flag if on Steroids at the Same time ----
 
