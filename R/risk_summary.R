@@ -318,12 +318,14 @@ risk_summary <- function(dir,
   # Biosample available anytime, 1 is available flag
   visit <- visit %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    mutate(PLASMA_05.ML_ANYTIME = ifelse(any(PLASMA_0.5ML != ""), 1, 0)) %>%
+    # mutate(PLASMA_0.5ML_ANYTIME = ifelse(any(PLASMA_0.5ML != ""), 1, 0)) %>%
     mutate(MUCOSAL_RNA_2.0ML_ANYTIME = ifelse(any(MUCOSAL_RNA_2.0ML != ""), 1, 0)) %>%
-    mutate(PLASMA_ALIQUOT_0.7ML_ANYTIME = ifelse(any(PLASMA_ALIQUOT_0.7ML != ""), 1, 0)) %>%
+    # mutate(PLASMA_ALIQUOT_0.7ML_ANYTIME = ifelse(any(PLASMA_ALIQUOT_0.7ML != ""), 1, 0)) %>%
     mutate(BLOOD_DNA_2.0ML_ANYTIME = ifelse(any(BLOOD_DNA_2.0ML != ""), 1, 0)) %>%
-    mutate(BLOOD_PLASMA_1.8ML_ANYTIME = ifelse(any(BLOOD_PLASMA_1.8ML != ""), 1, 0)) %>%
+    # mutate(BLOOD_PLASMA_1.8ML_ANYTIME = ifelse(any(BLOOD_PLASMA_1.8ML != ""), 1, 0)) %>%
     mutate(MUCOSAL_DNA_2.0ML_ANYTIME = ifelse(any(MUCOSAL_DNA_2.0ML != ""), 1, 0)) %>%
+    mutate(BLOOD_PLASMA_ANYTIME = ifelse(any(BLOOD_PLASMA_1.8ML != "") | any(PLASMA_0.5ML != "") |
+                                           any(PLASMA_ALIQUOT_0.7ML != ""), 1, 0)) %>%
     mutate(STOOL_7.0ML_ANYTIME = ifelse(any(STOOL_7.0ML != ""), 1, 0)) %>%
     ungroup()
 
