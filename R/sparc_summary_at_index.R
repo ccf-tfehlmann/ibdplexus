@@ -985,7 +985,9 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = LAB_TEST_CONCEPT_NAME, values_from = c(LAB_RESULTS, TEST_UNIT))
+    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = LAB_TEST_CONCEPT_NAME, values_from = c(LAB_RESULTS, TEST_UNIT)) %>%
+    rename(!!paste("LAB_RESULTS_HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)", t, sep = "_") := `LAB_RESULTS_HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)`) %>%
+    rename(!!paste("TEST_UNIT_HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)", t, sep = "_") := `TEST_UNIT_HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)`)
 
   cohort <- left_join(cohort, hscrp)
 
@@ -1002,7 +1004,12 @@ sparc_summary <- function(data,
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, LAB_TEST_CONCEPT_NAME, index_date) %>%
     slice(which.min(abs(diff))) %>%
     ungroup() %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = LAB_TEST_CONCEPT_NAME, values_from = c(LAB_RESULTS, TEST_UNIT))
+    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date), names_from = LAB_TEST_CONCEPT_NAME, values_from = c(LAB_RESULTS, TEST_UNIT)) %>%
+    rename(!!paste("LAB_RESULTS_FECAL CALPROTECTIN (10-600 uG/G)", t, sep = "_") := `LAB_RESULTS_FECAL CALPROTECTIN (10-600 uG/G)`) %>%
+    rename(!!paste("LAB_RESULTS_FECAL CALPROTECTIN (30-1800 uG/G)", t, sep = "_") := `LAB_RESULTS_FECAL CALPROTECTIN (30-1800 uG/G)`) %>%
+    rename(!!paste("TEST_UNIT_FECAL CALPROTECTIN (10-600 uG/G)", t, sep = "_") := `TEST_UNIT_FECAL CALPROTECTIN (10-600 uG/G)`) %>%
+    rename(!!paste("TEST_UNIT_FECAL CALPROTECTIN (30-1800 uG/G)", t, sep = "_") := `TEST_UNIT_FECAL CALPROTECTIN (30-1800 uG/G)`)
+
 
   cohort <- left_join(cohort, fcal)
 
