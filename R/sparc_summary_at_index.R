@@ -1325,15 +1325,15 @@ sparc_summary <- function(data,
           `PERIANAL FISTULA` == "Yes" |
           `LARGE SKIN TAGS` == "Yes" |
           `RECTOVAGINAL FISTULA` == "Yes" ~ "Yes",
-        (`PHENOTYPE - ANAL STRICTURE` == "No" &
+        `PHENOTYPE - ANAL STRICTURE` == "No" &
           `ANAL PHENOTYPE` == "No" &
           `ANAL CANAL STRICTURE` == "No" &
           `ANAL CANAL ULCER` == "No" &
           `ANAL FISSURE` == "No" &
           `PERIANAL ABCESS` == "No" &
-          `PERIANAL FISTULA - COMPLEX FISTULA` == "No" &
+          #`PERIANAL FISTULA - COMPLEX FISTULA` == "No" &
           `LARGE SKIN TAGS` == "No" &
-          `RECTOVAGINAL FISTULA` == "No") &
+          `RECTOVAGINAL FISTULA` == "No" &
           `PERIANAL FISTULA` == "No" ~ "No",
         TRUE ~ "Unknown"
       ),
