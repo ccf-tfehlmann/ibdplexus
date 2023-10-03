@@ -26,10 +26,15 @@
 #' # risk_med_journey_df <- risk_med_journey(dat$prescriptions, dat$encounter)
 #'
 risk_med_journey <- function(prescriptions, encounter) {
+
   # filter data
   prescriptions <- prescriptions %>%
     filter(DATA_SOURCE == "RISK") %>%
-    mutate(END_DATE_IMPUTED = ifelse(is.na(MED_END_DATE), 1, 0))
+    mutate(END_DATE_IMPUTED = ifelse(is.na(MED_END_DATE), 1, 0)) %>%
+    mutate(MEDICATION_NAME = ifelse(MEDICATION_NAME == "Infliximab (Unspecified)",
+                                    gsub(paste(c("Unspecified", "[ (]", "[)]"), collapse = "|"), "", MEDICATION_NAME),
+                                    MEDICATION_NAME))
+
 
   # find columns to keep
   # keep_cols <- as_tibble(as.list(remove_empty_cols(prescriptions))) %>%
@@ -69,9 +74,9 @@ risk_med_journey <- function(prescriptions, encounter) {
         "Methotrexate"
       ) ~ "Immunomodulators",
       MEDICATION_NAME %in% c(
-        "Adalimumab", "Certolizumab Pegol", "Infliximab (Unspecified)",
-        "Natalizumab"
-      ) ~ "Biologic",
+        "Adalimumab", "Certolizumab Pegol", "Infliximab"
+      ) ~ "Biologic (anti-TNF)",
+      MEDICATION_NAME %in% c("Natalizumab") ~ "Biologic (anti-a4 integrin)",
       MEDICATION_NAME %in% c(
         "Budesonide", "Methylprednisolone",
         "Prednisolone", "Hydrocortisone",
@@ -116,9 +121,9 @@ risk_med_journey <- function(prescriptions, encounter) {
         "Methotrexate"
       ) ~ "Immunomodulators",
       MEDICATION_NAME %in% c(
-        "Adalimumab", "Certolizumab Pegol", "Infliximab (Unspecified)",
-        "Natalizumab"
-      ) ~ "Biologic"
+        "Adalimumab", "Certolizumab Pegol", "Infliximab"
+      ) ~ "Biologic (anti-TNF)",
+      MEDICATION_NAME %in% c("Natalizumab") ~ "Biologic (anti-a4 integrin)"
     )) %>%
     filter(!is.na(MED_GROUP))
 
@@ -129,9 +134,9 @@ risk_med_journey <- function(prescriptions, encounter) {
   moa <- meds %>%
     distinct(MEDICATION_NAME, MED_GROUP) %>%
     mutate(MOA = case_when(
-      grepl("Adalimumab|Certolizumab Pegol", MEDICATION_NAME, ignore.case = T) ~ "antiTNF",
-      MEDICATION_NAME %in% c("Natalizumab") ~ "IRA",
-      MEDICATION_NAME == "Infliximab (Unspecified)" ~ "antiTNF",
+      grepl("Adalimumab|Certolizumab Pegol", MEDICATION_NAME, ignore.case = T) ~ "Biologic (anti-TNF)",
+      MEDICATION_NAME %in% c("Natalizumab") ~ "Biologic (anti-a4 integrin)",
+      MEDICATION_NAME == "Infliximab" ~ "Biologic (anti-TNF)",
       TRUE ~ MEDICATION_NAME
     )) %>%
     select(MEDICATION_NAME, MOA)
@@ -150,8 +155,9 @@ risk_med_journey <- function(prescriptions, encounter) {
   # previous one. Only have to worry about anti-TNF for RISK
 
   antitnfs <- meds %>%
-    filter(MOA == "antiTNF") %>%
-    filter(MEDICATION_NAME != "Infliximab (Unspecified)" & MEDICATION_NAME != "Natalizumab") %>%
+    filter(MOA == "Biologic (anti-TNF)") %>%
+    filter(MEDICATION_NAME != "Infliximab" &
+             MEDICATION_NAME != "Natalizumab") %>%
     # join encounter table here right now, if do it earlier can remove
     left_join(encounter %>%
                 select(
@@ -215,7 +221,7 @@ risk_med_journey <- function(prescriptions, encounter) {
   # use last day administrated as end date for infliximab and natalizumab if
   # other antiTNF is not started
   inflix_nata <- meds %>%
-    filter(MEDICATION_NAME == "Infliximab (Unspecified)" | MEDICATION_NAME == "Natalizumab") %>%
+    filter(MEDICATION_NAME == "Infliximab" | MEDICATION_NAME == "Natalizumab") %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
     filter(!is.na(MED_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME) %>%
@@ -808,14 +814,14 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   table <- table %>%
     mutate(
-      OVERLAPPING_MOA = gsub("Adalimumab|Certolizumab Pegol", "antiTNF", MEDS_OVERLAP),
-      OVERLAPPING_MOA = gsub("Natalizumab", "IRA", OVERLAPPING_MOA),
-      OVERLAPPING_MOA = gsub("[()]", "", OVERLAPPING_MOA),
-      OVERLAPPING_MOA = gsub("Infliximab Unspecified", "antiTNF", OVERLAPPING_MOA),
-      OVERLAPPING_MOA = gsub("Tacrolimus|Methotrexate|Mercaptopurine|Azathioprine", "Immunomodulator", OVERLAPPING_MOA),
-      OVERLAPPING_MOA = gsub("Olsalazine|Mesalamine|Sulfasalazine", "5-ASA", OVERLAPPING_MOA)
+      OVERLAPPING_GROUP = gsub("Adalimumab|Certolizumab Pegol", "Biologic (anti-a4 integrin)", MEDS_OVERLAP),
+      OVERLAPPING_GROUP = gsub("Natalizumab", "Biologic (anti-TNF)", OVERLAPPING_GROUP),
+      # OVERLAPPING_GROUP = gsub("[()]", "", OVERLAPPING_GROUP),
+      OVERLAPPING_GROUP = gsub("Infliximab", "Biologic (anti-TNF)", OVERLAPPING_GROUP),
+      OVERLAPPING_GROUP = gsub("Tacrolimus|Methotrexate|Mercaptopurine|Azathioprine", "Immunomodulator", OVERLAPPING_GROUP),
+      OVERLAPPING_GROUP = gsub("Olsalazine|Mesalamine|Sulfasalazine", "Aminosalicylate", OVERLAPPING_GROUP)
     ) %>%
-    relocate(OVERLAPPING_MOA, .after = MEDS_OVERLAP)
+    relocate(OVERLAPPING_GROUP, .after = MEDS_OVERLAP)
 
   #### ANTIBIOTICS FLAG ----
 
@@ -895,6 +901,8 @@ risk_med_journey <- function(prescriptions, encounter) {
     filter(END_DATE_IMPUTED == 0) %>%
     mutate(MED_END_DATE = dmy(MED_END_DATE))
 
+
+
   #### FINAL ARRANGE ----
   table <- table %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
@@ -911,6 +919,20 @@ risk_med_journey <- function(prescriptions, encounter) {
     # left join the med date imputed and fill in for imputed dates
     left_join(med_end_date_imputed, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_END_DATE)) %>%
     mutate(END_DATE_IMPUTED = ifelse(is.na(END_DATE_IMPUTED), 1, END_DATE_IMPUTED))
+
+  #### FIX END SEMI-COLON
+
+  table <- table %>%
+    mutate(MEDS_OVERLAP = paste0(MEDS_OVERLAP, " EXTRA")) %>%
+    mutate(OVERLAPPING_GROUP = paste0(OVERLAPPING_GROUP, " EXTRA")) %>%
+    mutate(MEDS_OVERLAP = ifelse(str_detect(MEDS_OVERLAP, "Infliximab;   EXTRA"),
+                                 gsub(";   EXTRA", "", MEDS_OVERLAP), MEDS_OVERLAP)) %>%
+    mutate(OVERLAPPING_GROUP = ifelse(str_detect(OVERLAPPING_GROUP, "\\);   EXTRA"),
+                                      gsub(";   EXTRA", "", OVERLAPPING_GROUP), OVERLAPPING_GROUP)) %>%
+    mutate(MEDS_OVERLAP = gsub("NA EXTRA", NA, MEDS_OVERLAP),
+           MEDS_OVERLAP = gsub(" EXTRA", "", MEDS_OVERLAP)) %>%
+    mutate(OVERLAPPING_GROUP = gsub("NA EXTRA", NA, OVERLAPPING_GROUP),
+           OVERLAPPING_GROUP = gsub(" EXTRA", "", OVERLAPPING_GROUP))
 
   # fix column names
    table <- fix_col_names(table)
