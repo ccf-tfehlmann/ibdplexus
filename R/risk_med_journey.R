@@ -814,7 +814,7 @@ risk_med_journey <- function(prescriptions, encounter) {
 
   table <- table %>%
     mutate(
-      OVERLAPPING_GROUP = gsub("Adalimumab|Certolizumab Pegol", "Biologic (anti-a4 integrin)", MEDS_OVERLAP),
+      OVERLAPPING_GROUP = gsub("Adalimumab|Certolizumab Pegol", "Biologic (anti-TNF)", MEDS_OVERLAP),
       OVERLAPPING_GROUP = gsub("Natalizumab", "Biologic (anti-TNF)", OVERLAPPING_GROUP),
       # OVERLAPPING_GROUP = gsub("[()]", "", OVERLAPPING_GROUP),
       OVERLAPPING_GROUP = gsub("Infliximab", "Biologic (anti-TNF)", OVERLAPPING_GROUP),
@@ -925,9 +925,9 @@ risk_med_journey <- function(prescriptions, encounter) {
   table <- table %>%
     mutate(MEDS_OVERLAP = paste0(MEDS_OVERLAP, " EXTRA")) %>%
     mutate(OVERLAPPING_GROUP = paste0(OVERLAPPING_GROUP, " EXTRA")) %>%
-    mutate(MEDS_OVERLAP = ifelse(str_detect(MEDS_OVERLAP, "Infliximab;   EXTRA"),
+    mutate(MEDS_OVERLAP = ifelse(str_detect(MEDS_OVERLAP, ";   EXTRA"),
                                  gsub(";   EXTRA", "", MEDS_OVERLAP), MEDS_OVERLAP)) %>%
-    mutate(OVERLAPPING_GROUP = ifelse(str_detect(OVERLAPPING_GROUP, "\\);   EXTRA"),
+    mutate(OVERLAPPING_GROUP = ifelse(str_detect(OVERLAPPING_GROUP, ";   EXTRA"),
                                       gsub(";   EXTRA", "", OVERLAPPING_GROUP), OVERLAPPING_GROUP)) %>%
     mutate(MEDS_OVERLAP = gsub("NA EXTRA", NA, MEDS_OVERLAP),
            MEDS_OVERLAP = gsub(" EXTRA", "", MEDS_OVERLAP)) %>%
