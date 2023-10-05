@@ -10,6 +10,7 @@
 #'
 
 overlapping_meds <- function(table) {
+
   all_meds <- table %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME,
@@ -302,9 +303,9 @@ overlapping_meds <- function(table) {
         "Methotrexate"
       ) ~ "Immunomodulators",
       MEDICATION_NAME %in% c(
-        "Adalimumab", "Certolizumab Pegol", "Infliximab (Unspecified)",
-        "Natalizumab"
-      ) ~ "Biologic"
+        "Adalimumab", "Certolizumab Pegol", "Infliximab"
+      ) ~ "Biologic (anti-TNF)",
+      MEDICATION_NAME %in% c("Natalizumab") ~ "Biologic (anti-a4 integrin)"
     )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NAME, MED_START_DATE, MED_END_DATE) %>%
     summarise(meds = paste(med, collapse = "; ")) %>%
