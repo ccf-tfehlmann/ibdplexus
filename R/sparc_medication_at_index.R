@@ -150,8 +150,9 @@ sparc_medication <- function(data,
       pivot_wider(
         id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"),
         names_from = MEDICATION,
-        values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION)
-      )
+        values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION_ECRF)
+      ) %>%
+      ungroup()
 
 
     cohort <- cohort %>% left_join(med_dates)
