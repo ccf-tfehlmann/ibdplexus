@@ -1038,167 +1038,23 @@ sparc_summary <- function(data,
 
   # SCORES ----
 
+  all_scores_allcol <- sparc_scores(data, index_info, index_range, export = F)
 
-  # scdai
-  scdai <- calculate_scdai(data$observations) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(SCDAI_DATE - index_date)) %>%
-    filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
-    drop_na(SCDAI_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(SCDAI_SOURCE), desc(SCDAI_SCORE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(-datediff)
-
-
-  cohort <- cohort %>% left_join(scdai)
-
-
-  # pro2
-  pro2 <- calculate_pro2(data$observations) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(PRO2_DATE - index_date)) %>%
-    filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
-    drop_na(PRO2_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(PRO2_SOURCE), desc(PRO2_SCORE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, LIQUID_BM, starts_with("PRO2"))
-
-  cohort <- cohort %>% left_join(pro2)
-
-  # pr03
-
-  pro3 <- calculate_pro3(data$observations) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(PRO3_DATE - index_date)) %>%
-    filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
-    drop_na(PRO3_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(PRO3_SOURCE), desc(PRO3_SCORE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("PRO3"))
-
-  cohort <- cohort %>% left_join(pro3)
-
-
-  # 6pt mayo
-
-  mayo <- calculate_mayo(data$observations) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(MAYO_DATE - index_date)) %>%
-    filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
-    drop_na(MAYO_6_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(MAYO_SOURCE), desc(MAYO_6_SCORE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(-datediff)
-
-  cohort <- cohort %>% left_join(mayo)
-
-  # pga
-
-
-
-  pga <- calculate_pga(data$observations) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(PGA_DATE - index_date)) %>%
-    filter(datediff <= t) %>%
-    drop_na(PGA) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(PGA_SOURCE), desc(PGA)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(-datediff)
-
-  cohort <- cohort %>% left_join(pga)
-
-
-  # CALCULATE DISEASE ACTIVITY  ----
-
+  all_scores <- all_scores_allcol %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, ABDOMINAL_PAIN_SCORE, DAILY_BM, DAILY_BM_VERSION,
+           GENERAL_WELL_BEING_SCORE, SCDAI_DATE, SCDAI_SCORE, SCDAI_SOURCE, SCDAI_CATEGORY,
+           LIQUID_BM, PRO2_CATEGORY, PRO2_DATE, PRO2_SCORE,
+           PRO2_SOURCE, PRO3_CATEGORY, PRO3_DATE, PRO3_SCORE, PRO3_SOURCE, GLOBAL_ASSESSMENT_SCORE,
+           RECTAL_BLEEDING_SCORE, STOOL_FREQ_SCORE, MAYO_6_SCORE, MAYO_9_SCORE, MAYO_DATE,
+           MAYO_SOURCE, MAYO6_CATEGORY, PGA, PGA_DATE, PGA_SOURCE, paste0("DISEASE_ACTIVITY_", index_range), SES_SCORE,
+           ENDO_DATE, SES_SUBSCORE_ILEUM, SES_SUBSCORE_LEFT_COLON, SES_SUBSCORE_RECTUM, SES_SUBSCORE_RIGHT_COLON,
+           SES_SUBSCORE_TRANSVERSE_COLON, ENDO_CATEGORY, MAX_EXTENT_ACTIVE_DISEASE,
+           MAYO_ENDOSCOPY_SCORE, MODIFIED_MAYO_SCORE, EXTENDED_MODIFIED_MAYO_SCORE, MODIFIED_MAYO_ENDOSCOPIC_SCORE,
+           RECTUM, SIGMOID_COLON, RIGHT_COLON, DESCENDING_COLON, TRANSVERSE_COLON, paste0("ENDOSCOPY_", index_range)) %>%
+    rename(index_date = INDEX_DATE)
 
   cohort <- cohort %>%
-    mutate(DISEASE_ACTIVITY = case_when(
-      DIAGNOSIS == "Crohn's Disease" ~ SCDAI_CATEGORY,
-      DIAGNOSIS == "Ulcerative Colitis" ~ MAYO6_CATEGORY,
-      TRUE ~ as.character(NA)
-    )) %>%
-    mutate(DISEASE_ACTIVITY = case_when(
-      is.na(DISEASE_ACTIVITY) & PGA == "Quiescent" ~ "Remission",
-      is.na(DISEASE_ACTIVITY) & PGA != "Quiescent" ~ PGA,
-      TRUE ~ DISEASE_ACTIVITY
-    )) %>%
-    rename(!!paste("DISEASE_ACTIVITY", t, sep = "_") := DISEASE_ACTIVITY)
-
-
-
-  # ENDOSCOPY SCORES WITHIN t of INDEX DATE ----
-
-  # SES CD
-
-
-  ses <- calculate_ses(data$procedures) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(SCORE_DATE - index_date)) %>%
-    filter(DIAGNOSIS == "Crohn's Disease" & datediff <= t) %>%
-    drop_na(SES_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(SES_SCORE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(-datediff) %>%
-    rename(
-      ENDO_DATE = SCORE_DATE,
-      ENDO_CATEGORY = SES_CATEGORY
-    )
-
-
-
-
-
-  # Mayo Endocscopy Score - source: https://academic.oup.com/ecco-jcc/article/9/10/846/425061
-
-  mes <- calculate_mes(data$procedures) %>%
-    left_join(cohort_index_info) %>%
-    mutate(datediff = abs(SCORE_DATE - index_date)) %>%
-    filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
-    drop_na(MAYO_ENDOSCOPY_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(MAYO_ENDOSCOPY_SCORE)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
-    filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
-    distinct() %>%
-    ungroup() %>%
-    select(-datediff) %>%
-    rename(
-      ENDO_DATE = SCORE_DATE,
-      ENDO_CATEGORY = MES_CATGORY
-    )
-
-  es <- bind_rows(ses, mes) %>%
-    distinct() %>%
-    mutate(ENDOSCOPY = 1) %>%
-    rename(!!paste("ENDOSCOPY", t, sep = "_") := ENDOSCOPY)
-
-  cohort <- left_join(cohort, es)
-
-
+    left_join(all_scores, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, index_date))
 
   # BIOSAMPLES WITHIN t of index date ----
 

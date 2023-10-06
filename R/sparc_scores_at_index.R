@@ -19,7 +19,8 @@ sparc_scores <- function(data,
                          index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
                          filename = "SPARC_SCORES.xlsx",
                          index_range = "30",
-                         location_logic = "CCF") {
+                         location_logic = "CCF",
+                         export = T) {
   if ("character" %in% class(index_info)) {
     index_info <- toupper(index_info)
   } else {
@@ -624,6 +625,10 @@ sparc_scores <- function(data,
 
   cohort <- fix_col_names(cohort)
 
+ # create xlsx if export == T (default)
+
+  if (export == T)  {
+
 
   # ===============================
   # CREATE HEADER STYLES
@@ -656,5 +661,9 @@ sparc_scores <- function(data,
   # SAVE REPORT
   # ===============================
   saveWorkbook(wb, file = paste0(filename), overwrite = TRUE)
+
   return(cohort)
+  } else {
+    return(cohort)
+  }
 }

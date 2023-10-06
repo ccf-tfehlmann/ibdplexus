@@ -9,7 +9,8 @@ sparc_scores(
   index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
   filename = "SPARC_SCORES.xlsx",
   index_range = "30",
-  location_logic = "CCF"
+  location_logic = "CCF",
+  export = T
 )
 }
 \arguments{
