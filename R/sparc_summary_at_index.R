@@ -1038,12 +1038,13 @@ sparc_summary <- function(data,
 
   # SCORES ----
 
-  all_scores_allcol <- sparc_scores(data, index_info, index_range, export = F)
+  all_scores_allcol <- sparc_scores(data, index_info, index_range = t, export = F)
 
   all_scores <- all_scores_allcol %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, ABDOMINAL_PAIN_SCORE, DAILY_BM, DAILY_BM_VERSION,
            GENERAL_WELL_BEING_SCORE, SCDAI_DATE, SCDAI_SCORE, SCDAI_SOURCE, SCDAI_CATEGORY,
-           LIQUID_BM, PRO2_CATEGORY, PRO2_DATE, PRO2_SCORE,
+           # LIQUID_BM,
+           PRO2_CATEGORY, PRO2_DATE, PRO2_SCORE,
            PRO2_SOURCE, PRO3_CATEGORY, PRO3_DATE, PRO3_SCORE, PRO3_SOURCE, GLOBAL_ASSESSMENT_SCORE,
            RECTAL_BLEEDING_SCORE, STOOL_FREQ_SCORE, MAYO_6_SCORE, MAYO_9_SCORE, MAYO_DATE,
            MAYO_SOURCE, MAYO6_CATEGORY, PGA, PGA_DATE, PGA_SOURCE, paste0("DISEASE_ACTIVITY_", index_range), SES_SCORE,
