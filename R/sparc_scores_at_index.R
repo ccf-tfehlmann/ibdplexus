@@ -603,9 +603,9 @@ sparc_scores <- function(data,
 
 
   if ("OMICS" %in% index_info) {
-    cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
+    cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))
   } else if ("BIOSAMPLE" %in% index_info) {
-    cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
+    cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))
   } else {
     cohort <- cohort
   }
