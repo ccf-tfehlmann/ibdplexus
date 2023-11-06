@@ -77,10 +77,11 @@ sparc_med_ends <- function(medication) {
     )
 
   # Combine for eCRF and EMR  ----
+  # Pick latest end date
 
   med_end <- full_join(end_ecrf, end_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_END_DATE_EMR, MED_DISCONT_START_DATE_EMR, MED_END_DATE_ECRF) %>%
     rowwise() %>%
-    mutate(MED_END_DATE = min(c_across(MED_END_DATE_EMR:MED_END_DATE_ECRF), na.rm = T)) %>%
+    mutate(MED_END_DATE = max(c_across(MED_END_DATE_EMR:MED_END_DATE_ECRF), na.rm = T)) %>%
     ungroup()
 }
