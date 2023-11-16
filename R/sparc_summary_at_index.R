@@ -1038,7 +1038,8 @@ sparc_summary <- function(data,
 
   # SCORES ----
 
-  all_scores_allcol <- sparc_scores(data, index_info, index_range = t, export = F)
+  all_scores_allcol <- sparc_scores(data, index_info, index_range = t, export = F) %>%
+    distinct()
 
   all_scores <- all_scores_allcol %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, ABDOMINAL_PAIN_SCORE, DAILY_BM, DAILY_BM_VERSION,
