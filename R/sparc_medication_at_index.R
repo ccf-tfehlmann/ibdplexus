@@ -242,7 +242,8 @@ sparc_medication <- function(data,
     pull(x_x)
 
   #rearrange colnames by this logic
-  final_cohort <- final_cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID:MEDICATION_AT_INDEX, any_of(col_names_order), everything())
+  final_cohort <- final_cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, MEDICATION_AT_INDEX, any_of(col_names_order), everything()) %>%
+    select(-c(DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, BIRTH_YEAR, SEX, DIAGNOSIS_DATE))
 
 
 
