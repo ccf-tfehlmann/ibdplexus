@@ -34,13 +34,13 @@ sparc_summary <- function(data,
 
   # DEMOGRAPHIC INFORMATION ----
 
-  demo <- extract_demo(data$demographics, "SPARC")
+  demo <-  extract_demo(data$demographics, "SPARC")
 
 
   #  DIAGNOSIS & DIAGNOSIS_DATE ----
 
 
-  dx <- extract_diagnosis(data$diagnosis, data$encounter, data$demographics, "SPARC")
+  dx <-  extract_diagnosis(data$diagnosis, data$encounter, data$demographics, "SPARC")
 
 
 
@@ -1052,7 +1052,8 @@ sparc_summary <- function(data,
            SES_SUBSCORE_TRANSVERSE_COLON, ENDO_CATEGORY, MAX_EXTENT_ACTIVE_DISEASE,
            MAYO_ENDOSCOPY_SCORE, MODIFIED_MAYO_SCORE, EXTENDED_MODIFIED_MAYO_SCORE, MODIFIED_MAYO_ENDOSCOPIC_SCORE,
            RECTUM, SIGMOID_COLON, RIGHT_COLON, DESCENDING_COLON, TRANSVERSE_COLON, paste0("ENDOSCOPY_", index_range)) %>%
-    rename(index_date = INDEX_DATE)
+    rename(index_date = INDEX_DATE) %>%
+    distinct()
 
   cohort <- cohort %>%
     left_join(all_scores, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, index_date))
@@ -1209,12 +1210,12 @@ sparc_summary <- function(data,
     left_join(disease_location)
 
   # CREATE BIOSAMPLE FLAGS TABLE
-
+  if ("BIOSAMPLE" %in% index_info) {
   biosample_flags <- sparc_biosample_flags(data, index_range) %>%
     ungroup() # %>%
     # select(-index_date) %>%
     # select(-SAMPLE_DATE_COLLECTED)
-
+}
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
 
 
