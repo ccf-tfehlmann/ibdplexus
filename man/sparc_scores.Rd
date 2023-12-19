@@ -23,6 +23,8 @@ sparc_scores(
 \item{index_range}{the number of days to look out from index date. If multiple of the same score fall within this range then the one closest to the index date is picked. Default is 30 days.}
 
 \item{location_logic}{specify which CD location function to use. If using logic developed by AZ then use location_logic = "AZ".}
+
+\item{export}{if TRUE then writes the data frame to its own excel file}
 }
 \value{
 A dataframe with scores at that date and an excel spreadsheet.

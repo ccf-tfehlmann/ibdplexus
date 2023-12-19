@@ -7,6 +7,7 @@
 #' @param filename the name of the output file. Must be .xlsx.
 #' @param index_range the number of days to look out from index date. If multiple of the same score fall within this range then the one closest to the index date is picked. Default is 30 days.
 #' @param location_logic specify which CD location function to use. If using logic developed by AZ then use location_logic = "AZ".
+#' @param export if TRUE then writes the data frame to its own excel file
 #'
 #' @return A dataframe with scores at that date and an excel spreadsheet.
 #'
@@ -21,6 +22,7 @@ sparc_scores <- function(data,
                          index_range = "30",
                          location_logic = "CCF",
                          export = T) {
+
   if ("character" %in% class(index_info)) {
     index_info <- toupper(index_info)
   } else {
