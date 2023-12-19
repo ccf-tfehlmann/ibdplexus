@@ -158,42 +158,9 @@ if("biologic" %in% med_groups){
 
   # Add last medication verification date ----
 
-  if(0){
-  verified <- medication %>%
-    drop_na(LAST_MEDICATION_VERIFICATION_DATE__C) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,new_med_name, LAST_MEDICATION_VERIFICATION_DATE__C) %>%
-    mutate(LAST_MEDICATION_VERIFICATION_DATE = dmy(LAST_MEDICATION_VERIFICATION_DATE__C)) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, new_med_name) %>%
-    slice(which.max(LAST_MEDICATION_VERIFICATION_DATE)) %>%
-    ungroup() %>%
-    rename(MEDICATION = new_med_name) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,MEDICATION, LAST_MEDICATION_VERIFICATION_DATE)
+  verify <- med_verification(medication)
 
-  # if med is verified use eCRF data
-
-  med <- med %>% left_join(verified,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
-    mutate(MED_START_DATE = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE), MED_START_DATE_ECRF, MED_START_DATE),
-           MED_END_DATE = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE), MED_END_DATE_ECRF, MED_END_DATE),
-           ) %>%
-    mutate(
-      MED_START_SOURCE = case_when(
-        MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE != MED_START_DATE_EMR ~ "ECRF",
-        MED_START_DATE != MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "EMR",
-        MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE == MED_START_DATE_EMR ~ "BOTH",
-        MED_START_DATE == MED_START_DATE_ECRF & is.na(MED_START_DATE_EMR) ~ "ECRF",
-        MED_START_DATE == MED_START_DATE_EMR & is.na(MED_START_DATE_ECRF) ~ "EMR",
-        TRUE ~ NA_character_
-      ),
-      MED_END_SOURCE = case_when(
-        MED_END_DATE == MED_END_DATE_ECRF & (MED_END_DATE != MED_END_DATE_EMR & MED_END_DATE != MED_DISCONT_START_DATE_EMR) ~ "ECRF",
-        MED_END_DATE != MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "EMR",
-        MED_END_DATE == MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) ~ "BOTH",
-        MED_END_DATE == MED_END_DATE_ECRF & (is.na(MED_END_DATE_EMR) & is.na(MED_DISCONT_START_DATE_EMR)) ~ "ECRF",
-        (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) & is.na(MED_END_DATE_ECRF) ~ "EMR",
-        TRUE ~ NA_character_
-      )
-    )
-}
+  med <- med %>% left_join(verify)
 
   # Flag if on Steroids at the Same time ----
 
@@ -307,6 +274,9 @@ if("biologic" %in% med_groups){
     left_join(bionaive) # %>%
   # rename(ECRF_PRESCRIPTION_DATA = ECRF_DATA)
 
+
+  med <- med %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION_NUMBER)
 
   # names(med) <- gsub(" ", "_", toupper(names(med)))
 

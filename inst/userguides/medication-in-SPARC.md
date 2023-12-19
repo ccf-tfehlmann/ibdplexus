@@ -1,6 +1,3 @@
-Medication Data in SPARC IBD
-================
-
 A Study of a Prospective Adult Research Cohort with Inflammatory Bowel
 Disease (SPARC IBD) is a longitudinal study following adult IBD patients
 as they receive care at 17 different sites across the United States. To
@@ -30,92 +27,209 @@ This vignette mainly focuses on the medication data from eCRF and EMR.
 of interest that are listed in the data.frame `med_grp`.
 
 `med grp` contains the medication name of interest, the type of
-medication and a standardized name. The MEDICATION_NAME column includes
-generic and brand names. the new_med_name column is the standardized
-name for each MEDICATION_NAME.
+medication and a standardized name. The MEDICATION\_NAME column includes
+generic and brand names. the new\_med\_name column is the standardized
+name for each MEDICATION\_NAME.
 
 Biosimilars are now in their own groups.
 
-``` r
-library(ibdplexus, quietly = T)
-library(tidyr, quietly = T)
-library(dplyr, quietly = T)
-library(lubridate, quietly = T)
+    library(ibdplexus, quietly = T)
+    library(tidyr, quietly = T)
+    library(dplyr, quietly = T)
+    library(lubridate, quietly = T)
 
-# Here is the table of the medication types in med_grp
-knitr::kable(med_grp %>% distinct(med_type))
-```
+    # Here is the table of the medication types in med_grp
+    knitr::kable(med_grp %>% distinct(med_type))
 
-| med_type                           |
-|:-----------------------------------|
-| biologic                           |
-| antibiotics                        |
-| immunomodulators                   |
-| aminosalicylates                   |
-| corticosteroids                    |
-| antidiarrheals                     |
-| other                              |
-| targeted synthetic small molecules |
-| probiotic                          |
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">med_type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">biologic</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">antibiotics</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">immunomodulators</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">aminosalicylates</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">corticosteroids</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">antidiarrheals</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">other</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">targeted synthetic small molecules</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">probiotic</td>
+</tr>
+</tbody>
+</table>
 
-``` r
 
-# Here is the first 5 rows of the med_grp data.frame
+    # Here is the first 5 rows of the med_grp data.frame
 
-knitr::kable(head(med_grp, 5))
-```
+    knitr::kable(head(med_grp, 5))
 
-| MEDICATION_NAME | med_type | new_med_name         |
-|:----------------|:---------|:---------------------|
-| Cyltezo         | biologic | Adalimumab (Cyltezo) |
-| adalimumab-adbm | biologic | Adalimumab (Cyltezo) |
-| Adalimumab-bwwd | biologic | Adalimumab (HADLIMA) |
-| HADLIMA         | biologic | Adalimumab (HADLIMA) |
-| Adalimumab      | biologic | Adalimumab (Humira)  |
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">MEDICATION_NAME</th>
+<th style="text-align: left;">med_type</th>
+<th style="text-align: left;">new_med_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Cyltezo</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Adalimumab (Cyltezo)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">adalimumab-adbm</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Adalimumab (Cyltezo)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Adalimumab-bwwd</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Adalimumab (HADLIMA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HADLIMA</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Adalimumab (HADLIMA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Adalimumab</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Adalimumab (Humira)</td>
+</tr>
+</tbody>
+</table>
 
-``` r
 
-# Here is how Infliximab and its' bio-similars are mapped
+    # Here is how Infliximab and its' bio-similars are mapped
 
-knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = T)))
-```
+    knitr::kable(med_grp %>% filter(grepl("Infliximab", new_med_name, ignore.case = T)))
 
-| MEDICATION_NAME             | med_type | new_med_name             |
-|:----------------------------|:---------|:-------------------------|
-| Infliximab-axxq (Avsola)    | biologic | Infliximab (Avsola)      |
-| Avsola                      | biologic | Infliximab (Avsola)      |
-| Infliximab-axxq             | biologic | Infliximab (Avsola)      |
-| Infliximab-dyyb (Inflectra) | biologic | Infliximab (Inflectra)   |
-| Inflectra                   | biologic | Infliximab (Inflectra)   |
-| Infliximab-dyyb             | biologic | Infliximab (Inflectra)   |
-| Remicade                    | biologic | Infliximab (Remicade)    |
-| Infliximab                  | biologic | Infliximab (Remicade)    |
-| Infliximab (Remicade)       | biologic | Infliximab (Remicade)    |
-| Infliximab (Remsima)        | biologic | Infliximab (Remsima)     |
-| Remsima                     | biologic | Infliximab (Remsima)     |
-| Infliximab-abda (Renflexis) | biologic | Infliximab (Renflexis)   |
-| Renflexis                   | biologic | Infliximab (Renflexis)   |
-| Infliximab-abda             | biologic | Infliximab (Renflexis)   |
-| Infliximab (Unspecified)    | biologic | Infliximab (Unspecified) |
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">MEDICATION_NAME</th>
+<th style="text-align: left;">med_type</th>
+<th style="text-align: left;">new_med_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Infliximab-axxq (Avsola)</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Avsola)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Avsola</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Avsola)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Infliximab-axxq</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Avsola)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infliximab-dyyb (Inflectra)</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Inflectra)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Inflectra</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Inflectra)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infliximab-dyyb</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Inflectra)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Remicade</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Remicade)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infliximab</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Remicade)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Infliximab (Remicade)</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Remicade)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infliximab (Remsima)</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Remsima)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Remsima</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Remsima)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infliximab-abda (Renflexis)</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Renflexis)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Renflexis</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Renflexis)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infliximab-abda</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Renflexis)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Infliximab (Unspecified)</td>
+<td style="text-align: left;">biologic</td>
+<td style="text-align: left;">Infliximab (Unspecified)</td>
+</tr>
+</tbody>
+</table>
 
-To see the entire med_grp data.frame click
+To see the entire med\_grp data.frame click
 <a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/data/med_grp.rda">`here`</a>
 
 `sparc_med_filter` requires the following SPARC domains to be loaded:
 
-- prescriptions
+-   prescriptions
 
-- observations
+-   observations
 
-- demographics
+-   demographics
 
-- encounter
+-   encounter
 
-One must also supply the med_groups of interest which corresponds to the
-med_type in the med_grp data.frame.
+One must also supply the med\_groups of interest which corresponds to
+the med\_type in the med\_grp data.frame.
 
 `sparc med filter` subsets the prescriptions table to just the
-medication types specified in med_groups. The leading question on
+medication types specified in med\_groups. The leading question on
 medications is located in the observations table.
 
 In the baseline survey, a patient is asked if they are currently taking
@@ -130,26 +244,24 @@ not had any medication changes, the data from the previous survey is
 pulled forward.
 
 `sparc med filter` uses grep to search through the MEDICATION,
-OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns in the
+OTHER\_MEDICATION and SRC\_DRUG\_CODE\_CONCEPT\_NAME columns in the
 prescription table. If the medication of interest is found, it subsets
 the data and maps the medication to the standardized name
-(new_med_name).
+(new\_med\_name).
 
-``` r
-# Load EMR and eCRF data necessary for sparc_med_filter
+    # Load EMR and eCRF data necessary for sparc_med_filter
 
-data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("prescriptions", "observations", "demographics", "encounter"), data_type = "Both")
+    data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("prescriptions", "observations", "demographics", "encounter"), data_type = "Both")
 
-# Filter SPARC IBD data for biologics & immunomodulators
+    # Filter SPARC IBD data for biologics & immunomodulators
 
-meds_of_interest <- sparc_med_filter(
-  data$prescriptions,
-  data$observations,
-  data$demographics,
-  data$encounter,
-  med_groups = c("Biologic", "Immunomodulators")
-)
-```
+    meds_of_interest <- sparc_med_filter(
+      data$prescriptions,
+      data$observations,
+      data$demographics,
+      data$encounter,
+      med_groups = c("Biologic", "Immunomodulators")
+    )
 
 # Finding the First Instance of a Medication
 
@@ -171,15 +283,15 @@ dropped.
 
 For EMR data, if a medication start date is missing, the visit encounter
 start date is used. These records are flagged in the column
-VISIT_ENCOUNTER_MED_START.
+VISIT\_ENCOUNTER\_MED\_START.
 
 If a patient has medication information for the same drug from eCRF and
-EMR, the earliest MED_START_DATE is used and the latest MED_END_DATE. If
-the visit encounter start date is used as a proxy medication start date
-for the EMR data and eCRF medication information is available, then the
-eCRF start date is used for the MED_START_DATE. The columns
-MED_START_SOURCE and MED_END_SOURCE tell the data source of the
-respective date. I
+EMR, the earliest MED\_START\_DATE is used and the latest
+MED\_END\_DATE. If the visit encounter start date is used as a proxy
+medication start date for the EMR data and eCRF medication information
+is available, then the eCRF start date is used for the MED\_START\_DATE.
+The columns MED\_START\_SOURCE and MED\_END\_SOURCE tell the data source
+of the respective date. I
 
 Any overlap between medications is reported along with the number of
 days the medications overlap.
@@ -235,29 +347,34 @@ field is free text and the r script only parses out numbers.</td>
 <td>Flags if there is a decrease in frequency of a medication.</td>
 </tr>
 <tr class="odd">
+<td>LAST_MEDICATION_VERIFICATION_DATE</td>
+<td>The most recent date a medication’s information was verified to be
+true at time of endoscopy. This feature was added in Nov 2022.</td>
+</tr>
+<tr class="even">
 <td>REASON_STOPPED</td>
 <td>Lists the reason stopped if available. A medication may be current,
 but have a reason stopped populated because of a dose and/or frequency
 change.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>VISIT_ENCOUNTER_MED_START</td>
 <td>For EMR data, flags if a medication start date is missing and the
 visit encounter start date was used instead</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MED_START_DATE_EMR</td>
 <td>Medication Start Date from the EMR data source</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MED_END_DATE_EMR</td>
 <td>Medication End Date from the EMR data source</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MED_DISCONT_START_DATE_EMR</td>
 <td>Medication discontinue date from the EMR data source</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>LOADING_DOSE_EMR</td>
 <td><p>1 if a patients prescription pattern for specific biologics
 represents the loading pattern of that medication.</p>
@@ -298,146 +415,146 @@ weeks</td>
 </tbody>
 </table></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>PRESCRIPTION_NUMBER_EMR</td>
 <td>Number of rows for this medication in the prescription emr data</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MEDICATION_REFILLS_EMR</td>
 <td>Number of refills from most recent prescription in the EMR data</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ECRF_PRESCRIPTION_DATA</td>
 <td>1 if data for this medication is available in the eCRF data
 source</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MED_START_DATE</td>
 <td>The earliest date of MED_START_DATE_ECRF and MED_END_DATE_EMR</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MED_END_DATE</td>
 <td>The latest date of MED_END_DATE_ECRF and MED_END_DATE_EMR</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MED_START_SOURCE</td>
 <td>The data source where the MED_START_DATE is coming from. If EMR
 &amp; eCRF have the same date, then it is “Both”</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MED_END_SOURCE</td>
 <td>The data source where the MED_END_DATE is coming from. If EMR &amp;
 eCRF have the same date, then it is “Both”</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MOA</td>
 <td>The mechanism of action for each medication. Includes, antiTNF,
 Aminosalicylates, Immunomodulators, Interleukin-12 and -23 Antagonist,
 JAKi, Integrin Receptor Antagonists, S1P</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MEDICATION_NUMBER</td>
 <td>counts the number of different medications in a patients’ journey.
 Only medications in the selected med_groups are considered. The
 medication with with earliest start date will have MEDICATION_NUMBER =
 1.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>OVERLAPPING_MOA</td>
 <td>If multiple medications overlap, the overlapping MOA is listed
 here</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>OVERLAPPING_DAYS</td>
 <td>The number of days the medication overlaps with another MOA</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>DATE_OF_CONSENT</td>
 <td>The date of enrollment into SPARC for the patient</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>DATE_OF_CONSENT_WITHDRAWN</td>
 <td>The date of withdrawal from SPARC, if applicable</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>STARTED_AFTER_ENROLLMENT</td>
 <td>is 1 if the medication start date is after the date of consent.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT</td>
 <td>1 if a patient indicates “No” to “Are you currently on any IBD
 medications?” at their baseline survey.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>ADVANCED_MED</td>
 <td>is 1 if the record is for an advanced medication including
 Adalimumab, Certolizumab Pegol, Golimumab, Infliximab, Natalizumab,
 Other Biologic, Ustekinumab, Vedolizumab, Tofacitinib, Upadacitinib,
 Ozanimod, or Risankizumab. Biosimilars are included.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>FIRST_ADVANCED_MED</td>
 <td>is 1 if a medication record is the first advanced medication a
 patient receives.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>FIRST_ADVANCED_MED_NUMBER</td>
 <td> If a record is the first advanced medication a patient receives,
 FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>BIONAIVE</td>
 <td>is 1 if patient has no prior reported advanced medication use</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>PREDNISONE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>BUDESONIDE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>STEROIDS_ORAL_ECRF</td>
 <td>Flag 1 if a patient has a report of Steroids Oral on the eCRF that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>METHYLPREDNISOLONE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>PREDNISOLONE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>STEROID_FOAM</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>STEROID_ENEMA</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>STEROID_SUPPOSITORY</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>ANY_STEROID</td>
 <td>1 if any of the steroid flags are 1.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>RECTAL_STEROID</td>
 <td>1 if steroid foam, steroid enema or steroid suppository is 1</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>ORAL_IV_STEROID</td>
 <td>1 if prednisone, budesonide, steroids_oral_ecrf, methylprednisolone,
 or prednisolone are 1</td>
@@ -445,19 +562,17 @@ or prednisolone are 1</td>
 </tbody>
 </table>
 
-``` r
-# Find Medication Start Dates for Biologics and Immunomodulators.
-# If export = TRUE then an excel spreadsheet is generated.
+    # Find Medication Start Dates for Biologics and Immunomodulators.
+    # If export = TRUE then an excel spreadsheet is generated.
 
-medication_starts <- sparc_med_journey(
-  data$prescriptions,
-  data$observations,
-  data$demographics,
-  data$encounter,
-  med_groups = c("Biologic", "Immunomodulators"),
-  export = TRUE
-)
-```
+    medication_starts <- sparc_med_journey(
+      data$prescriptions,
+      data$observations,
+      data$demographics,
+      data$encounter,
+      med_groups = c("Biologic", "Immunomodulators"),
+      export = TRUE
+    )
 
 # Medication at a Specific Time-point
 
@@ -469,13 +584,14 @@ and stop dates as generated by the `sparc_med_journey` function.
 
 `sparc_medication` includes pre-programmed index dates for enrollment,
 latest, endoscopy, omics and biosample collection. A data frame with the
-DEIDENTIFIED_MASTER_PATIENT_ID and index_date can also be passed into
-the function. If two medications of the same MOA overlap, the start of
-the 2nd medication is used as the end date of the previous medication.
+DEIDENTIFIED\_MASTER\_PATIENT\_ID and index\_date can also be passed
+into the function. If two medications of the same MOA overlap, the start
+of the 2nd medication is used as the end date of the previous
+medication.
 
 `sparc_medication` also requires a list of data.frames as generated by
 `load_data` which must include demographics, diagnosis, encounter,
-procedures, observations, biosample, omics_patient_mapping, and
+procedures, observations, biosample, omics\_patient\_mapping, and
 prescriptions.
 
 Currently, this function does not support antibiotic use. Functions to
@@ -483,57 +599,149 @@ parse out this information are in development.
 
 A data.frame and excel file is generated with the following columns:
 
-|                                         |                                                                                                                                   |
-|-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| **Column**                              | **Description**                                                                                                                   |
-| DEIDENTIFIED_MASTER_PATIENT_ID          | Unique patient id                                                                                                                 |
-| DATE_OF_CONSENT                         | The date of enrollment into SPARC for the patient                                                                                 |
-| DATE_OF_CONSENT_WITHDRAWN               | The date of withdrawal from SPARC, if applicable                                                                                  |
-| BIRTH_YEAR                              | Year of patients birth                                                                                                            |
-| SEX                                     | Male, Female or Unknown                                                                                                           |
-| DIAGNOSIS                               | Crohn’s Disease, Ulcerative Colitis, or IBD Unclassified                                                                          |
-| DIAGNOSIS_DATE                          | Date of IBD Diagnosis                                                                                                             |
-| INDEX_DATE                              | Date of interest as specified in “index_info”                                                                                     |
-| NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT | 1 if a patient indicates “No” to “Are you currently on any IBD medications?” at their baseline survey.                            |
-| MEDICATION_AT_INDEX                     | A concatenated list of medications the patient is on based on if the index date falls between the medication start and stop date. |
-| BIONAIVE                                | is 1 if patient has no prior reported biologic use                                                                                |
-| MED_START_DATE_ECRF_XXX                 | The start date in the ECRF for medication XXX                                                                                     |
-| MED_END_DATE_ECRF_XXX                   | The end date in the ECRF for medication XXX                                                                                       |
-| MED_START_DATE_EMR_XXX                  | The start date in the EMR for medication XXX                                                                                      |
-| MED_END_DATE_EMR_XXX                    | The end date in the EMR for medication XXX                                                                                        |
-| CURRENT_MEDICATION_ECRF_XXX             | The current medication flag (yes/no) from eCRF for medication XXX                                                                 |
-| PREDNISONE                              | Flag if patient on listed steroid at index date.                                                                                  |
-| BUDESONIDE                              | Flag if patient on listed steroid at index date.                                                                                  |
-| STEROIDS_ORAL_ECRF                      | Flag if patient on listed steroid at index date.                                                                                  |
-| METHYLPREDNISOLONE                      | Flag if patient on listed steroid at index date.                                                                                  |
-| PREDNISOLONE                            | Flag if patient on listed steroid at index date.                                                                                  |
-| STEROID_FOAM                            | Flag if patient on listed steroid at index date.                                                                                  |
-| STEROID_ENEMA                           | Flag if patient on listed steroid at index date.                                                                                  |
-| STEROID_SUPPOSITORY                     | Flag if patient on listed steroid at index date.                                                                                  |
-| ANY_STEROID                             | Flag if patient on any of the steroids at index date.                                                                             |
-| RECTAL_STEROID                          | Flag is patient on steroid foam, steroid enema, or steroid suppository at index date.                                             |
-| ORAL_IV_STEROID                         | Flag if patient on oral or IV steroid at the index date.                                                                          |
+<table>
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 75%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><strong>Column</strong></td>
+<td><strong>Description</strong></td>
+</tr>
+<tr class="even">
+<td>DEIDENTIFIED_MASTER_PATIENT_ID</td>
+<td>Unique patient id</td>
+</tr>
+<tr class="odd">
+<td>DATE_OF_CONSENT</td>
+<td>The date of enrollment into SPARC for the patient</td>
+</tr>
+<tr class="even">
+<td>DATE_OF_CONSENT_WITHDRAWN</td>
+<td>The date of withdrawal from SPARC, if applicable</td>
+</tr>
+<tr class="odd">
+<td>BIRTH_YEAR</td>
+<td>Year of patients birth</td>
+</tr>
+<tr class="even">
+<td>SEX</td>
+<td>Male, Female or Unknown</td>
+</tr>
+<tr class="odd">
+<td>DIAGNOSIS</td>
+<td>Crohn’s Disease, Ulcerative Colitis, or IBD Unclassified</td>
+</tr>
+<tr class="even">
+<td>DIAGNOSIS_DATE</td>
+<td>Date of IBD Diagnosis</td>
+</tr>
+<tr class="odd">
+<td>INDEX_DATE</td>
+<td>Date of interest as specified in “index_info”</td>
+</tr>
+<tr class="even">
+<td>NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT</td>
+<td>1 if a patient indicates “No” to “Are you currently on any IBD
+medications?” at their baseline survey.</td>
+</tr>
+<tr class="odd">
+<td>MEDICATION_AT_INDEX</td>
+<td>A concatenated list of medications the patient is on based on if the
+index date falls between the medication start and stop date.</td>
+</tr>
+<tr class="even">
+<td>BIONAIVE</td>
+<td>is 1 if patient has no prior reported biologic use</td>
+</tr>
+<tr class="odd">
+<td>MED_START_DATE_ECRF_XXX</td>
+<td>The start date in the ECRF for medication XXX</td>
+</tr>
+<tr class="even">
+<td>MED_END_DATE_ECRF_XXX</td>
+<td>The end date in the ECRF for medication XXX</td>
+</tr>
+<tr class="odd">
+<td>MED_START_DATE_EMR_XXX</td>
+<td>The start date in the EMR for medication XXX</td>
+</tr>
+<tr class="even">
+<td>MED_END_DATE_EMR_XXX</td>
+<td>The end date in the EMR for medication XXX</td>
+</tr>
+<tr class="odd">
+<td>CURRENT_MEDICATION_ECRF_XXX</td>
+<td>The current medication flag (yes/no) from eCRF for medication
+XXX</td>
+</tr>
+<tr class="even">
+<td>PREDNISONE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>BUDESONIDE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>STEROIDS_ORAL_ECRF</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>METHYLPREDNISOLONE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>PREDNISOLONE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>STEROID_FOAM</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>STEROID_ENEMA</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>STEROID_SUPPOSITORY</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>ANY_STEROID</td>
+<td>Flag if patient on any of the steroids at index date.</td>
+</tr>
+<tr class="odd">
+<td>RECTAL_STEROID</td>
+<td>Flag is patient on steroid foam, steroid enema, or steroid
+suppository at index date.</td>
+</tr>
+<tr class="even">
+<td>ORAL_IV_STEROID</td>
+<td>Flag if patient on oral or IV steroid at the index date.</td>
+</tr>
+</tbody>
+</table>
 
-``` r
-# Load Data needed for sparc_medication function
+    # Load Data needed for sparc_medication function
 
-data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions"), data_type = "Both")
+    data <- load_data(datadir = "~/r_input/", cohort = "SPARC", domains = c("demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions"), data_type = "Both")
 
-# Find Biologics and Immunomodulators a patient is on at enrollment.
+    # Find Biologics and Immunomodulators a patient is on at enrollment.
 
-med_at_enrollment <- sparc_medication(
-  data = data,
-  index_info = "Enrollment",
-  med_groups = c("Biologic", "Immunomodulators"),
-  filename = "SPARC_MEDICATION_AT_ENROLLMENT.xlsx"
-)
+    med_at_enrollment <- sparc_medication(
+      data = data,
+      index_info = "Enrollment",
+      med_groups = c("Biologic", "Immunomodulators"),
+      filename = "SPARC_MEDICATION_AT_ENROLLMENT.xlsx"
+    )
 
-# Find Biologics and Immunomodulators a patient is on at endoscopy
+    # Find Biologics and Immunomodulators a patient is on at endoscopy
 
-med_at_endoscopy<- sparc_medication(
-  data = data,
-  index_info = "Endoscopy",
-  med_groups = c("Biologic", "Immunomodulators"),
-  filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx"
-)
-```
+    med_at_endoscopy<- sparc_medication(
+      data = data,
+      index_info = "Endoscopy",
+      med_groups = c("Biologic", "Immunomodulators"),
+      filename = "SPARC_MEDICATION_AT_ENDOSCOPY.xlsx"
+    )
