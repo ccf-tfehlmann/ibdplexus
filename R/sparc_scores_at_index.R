@@ -65,6 +65,7 @@ sparc_scores <- function(data,
 
     cohort <- endoscopy %>% left_join(table)
   } else if ("OMICS" %in% index_info) {
+    # NEED TO FIX: if no sample collected date, not drop those rows
     omics <- data$omics_patient_mapping %>%
       mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
       mutate(index_date = SAMPLE_COLLECTED_DATE) %>%
@@ -353,7 +354,8 @@ sparc_scores <- function(data,
         TRUE ~ Location
       )) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID, INDEX_DATE, Location, UpperGI, Perianal) %>%
-      dplyr::rename(DISEASE_LOCATION = Location, UPPERGI = UpperGI, PERIANAL = Perianal, index_date = INDEX_DATE)
+      dplyr::rename(DISEASE_LOCATION = Location, UPPERGI = UpperGI, PERIANAL = Perianal, index_date = INDEX_DATE) %>%
+      distinct()
 
     cohort <- left_join(cohort, disease_location)
 
@@ -605,7 +607,9 @@ sparc_scores <- function(data,
   if ("OMICS" %in% index_info) {
     cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))
   } else if ("BIOSAMPLE" %in% index_info) {
-    cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))
+    cohort <- biosample %>% left_join(cohort, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, SRC_BIOSAMPLE_CONCEPT_NAME, SAMPLE_STATUS,
+                                                         DATE_SAMPLE_COLLECTED, BIOSAMPLE_LOCATION, MACROSCOPIC_APPEARANCE, SUB_LOCATION__C, VISIT_TYPE__C, index_date))
+    # , by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"))
   } else {
     cohort <- cohort
   }
