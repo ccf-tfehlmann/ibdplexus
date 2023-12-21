@@ -40,12 +40,20 @@ Future versions of this package will include a similar functionality for a Qorus
 
 # Extracting Diagnosis Codes from the EMR
 
-`emr_extract_diagnosis()` filters the diagnosis and patient_problem table based on specified inclusion and exclusion criteria. One may search for comorbidities, general disease complications, common symptoms, extra-intestinal manifestations, cancer, common clinical trial criteria, and infectious diseases. There is also an option to custom input ICD10 codes. The result is a list of data.frames with all relevant EMR ICD10 diagnosis and/or patient problem records.
+`emr_extract_diagnosis()` filters the diagnosis and patient_problem table based on specified inclusion and exclusion criteria.
 
-The list of pre-programmed ICD10 codes is pasted below. Full documentation for this function can be found here: inst/userguides/Diagnosis_EMR_Extract.md.
+This function can search through the EMR using ICD10 codes or keywords. The default function will search through the EMR using ICD10 codes. One may search for comorbidities, general disease complications, common symptoms, extra-intestinal manifestations, cancer, common clinical trial criteria, and infectious diseases using the pre-set condition categories outlined below. There is also an option to custom input ICD10 codes.
+
+The text search option of this function filters through EMR diagnosis descriptions for any keyword. All relevant diagnosis will be returned for the keyword inputted. Diagnosis descriptions that include the specified keyword but are not a positive diagnosis for the patient will not be included. For example, rows are dropped if they are a negative diagnosis ("without" diagnosis), are screenings or scans for a diagnosis, are family history of the diagnosis, or are indicating risk for the diagnosis.
+
+There is also the option to use both codes and text to search through the EMR for a diagnosis. More specifics on the inputs for code and text search options is detailed in the emr_extract_diagnosis parameters section of this document.
+
+The result is a list of data.frames with all relevant EMR ICD10 diagnosis, patient problem and/or patient problem records.
+
+The list of pre-programmed ICD10 codes is below.
 
 | Condition Categories                     | ICD 10 Diagnosis Codes                                                                                                                                                                                         | ICD 9 Diagnosis Codes                                                                                                       |
-|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+|---------------|------------------------------------|---------------------|
 | SYSTEMIC FUNGAL INFECTION                | B39, B45, B38, B40, B46, B44, B37, B59                                                                                                                                                                         | 110-118                                                                                                                     |
 | CANCER                                   | All C codes, d0, d1, d2, d3, d4                                                                                                                                                                                | 140-229                                                                                                                     |
 | COLORECTAL CANCER                        | C18, C19, C20                                                                                                                                                                                                  | 153, 154.0, 154.1                                                                                                           |
@@ -87,3 +95,25 @@ The list of pre-programmed ICD10 codes is pasted below. Full documentation for t
 | HEPATITIS B                              | B16, B18.0, B18.1, B19.1                                                                                                                                                                                       | 070.2, 070.3                                                                                                                |
 | HEPATITIS C                              | B17.1, B18.2, B19.2                                                                                                                                                                                            | 070.41, 070.44, 070.51, 070.54, 070.7                                                                                       |
 | INHERITED AUTOIMMUNE DISORDER            | D80.0, D82.0, D80.4, D82.3, N41.4, Q82.8, D81.0, D81.1, D81.2, D81.3, E70.330, D76.1, D82.4, D82.2, D81.6, D81.7, D83, D80.2, D84.1, G11.3, D81.5, D81.8                                                       | 279.04, 279.12, 279.02, 279.8, 601.8, 757.2, 757.39, 279.2, 270.2, 288.4, 279.8, 279.06, 279.01, 277.6, 334.8, 277.2, 266.2 |
+
+### emr_extract_diagnosis parameters 
+
+`data` is a list of data frames typically generated by load_data from the ibdplexus package. It must include demographics and the diagnosis, patient problem and/or patient history tables. Only EMR data is required.
+
+`code_search` is the option to extract relevant diagnosis codes using ICD 10 codes. This defaults to true in the function. If code_search is true, the inclusion parameter must be either one of the pre-set condition categories from above, or "CUSTOM". The function will not run if code_search is true and an unknown character string is in the inclusion criteria.
+
+`text_search` is the option to extract relevant diagnosis codes using keyword text search. This defaults to false. When set to true and code_search is false, the inclusion parameter can be any string of characters. The different arguments of the character string should be separated by a pipe (eg. "argument1\|argument2").
+
+`inclusion` When searching by code, the diagnosis category of ICD 10 codes to search for. Can choose between predefined categories outlined above or enter a custom defined list. If searching for a custom defined list, this parameter must be set to "CUSTOM", and the list should be specified in the `custominc` parameter. When text searching, a regular expression string of keywords to search for (eg. "argument1\|argument2\|argument3")
+
+**note for combined text and code search**: The function allows for code_search and text_search to both be true, so the function will filter through the EMR using both ICD 10 codes and keyword text search. Currently, the function will only run with both of these options if the input is one of the specific ICD 10 condition categories. For example, if text_search = T and code_search = T with inclusion = "COLORECTAL CANCER", the function will return all results that match the ICD 10 codes in the colorectal cancer condition category, as well as any results that have colorectal cancer in the description of the diagnosis but are not one of the specified ICD 10 categories.
+
+`exclusion` diagnosis category of ICD 10 codes to exclude from search. Can currently be either "SKIN CARCINOMA", "CERVIX CARCINOMA", or "CUSTOM" (for which the custom exclusion list will be specified in the `customexc` parameter). More predefined lists can be included in future updates of the function.
+
+`custominc` optional list of custom ICD 10 codes to be searched for. The variable "inclusion" must also be set to "CUSTOM" for this option. If multiple inputs, needs to be in a regular expression string (eg. "argument1\|argument2\|argument3")
+
+`customexc` optional list of custom ICD 10 codes to be excluded from the search. The variable "exclusion" must also be set to "CUSTOM" for this option. If multiple inputs, needs to be in a regular expression string (eg. "argument1\|argument2\|argument3")
+
+`datecutoff` Type of date cutoff to be used for EMR extract. Current options include "ENROLLMENT" - number of days before consent into study.
+
+`index_range` Number of days before date cutoff to be used for EMR extract. Time must be specified in number of days. Default is 36500 days (100 years).

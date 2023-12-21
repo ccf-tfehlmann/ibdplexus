@@ -160,9 +160,7 @@ emr_extract_diagnosis <- function(data,
   #
   #   }
 
-  # to do - add warning that if a word that is not in the list of words for
-  # codes is used in the inclusion criteria, can only search by text and not by
-  # code and text
+  # to do - add option to search for a specific code character and an unspecified keyword in the same search
   list_of_inclusion_categories <- c("CANCER", "COLORECTAL CANCER", "WEIGHT LOSS",
                                     "ABDOMINAL PAIN", "STOMA", "PSC", "GI BLEEDING",
                                     "GI ULCER", "PERIANAL ABSCESS OR FISTULA", "SYSTEMATIC FUNGAL INFECTION",
