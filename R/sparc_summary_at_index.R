@@ -266,7 +266,144 @@ sparc_summary <- function(data,
   cohort <- cohort %>%
     left_join(cdp)
 
+  # Crohn's Disease Phenotype Journey
 
+  cd_pts <- cohort %>%
+    filter(DIAGNOSIS == "Crohn's Disease") %>%
+    distinct()
+  cd_pts <- cd_pts$DEIDENTIFIED_MASTER_PATIENT_ID
+
+  enc_cd_pts <- data$encounter %>%
+    filter(DEIDENTIFIED_MASTER_PATIENT_ID %in% cd_pts) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, TYPE_OF_ENCOUNTER,
+           VISIT_ENCOUNTER_ID) %>%
+    distinct() %>%
+    left_join(data$observations, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%
+    filter(DATA_SOURCE == "SF_SPARC") %>%
+    filter(OBS_TEST_CONCEPT_NAME %in% c("Crohn's Disease Phenotype", "IBD Manifestations - Abdominal Abscess, Fistula, or Other Penetrating Complication") | str_detect(OBS_TEST_CONCEPT_NAME, "^Phenotype")) %>%
+    drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID,
+             OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+    filter(OBS_TEST_CONCEPT_NAME == "Crohn's Disease Phenotype") %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID) %>%
+    mutate(fil = case_when(
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Inflammatory, non-penetrating, non-stricturing" ~ 1,
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Stricturing" ~ 2,
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Penetrating" ~ 3,
+      DESCRIPTIVE_SYMP_TEST_RESULTS == "Both stricturing and penetrating" ~ 4,
+      TRUE ~ 0)) %>%
+    slice(which.max(fil)) %>%
+    select(-fil) %>%
+    left_join(data$encounter %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE),
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%
+    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE), names_from = OBS_TEST_CONCEPT_NAME,
+                values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+    mutate(`Crohn's Disease Phenotype` = case_when(
+      `Crohn's Disease Phenotype` == "Inflammatory, non-penetrating, non-stricturing" ~ "Inflammatory non-penetrating, non-stricturing (B1)",
+      `Crohn's Disease Phenotype` == "Stricturing" ~ "Stricturing (B2)",
+      `Crohn's Disease Phenotype` == "Penetrating" ~ "Penetrating (B3)",
+      `Crohn's Disease Phenotype` == "Both stricturing and penetrating" ~ "Both stricturing and penetrating (B2B3)",
+      TRUE ~ `Crohn's Disease Phenotype`
+    )) %>%
+    ungroup() %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, `Crohn's Disease Phenotype`, .keep_all = T) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
+    mutate(`CD_CHOOSE` = case_when(
+      `Crohn's Disease Phenotype` == "Inflammatory non-penetrating, non-stricturing (B1)" ~ 1,
+      `Crohn's Disease Phenotype` == "Stricturing (B2)" ~ 2,
+      `Crohn's Disease Phenotype` == "Penetrating (B3)" ~ 3,
+      `Crohn's Disease Phenotype` == "Both stricturing and penetrating (B2B3)" ~ 4,
+      TRUE ~ 0
+    )) %>%
+    slice(which.max(CD_CHOOSE)) %>%
+    select(-CD_CHOOSE)
+
+  # first part of CD journey
+  CD_PHENO_JOURNEY_first <- enc_cd_pts %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE,
+           `Crohn's Disease Phenotype`) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    slice(which.min(VISIT_ENCOUNTER_START_DATE)) %>%
+    rename(FIRST = `Crohn's Disease Phenotype`)
+
+  # final part of CD journey
+  CD_PHENO_JOURNEY_final <- enc_cd_pts %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE,
+           `Crohn's Disease Phenotype`) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    slice(which.max(VISIT_ENCOUNTER_START_DATE))  %>%
+    rename(FINAL = `Crohn's Disease Phenotype`)
+
+
+  # middle behaviors
+  CD_PHENO_JOURNEY_middle <- enc_cd_pts %>%
+    left_join(CD_PHENO_JOURNEY_final,
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
+    left_join(CD_PHENO_JOURNEY_first,
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    fill(FIRST, .direction = "updown") %>%
+    fill(FINAL, .direction = "updown") %>%
+    mutate(not = ifelse(FIRST != `Crohn's Disease Phenotype` &
+                          FINAL != `Crohn's Disease Phenotype`, 1, 0)) %>%
+    filter(not == 1) %>%
+    select(-not) %>%
+    rename(MIDDLE = `Crohn's Disease Phenotype`) %>%
+    select(-c(FINAL, FIRST))
+
+  # combine all behaviors
+  CD_behaviors <- CD_PHENO_JOURNEY_first %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, FIRST) %>%
+    full_join(CD_PHENO_JOURNEY_final %>%
+                select(DEIDENTIFIED_MASTER_PATIENT_ID, FINAL),
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    full_join(CD_PHENO_JOURNEY_middle %>%
+                select(DEIDENTIFIED_MASTER_PATIENT_ID, MIDDLE),
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    mutate(FIRST_FACTORS = case_when(
+      FIRST == "Inflammatory non-penetrating, non-stricturing (B1)" ~ 1,
+      `FIRST` == "Stricturing (B2)" ~ 2,
+      `FIRST` == "Penetrating (B3)" ~ 3,
+      `FIRST` == "Both stricturing and penetrating (B2B3)" ~ 4,
+      FIRST == "Unknown" ~ 0,
+      TRUE ~ -1
+    )) %>%
+    mutate(FINAL_FACTORS = case_when(
+      FINAL == "Inflammatory non-penetrating, non-stricturing (B1)" ~ 1,
+      `FINAL` == "Stricturing (B2)" ~ 2,
+      `FINAL` == "Penetrating (B3)" ~ 3,
+      `FINAL` == "Both stricturing and penetrating (B2B3)" ~ 4,
+      FINAL == "Unknown" ~ 0,
+      TRUE ~ -1
+    ))  %>%
+    mutate(MIDDLE_FACTORS = case_when(
+      MIDDLE == "Inflammatory non-penetrating, non-stricturing (B1)" ~ 1,
+      `MIDDLE` == "Stricturing (B2)" ~ 2,
+      `MIDDLE` == "Penetrating (B3)" ~ 3,
+      `MIDDLE` == "Both stricturing and penetrating (B2B3)" ~ 4,
+      MIDDLE == "Unknown" ~ 0,
+      TRUE ~ -1
+    )) %>%
+    mutate(MIDDLE = ifelse(MIDDLE_FACTORS == -1, NA, MIDDLE)) %>%
+    mutate(FINAL = ifelse(FINAL_FACTORS == -1, NA, FINAL)) %>%
+    mutate(FIRST = ifelse(FIRST_FACTORS == -1, NA, FIRST)) %>%
+    mutate(FINAL = ifelse(MIDDLE_FACTORS > FINAL_FACTORS, MIDDLE, FINAL)) %>%
+    mutate(FINAL = ifelse(FINAL_FACTORS < FIRST_FACTORS, FIRST, FINAL)) %>%
+    mutate(MIDDLE = ifelse(!is.na(MIDDLE) & FIRST_FACTORS > MIDDLE_FACTORS, FIRST, MIDDLE)) %>%
+    mutate(FIRST1 = ifelse(!is.na(FIRST), str_extract(FIRST, "(?<=\\()\\w+"), FIRST)) %>%
+    mutate(MIDDLE1 = ifelse(!is.na(MIDDLE), str_extract(MIDDLE, "(?<=\\()\\w+"), MIDDLE)) %>%
+    mutate(FINAL1 = ifelse(!is.na(FINAL), str_extract(FINAL, "(?<=\\()\\w+"), FINAL)) %>%
+    mutate(FIRST1 = ifelse(is.na(FIRST1), "Unknown", FIRST1)) %>%
+    mutate(MIDDLE1 = ifelse(is.na(MIDDLE1), "Unknown", MIDDLE1)) %>%
+    mutate(FINAL1 = ifelse(is.na(FINAL1), "Unknown", FINAL1)) %>%
+    mutate(CD_PHENO_JOURNEY = ifelse(MIDDLE_FACTORS == -1 | FIRST1 == MIDDLE1 |
+                                       MIDDLE1 == FINAL1, paste0(FIRST1, " -> ", FINAL1),
+                                     paste0(FIRST1, " -> ", MIDDLE1, " -> ", FINAL1))) %>%
+    mutate(CD_PHENO_JOURNEY = ifelse(CD_PHENO_JOURNEY == "B2 -> B3", "B2 -> B2B3", CD_PHENO_JOURNEY)) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, CD_PHENO_JOURNEY)
+
+  cohort <- cohort %>%
+    left_join(CD_behaviors, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID))
 
   # PHENOTYPES:
   #  Ulcerative Colitis- just closest no date constraint if multiple before index date then keep worst one
