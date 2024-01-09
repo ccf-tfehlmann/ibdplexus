@@ -15,3 +15,6 @@ A dataframe with all sCDAI scores from eCRF and Smartform regardless of IBD diag
 \description{
 Calculates short CDAI score from SPARC data.
 }
+\details{
+Number of stools is capped at 20.
+}

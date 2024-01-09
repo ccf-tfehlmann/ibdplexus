@@ -9,8 +9,9 @@ sparc_med_filter(
   observations,
   demographics,
   encounter,
-  med_groups = c("Aminosalicylates", "Antibiotics", "Antidiarrheals", "Biologic",
-    "Corticosteroids", "Immunomodulators", "Other", "Probiotic")
+  med_groups = c("aminosalicylates", "antibiotics", "antidiarrheals", "biologic",
+    "corticosteroids", "immunomodulators", "other", "probiotic",
+    "targeted synthetic small molecules")
 )
 }
 \arguments{

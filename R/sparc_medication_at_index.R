@@ -1,5 +1,3 @@
-
-
 #' sparc_medication
 #'
 #' Finds the medications the participant is prescribed from the
@@ -20,14 +18,16 @@
 #' @export
 sparc_medication <- function(data,
                              index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
-                             med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
+                             med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators", "Targeted synthetic small molecules"),
                              filename = "SPARC_MEDICATION.xlsx") {
 
+  med_groups <- tolower(med_groups)
+  if("character" %in% class(index_info)){index_info = toupper(index_info)}
 
 
   # Get all medication start dates ----
 
-  med <- sparc_med_starts(data$prescriptions, data$demographics, data$observations, data$encounter,med_groups, export = FALSE)
+  med <- sparc_med_journey(data$prescriptions, data$demographics, data$observations, data$encounter, med_groups, export = FALSE)
 
 
   # CONSENT INFORMATION ----
@@ -77,7 +77,7 @@ sparc_medication <- function(data,
     cohort <- omics_index %>% left_join(table)
   } else if ("BIOSAMPLE" %in% index_info) {
     biosample <- data$biosample %>%
-      mutate(SAMPLE_COLLECTED_DATE = dmy(`Date Sample Collected`)) %>%
+      mutate(SAMPLE_COLLECTED_DATE = dmy(`DATE_SAMPLE_COLLECTED`)) %>%
       rename(index_date = SAMPLE_COLLECTED_DATE) %>%
       drop_na(index_date) %>%
       select(-c(DATA_SOURCE, DEIDENTIFIED_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%
@@ -103,9 +103,9 @@ sparc_medication <- function(data,
 
   # FIND MEDICATION AT INDEX DATE ----
 
-  if ("ENROLLMENT" %in% index_info) {
-    cohort <- sparc_medication_enrollment(cohort, med)
-  } else {
+  # if ("ENROLLMENT" %in% index_info) {
+  #   cohort <- sparc_medication_enrollment(cohort, med)
+  # } else {
     # MEDICATIONS AT OTHER INDEX DATES ----
 
     med_index <- med %>%
@@ -151,7 +151,8 @@ sparc_medication <- function(data,
         id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"),
         names_from = MEDICATION,
         values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION_ECRF)
-      )
+      ) %>%
+      ungroup()
 
 
     cohort <- cohort %>% left_join(med_dates)
@@ -185,60 +186,70 @@ sparc_medication <- function(data,
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT)
 
     cohort <- cohort %>% left_join(no_med)
-  }
+ # }
+
+# On Steroid At Index ----
+
+  steroid <- steroid_use_at_index(data, cohort)
+
+  cohort <- cohort %>% left_join(steroid)
 
 
 
 
-  # REORDER COLUMNS & FORMAT SPREADSHEET ----
-
-#
-#   bionames <- med_grp %>%
-#     filter(med_type %in% c("Biologic", "Aminosalicylates", "Immunomodulators")) %>%
-#     arrange(new_med_name) %>%
-#     distinct(new_med_name) %>%
-#     rename(name = new_med_name) %>%
-#     add_row(name = c("MEDICATION_AT_INDEX")) %>%
-#     add_row(name = c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT")) %>%
-#     add_row(name = c("BIONAIVE")) %>%
-#     arrange(match(name, c("NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT", "MEDICATION_AT_INDEX", "BIONAIVE")))
-#
-#   if ("LATEST" %in% index_info) {
-#     names <- bind_rows(data.frame(name = names(cohort[1:9])), bionames) %>%
-#       distinct() %>%
-#       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-#       filter(name != "DIAGNOSIS_DATE")
-#   } else {
-#     names <- bind_rows(data.frame(name = names(cohort[1:8])), bionames) %>%
-#       distinct() %>%
-#       filter(name != "DATE_OF_CONSENT_WITHDRAWN") %>%
-#       filter(name != "DIAGNOSIS_DATE")
-#   }
-
-  #cohort <- cohort[unlist(lapply(names$name, function(x) grep(x, names(cohort))))]
 
 
   # FOR OMICS & BIOSAMPLE ADD WHOLE TABLE IN
 
 
   if ("OMICS" %in% index_info) {
-    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
+    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"), intersect(names(.), names(steroid)))
 
-    final_cohort <- omics %>% left_join(table) %>% left_join(cohort)
+    final_cohort <- omics %>%
+      left_join(table) %>%
+      left_join(cohort)
   } else if ("BIOSAMPLE" %in% index_info) {
-    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"))
+    cohort <- cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, starts_with("MED"), intersect(names(.), names(steroid)))
 
-    final_cohort <- biosample %>% left_join(table) %>% left_join(cohort)
+    final_cohort <- biosample %>%
+      left_join(table) %>%
+      left_join(cohort)
   } else {
     final_cohort <- cohort
   }
 
+
+  # REORDER COLUMNS & FORMAT SPREADSHEET ----
+
+
   names(final_cohort) <- toupper(names(final_cohort))
+  names(final_cohort) <- gsub(" ", "_", names(final_cohort))
+  names(final_cohort) <- gsub("\\(|\\)", "", names(final_cohort))
+
+  #assign col names into new tibble
+  col_names <- tibble(x=final_cohort %>% names()) %>% filter(grepl("^MED_|^CURRENT_", x))
+
+  #extract out into new columns name components
+  col_names_order <- col_names %>%
+    mutate(order = case_when(grepl("END", x) ~ 2,
+                             grepl("START", x) ~ 1,
+                             grepl("CURRENT", x) ~ 3)) %>%
+    separate_wider_delim(x,delim = "_", too_few = "align_start", names_sep = "_",cols_remove = FALSE) %>%
+    # mutate(before=str_extract(x,".*(?=_)"),
+    #        after=str_extract(x,"_(?!.*_).*")
+    # ) %>%
+    arrange(x_5,x_6,match(x_4, c("ECRF","EMR")), match(x_2, c("START", "END"))) %>%
+    pull(x_x)
+
+  #rearrange colnames by this logic
+  final_cohort <- final_cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, MEDICATION_AT_INDEX, any_of(col_names_order), everything()) %>%
+    select(-c(DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, BIRTH_YEAR, SEX, DIAGNOSIS_DATE))
+
+
 
   # CREATE HEADER STYLES----
 
-  if (!is.null(filename))
-  {
+  if (!is.null(filename)) {
     # orange
     style2 <- createStyle(bgFill = "#F8CBAD", textDecoration = "bold")
 
@@ -271,5 +282,5 @@ sparc_medication <- function(data,
 
     saveWorkbook(wb, file = paste0(filename), overwrite = TRUE)
   }
-  return(cohort)
+  return(final_cohort)
 }

@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+@font-face {
+font-family: octicons-link;
+src: url(data:font/woff;charset=utf-8;base64,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) format('woff');
+}
+body {
+-webkit-text-size-adjust: 100%;
+text-size-adjust: 100%;
+color: #333;
+font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+font-size: 16px;
+line-height: 1.6;
+word-wrap: break-word;
+}
+a {
+background-color: transparent;
+}
+a:active,
+a:hover {
+outline: 0;
+}
+strong {
+font-weight: bold;
+}
+h1 {
+font-size: 2em;
+margin: 0.67em 0;
+}
+img {
+border: 0;
+}
+hr {
+box-sizing: content-box;
+height: 0;
+}
+pre {
+overflow: auto;
+}
+code,
+kbd,
+pre {
+font-family: monospace, monospace;
+font-size: 1em;
+}
+input {
+color: inherit;
+font: inherit;
+margin: 0;
+}
+html input[disabled] {
+cursor: default;
+}
+input {
+line-height: normal;
+}
+input[type="checkbox"] {
+box-sizing: border-box;
+padding: 0;
+}
+table {
+border-collapse: collapse;
+border-spacing: 0;
+}
+td,
+th {
+padding: 0;
+}
+* {
+box-sizing: border-box;
+}
+input {
+font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+a {
+color: #4078c0;
+text-decoration: none;
+}
+a:hover,
+a:active {
+text-decoration: underline;
+}
+hr {
+height: 0;
+margin: 15px 0;
+overflow: hidden;
+background: transparent;
+border: 0;
+border-bottom: 1px solid #ddd;
+}
+hr:before {
+display: table;
+content: "";
+}
+hr:after {
+display: table;
+clear: both;
+content: "";
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 15px;
+margin-bottom: 15px;
+line-height: 1.1;
+}
+h1 {
+font-size: 30px;
+}
+h2 {
+font-size: 21px;
+}
+h3 {
+font-size: 16px;
+}
+h4 {
+font-size: 14px;
+}
+h5 {
+font-size: 12px;
+}
+h6 {
+font-size: 11px;
+}
+blockquote {
+margin: 0;
+}
+ul,
+ol {
+padding: 0;
+margin-top: 0;
+margin-bottom: 0;
+}
+ol ol,
+ul ol {
+list-style-type: lower-roman;
+}
+ul ul ol,
+ul ol ol,
+ol ul ol,
+ol ol ol {
+list-style-type: lower-alpha;
+}
+dd {
+margin-left: 0;
+}
+code {
+font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+font-size: 12px;
+}
+pre {
+margin-top: 0;
+margin-bottom: 0;
+font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+.select::-ms-expand {
+opacity: 0;
+}
+.octicon {
+font: normal normal normal 16px/1 octicons-link;
+display: inline-block;
+text-decoration: none;
+text-rendering: auto;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
+.octicon-link:before {
+content: '\f05c';
+}
+.markdown-body:before {
+display: table;
+content: "";
+}
+.markdown-body:after {
+display: table;
+clear: both;
+content: "";
+}
+.markdown-body>*:first-child {
+margin-top: 0 !important;
+}
+.markdown-body>*:last-child {
+margin-bottom: 0 !important;
+}
+a:not([href]) {
+color: inherit;
+text-decoration: none;
+}
+.anchor {
+display: inline-block;
+padding-right: 2px;
+margin-left: -18px;
+}
+.anchor:focus {
+outline: none;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 1em;
+margin-bottom: 16px;
+font-weight: bold;
+line-height: 1.4;
+}
+h1 .octicon-link,
+h2 .octicon-link,
+h3 .octicon-link,
+h4 .octicon-link,
+h5 .octicon-link,
+h6 .octicon-link {
+color: #000;
+vertical-align: middle;
+visibility: hidden;
+}
+h1:hover .anchor,
+h2:hover .anchor,
+h3:hover .anchor,
+h4:hover .anchor,
+h5:hover .anchor,
+h6:hover .anchor {
+text-decoration: none;
+}
+h1:hover .anchor .octicon-link,
+h2:hover .anchor .octicon-link,
+h3:hover .anchor .octicon-link,
+h4:hover .anchor .octicon-link,
+h5:hover .anchor .octicon-link,
+h6:hover .anchor .octicon-link {
+visibility: visible;
+}
+h1 {
+padding-bottom: 0.3em;
+font-size: 2.25em;
+line-height: 1.2;
+border-bottom: 1px solid #eee;
+}
+h1 .anchor {
+line-height: 1;
+}
+h2 {
+padding-bottom: 0.3em;
+font-size: 1.75em;
+line-height: 1.225;
+border-bottom: 1px solid #eee;
+}
+h2 .anchor {
+line-height: 1;
+}
+h3 {
+font-size: 1.5em;
+line-height: 1.43;
+}
+h3 .anchor {
+line-height: 1.2;
+}
+h4 {
+font-size: 1.25em;
+}
+h4 .anchor {
+line-height: 1.2;
+}
+h5 {
+font-size: 1em;
+}
+h5 .anchor {
+line-height: 1.1;
+}
+h6 {
+font-size: 1em;
+color: #777;
+}
+h6 .anchor {
+line-height: 1.1;
+}
+p,
+blockquote,
+ul,
+ol,
+dl,
+table,
+pre {
+margin-top: 0;
+margin-bottom: 16px;
+}
+hr {
+height: 4px;
+padding: 0;
+margin: 16px 0;
+background-color: #e7e7e7;
+border: 0 none;
+}
+ul,
+ol {
+padding-left: 2em;
+}
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+margin-top: 0;
+margin-bottom: 0;
+}
+li>p {
+margin-top: 16px;
+}
+dl {
+padding: 0;
+}
+dl dt {
+padding: 0;
+margin-top: 16px;
+font-size: 1em;
+font-style: italic;
+font-weight: bold;
+}
+dl dd {
+padding: 0 16px;
+margin-bottom: 16px;
+}
+blockquote {
+padding: 0 15px;
+color: #777;
+border-left: 4px solid #ddd;
+}
+blockquote>:first-child {
+margin-top: 0;
+}
+blockquote>:last-child {
+margin-bottom: 0;
+}
+table {
+display: block;
+width: 100%;
+overflow: auto;
+word-break: normal;
+word-break: keep-all;
+}
+table th {
+font-weight: bold;
+}
+table th,
+table td {
+padding: 6px 13px;
+border: 1px solid #ddd;
+}
+table tr {
+background-color: #fff;
+border-top: 1px solid #ccc;
+}
+table tr:nth-child(2n) {
+background-color: #f8f8f8;
+}
+img {
+max-width: 100%;
+box-sizing: content-box;
+background-color: #fff;
+}
+code {
+padding: 0;
+padding-top: 0.2em;
+padding-bottom: 0.2em;
+margin: 0;
+font-size: 85%;
+background-color: rgba(0,0,0,0.04);
+border-radius: 3px;
+}
+code:before,
+code:after {
+letter-spacing: -0.2em;
+content: "\00a0";
+}
+pre>code {
+padding: 0;
+margin: 0;
+font-size: 100%;
+word-break: normal;
+white-space: pre;
+background: transparent;
+border: 0;
+}
+.highlight {
+margin-bottom: 16px;
+}
+.highlight pre,
+pre {
+padding: 16px;
+overflow: auto;
+font-size: 85%;
+line-height: 1.45;
+background-color: #f7f7f7;
+border-radius: 3px;
+}
+.highlight pre {
+margin-bottom: 0;
+word-break: normal;
+}
+pre {
+word-wrap: normal;
+}
+pre code {
+display: inline;
+max-width: initial;
+padding: 0;
+margin: 0;
+overflow: initial;
+line-height: inherit;
+word-wrap: normal;
+background-color: transparent;
+border: 0;
+}
+pre code:before,
+pre code:after {
+content: normal;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font-size: 11px;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.pl-c {
+color: #969896;
+}
+.pl-c1,
+.pl-s .pl-v {
+color: #0086b3;
+}
+.pl-e,
+.pl-en {
+color: #795da3;
+}
+.pl-s .pl-s1,
+.pl-smi {
+color: #333;
+}
+.pl-ent {
+color: #63a35c;
+}
+.pl-k {
+color: #a71d5d;
+}
+.pl-pds,
+.pl-s,
+.pl-s .pl-pse .pl-s1,
+.pl-sr,
+.pl-sr .pl-cce,
+.pl-sr .pl-sra,
+.pl-sr .pl-sre {
+color: #183691;
+}
+.pl-v {
+color: #ed6a43;
+}
+.pl-id {
+color: #b52a1d;
+}
+.pl-ii {
+background-color: #b52a1d;
+color: #f8f8f8;
+}
+.pl-sr .pl-cce {
+color: #63a35c;
+font-weight: bold;
+}
+.pl-ml {
+color: #693a17;
+}
+.pl-mh,
+.pl-mh .pl-en,
+.pl-ms {
+color: #1d3e81;
+font-weight: bold;
+}
+.pl-mq {
+color: #008080;
+}
+.pl-mi {
+color: #333;
+font-style: italic;
+}
+.pl-mb {
+color: #333;
+font-weight: bold;
+}
+.pl-md {
+background-color: #ffecec;
+color: #bd2c00;
+}
+.pl-mi1 {
+background-color: #eaffea;
+color: #55a532;
+}
+.pl-mdr {
+color: #795da3;
+font-weight: bold;
+}
+.pl-mo {
+color: #1d3e81;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.task-list-item {
+list-style-type: none;
+}
+.task-list-item+.task-list-item {
+margin-top: 3px;
+}
+.task-list-item input {
+margin: 0 0.35em 0.25em -1.6em;
+vertical-align: middle;
+}
+:checked+.radio-label {
+z-index: 1;
+position: relative;
+border-color: #4078c0;
+}
+.sourceLine {
+display: inline-block;
+}
+code .kw { color: #000000; }
+code .dt { color: #ed6a43; }
+code .dv { color: #009999; }
+code .bn { color: #009999; }
+code .fl { color: #009999; }
+code .ch { color: #009999; }
+code .st { color: #183691; }
+code .co { color: #969896; }
+code .ot { color: #0086b3; }
+code .al { color: #a61717; }
+code .fu { color: #63a35c; }
+code .er { color: #a61717; background-color: #e3d2d2; }
+code .wa { color: #000000; }
+code .cn { color: #008080; }
+code .sc { color: #008080; }
+code .vs { color: #183691; }
+code .ss { color: #183691; }
+code .im { color: #000000; }
+code .va {color: #008080; }
+code .cf { color: #000000; }
+code .op { color: #000000; }
+code .bu { color: #000000; }
+code .ex { color: #000000; }
+code .pp { color: #999999; }
+code .at { color: #008080; }
+code .do { color: #969896; }
+code .an { color: #008080; }
+code .cv { color: #008080; }
+code .in { color: #008080; }
+</style>
+<style>
+body {
+box-sizing: border-box;
+min-width: 200px;
+max-width: 980px;
+margin: 0 auto;
+padding: 45px;
+padding-top: 0px;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="medication-data-in-sparc-ibd">Medication Data in SPARC IBD</h1>
+<p>A Study of a Prospective Adult Research Cohort with Inflammatory
+Bowel Disease (SPARC IBD) is a longitudinal study following adult IBD
+patients as they receive care at 17 different sites across the United
+States. To learn more about SPARC IBD and it’s development please see
+[The Development and Initial Findings of A Study of a Prospective Adult
+Research Cohort with Inflammatory Bowel Disease (SPARC IBD)] (<a href="https://doi.org/10.1093/ibd/izab071">https://doi.org/10.1093/ibd/izab071</a>).</p>
+<p>Data from patient reported surveys (eCRFs), IBD Smartform and
+electronic medication records (EMR) are integrated into IBD Plexus. The
+ibdplexus package was created to synthesize this data into research
+ready formats. This vignette focuses on the functions in the ibdplexus
+package that handle the medication information in SPARC IBD.</p>
+<p>Patient reported surveys, sent out at enrollment and quarterly, ask
+patients about their current IBD medication use specifically. Electronic
+medical records, when available, contain the prescriptions for each
+patient from that institution. They may not be prescribed specifically
+for IBD. The Smartform, updated at the time of office visit by the
+provider, asks for exposure to specific IBD medications.</p>
+<p>This vignette mainly focuses on the medication data from eCRF and
+EMR.</p>
+<h1 id="filtering-for-medications-of-interest">Filtering for Medications
+of Interest</h1>
+<p><code>sparc_med_filter</code> filters through the eCRF and EMR data
+for medications of interest that are listed in the data.frame
+<code>med_grp</code>.</p>
+<p><code>med grp</code> contains the medication name of interest, the
+type of medication and a standardized name. The MEDICATION_NAME column
+includes generic and brand names. the new_med_name column is the
+standardized name for each MEDICATION_NAME.</p>
+<p>Biosimilars are now in their own groups.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(ibdplexus, <span class="at">quietly =</span> T)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(tidyr, <span class="at">quietly =</span> T)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(dplyr, <span class="at">quietly =</span> T)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(lubridate, <span class="at">quietly =</span> T)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co"># Here is the table of the medication types in med_grp</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(med_grp <span class="sc">%&gt;%</span> <span class="fu">distinct</span>(med_type))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">med_type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">biologic</td>
+</tr>
+<tr class="even">
+<td align="left">antibiotics</td>
+</tr>
+<tr class="odd">
+<td align="left">immunomodulators</td>
+</tr>
+<tr class="even">
+<td align="left">aminosalicylates</td>
+</tr>
+<tr class="odd">
+<td align="left">corticosteroids</td>
+</tr>
+<tr class="even">
+<td align="left">antidiarrheals</td>
+</tr>
+<tr class="odd">
+<td align="left">other</td>
+</tr>
+<tr class="even">
+<td align="left">targeted synthetic small molecules</td>
+</tr>
+<tr class="odd">
+<td align="left">probiotic</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co"># Here is the first 5 rows of the med_grp data.frame</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(med_grp, <span class="dv">5</span>))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">MEDICATION_NAME</th>
+<th align="left">med_type</th>
+<th align="left">new_med_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Cyltezo</td>
+<td align="left">biologic</td>
+<td align="left">Adalimumab (Cyltezo)</td>
+</tr>
+<tr class="even">
+<td align="left">adalimumab-adbm</td>
+<td align="left">biologic</td>
+<td align="left">Adalimumab (Cyltezo)</td>
+</tr>
+<tr class="odd">
+<td align="left">Adalimumab-bwwd</td>
+<td align="left">biologic</td>
+<td align="left">Adalimumab (HADLIMA)</td>
+</tr>
+<tr class="even">
+<td align="left">HADLIMA</td>
+<td align="left">biologic</td>
+<td align="left">Adalimumab (HADLIMA)</td>
+</tr>
+<tr class="odd">
+<td align="left">Adalimumab</td>
+<td align="left">biologic</td>
+<td align="left">Adalimumab (Humira)</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># Here is how Infliximab and its&#39; bio-similars are mapped</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(med_grp <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="fu">grepl</span>(<span class="st">&quot;Infliximab&quot;</span>, new_med_name, <span class="at">ignore.case =</span> T)))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">MEDICATION_NAME</th>
+<th align="left">med_type</th>
+<th align="left">new_med_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Infliximab-axxq (Avsola)</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Avsola)</td>
+</tr>
+<tr class="even">
+<td align="left">Avsola</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Avsola)</td>
+</tr>
+<tr class="odd">
+<td align="left">Infliximab-axxq</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Avsola)</td>
+</tr>
+<tr class="even">
+<td align="left">Infliximab-dyyb (Inflectra)</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Inflectra)</td>
+</tr>
+<tr class="odd">
+<td align="left">Inflectra</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Inflectra)</td>
+</tr>
+<tr class="even">
+<td align="left">Infliximab-dyyb</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Inflectra)</td>
+</tr>
+<tr class="odd">
+<td align="left">Remicade</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Remicade)</td>
+</tr>
+<tr class="even">
+<td align="left">Infliximab</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Remicade)</td>
+</tr>
+<tr class="odd">
+<td align="left">Infliximab (Remicade)</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Remicade)</td>
+</tr>
+<tr class="even">
+<td align="left">Infliximab (Remsima)</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Remsima)</td>
+</tr>
+<tr class="odd">
+<td align="left">Remsima</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Remsima)</td>
+</tr>
+<tr class="even">
+<td align="left">Infliximab-abda (Renflexis)</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Renflexis)</td>
+</tr>
+<tr class="odd">
+<td align="left">Renflexis</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Renflexis)</td>
+</tr>
+<tr class="even">
+<td align="left">Infliximab-abda</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Renflexis)</td>
+</tr>
+<tr class="odd">
+<td align="left">Infliximab (Unspecified)</td>
+<td align="left">biologic</td>
+<td align="left">Infliximab (Unspecified)</td>
+</tr>
+</tbody>
+</table>
+<p>To see the entire med_grp data.frame click
+<a href="https://github.com/ccf-tfehlmann/ibdplexus/blob/79168cbffa523ab8da142d250133e70f625e00c7/data/med_grp.rda"><code>here</code></a></p>
+<p><code>sparc_med_filter</code> requires the following SPARC domains to
+be loaded:</p>
+<ul>
+<li><p>prescriptions</p></li>
+<li><p>observations</p></li>
+<li><p>demographics</p></li>
+<li><p>encounter</p></li>
+</ul>
+<p>One must also supply the med_groups of interest which corresponds to
+the med_type in the med_grp data.frame.</p>
+<p><code>sparc med filter</code> subsets the prescriptions table to just
+the medication types specified in med_groups. The leading question on
+medications is located in the observations table.</p>
+<p>In the baseline survey, a patient is asked if they are currently
+taking any medications for their IBD. If they answer “No” they are
+flagged as having no medications at enrollment. It is important to note
+that antibiotics and probiotics are asked about separately in the
+patient surveys.</p>
+<p>In the quarterly follow-up surveys, a patient is asked if they have
+had any changes in their IBD medication. If a patient indicates they
+have not had any medication changes, the data from the previous survey
+is pulled forward.</p>
+<p><code>sparc med filter</code> uses grep to search through the
+MEDICATION, OTHER_MEDICATION and SRC_DRUG_CODE_CONCEPT_NAME columns in
+the prescription table. If the medication of interest is found, it
+subsets the data and maps the medication to the standardized name
+(new_med_name).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Load EMR and eCRF data necessary for sparc_med_filter</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">load_data</span>(<span class="at">datadir =</span> <span class="st">&quot;~/r_input/&quot;</span>, <span class="at">cohort =</span> <span class="st">&quot;SPARC&quot;</span>, <span class="at">domains =</span> <span class="fu">c</span>(<span class="st">&quot;prescriptions&quot;</span>, <span class="st">&quot;observations&quot;</span>, <span class="st">&quot;demographics&quot;</span>, <span class="st">&quot;encounter&quot;</span>), <span class="at">data_type =</span> <span class="st">&quot;Both&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># Filter SPARC IBD data for biologics &amp; immunomodulators</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>meds_of_interest <span class="ot">&lt;-</span> <span class="fu">sparc_med_filter</span>(</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  data<span class="sc">$</span>prescriptions,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  data<span class="sc">$</span>observations,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  data<span class="sc">$</span>demographics,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  data<span class="sc">$</span>encounter,</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">med_groups =</span> <span class="fu">c</span>(<span class="st">&quot;Biologic&quot;</span>, <span class="st">&quot;Immunomodulators&quot;</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>)</span></code></pre></div>
+<h1 id="finding-the-first-instance-of-a-medication">Finding the First
+Instance of a Medication</h1>
+<p><code>sparc_med_journey</code> looks at a patients treatment journey
+utilizing EMR and eCRF data. It is designed to find the first instance
+of a medication. It is only appropriate for long term medications that
+we do not expect to re-start. We assume biologics, aminosalicylates,
+immunomodulators and targeted synthetic small molecules fit this
+description. It returns a data.frame with the first medication start
+date for each drug, and an end date if available.</p>
+<p>It calls <code>sparc_med_filter</code> to filter for the medications
+of interest. It is recommended to only use those medications that a
+patient is on long term and unlikely to restart.</p>
+<p>Medication start and stop dates are chosen independently from both
+eCRF and EMR sources. Medications with a start or stop date before 1900
+are dropped.</p>
+<p>For EMR data, if a medication start date is missing, the visit
+encounter start date is used. These records are flagged in the column
+VISIT_ENCOUNTER_MED_START.</p>
+<p>If a patient has medication information for the same drug from eCRF
+and EMR, the earliest MED_START_DATE is used and the latest
+MED_END_DATE. If the visit encounter start date is used as a proxy
+medication start date for the EMR data and eCRF medication information
+is available, then the eCRF start date is used for the MED_START_DATE.
+The columns MED_START_SOURCE and MED_END_SOURCE tell the data source of
+the respective date. I</p>
+<p>Any overlap between medications is reported along with the number of
+days the medications overlap.</p>
+<p>If no end date is given for a prescription, the duration of the
+overlap is calculated assuming an ongoing prescription. The effective
+end date is set using a database wide cutoff based on the the date of
+the latest encounter any patient had (as returned by the function
+<code>extract_latest</code>.</p>
+<p>There are flags for if a patient was on a steroid at the same time as
+the listed medication.</p>
+<p><code>sparc_med_journey</code> creates a table with the following
+columns:</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 85%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Column</td>
+<td>Description</td>
+</tr>
+<tr class="even">
+<td>DEIDENTIFIED_MASTER_PATIENT_ID</td>
+<td>Unique patient id</td>
+</tr>
+<tr class="odd">
+<td>MEDICATION</td>
+<td>Corresponds to new_med_name in the med_grp data.frame</td>
+</tr>
+<tr class="even">
+<td>MED_START_DATE_ECRF</td>
+<td>Medication Start Date from the eCRF data source</td>
+</tr>
+<tr class="odd">
+<td>MED_END_DATE_ECRF</td>
+<td>Medication End Date from the eCRF data source</td>
+</tr>
+<tr class="even">
+<td>CURRENT_MEDICATION_ECRF</td>
+<td>YES if the medication is current, NO if the medication has been
+stopped</td>
+</tr>
+<tr class="odd">
+<td>NUMBER_OF_DOSE_CHANGES_ECRF</td>
+<td>Counts the number of times a patient reported a change in dose. This
+field is free text and the r script only parses out numbers.</td>
+</tr>
+<tr class="even">
+<td>DECREASE_IN_FREQUENCY</td>
+<td>Flags if there is a decrease in frequency of a medication.</td>
+</tr>
+<tr class="odd">
+<td>REASON_STOPPED</td>
+<td>Lists the reason stopped if available. A medication may be current,
+but have a reason stopped populated because of a dose and/or frequency
+change.</td>
+</tr>
+<tr class="even">
+<td>VISIT_ENCOUNTER_MED_START</td>
+<td>For EMR data, flags if a medication start date is missing and the
+visit encounter start date was used instead</td>
+</tr>
+<tr class="odd">
+<td>MED_START_DATE_EMR</td>
+<td>Medication Start Date from the EMR data source</td>
+</tr>
+<tr class="even">
+<td>MED_END_DATE_EMR</td>
+<td>Medication End Date from the EMR data source</td>
+</tr>
+<tr class="odd">
+<td>MED_DISCONT_START_DATE_EMR</td>
+<td>Medication discontinue date from the EMR data source</td>
+</tr>
+<tr class="even">
+<td>LOADING_DOSE_EMR</td>
+<td><p>1 if a patients prescription pattern for specific biologics
+represents the loading pattern of that medication.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 79%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Biologic</th>
+<th>Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Infliximab</td>
+<td>Prescriptions at 0,2,6 and then every 8 weeks</td>
+</tr>
+<tr class="even">
+<td>Adalimumab</td>
+<td>Every 2 weeks with the first dose as 160mg, then 80 mg, then 40mg
+going forward</td>
+</tr>
+<tr class="odd">
+<td>Certolizumab Pegol</td>
+<td>Prescriptions at 0,2,4 and then every 4 weeks</td>
+</tr>
+<tr class="even">
+<td>VedolizInumab</td>
+<td>Prescriptions at 0,2,6 and then every 8 weeks</td>
+</tr>
+<tr class="odd">
+<td>Ustekinumab</td>
+<td>Initial dose as an IV and then subcutaneous injection every 8
+weeks</td>
+</tr>
+</tbody>
+</table></td>
+</tr>
+<tr class="odd">
+<td>PRESCRIPTION_NUMBER_EMR</td>
+<td>Number of rows for this medication in the prescription emr data</td>
+</tr>
+<tr class="even">
+<td>MEDICATION_REFILLS_EMR</td>
+<td>Number of refills from most recent prescription in the EMR data</td>
+</tr>
+<tr class="odd">
+<td>ECRF_PRESCRIPTION_DATA</td>
+<td>1 if data for this medication is available in the eCRF data
+source</td>
+</tr>
+<tr class="even">
+<td>MED_START_DATE</td>
+<td>The earliest date of MED_START_DATE_ECRF and MED_END_DATE_EMR</td>
+</tr>
+<tr class="odd">
+<td>MED_END_DATE</td>
+<td>The latest date of MED_END_DATE_ECRF and MED_END_DATE_EMR</td>
+</tr>
+<tr class="even">
+<td>MED_START_SOURCE</td>
+<td>The data source where the MED_START_DATE is coming from. If EMR
+&amp; eCRF have the same date, then it is “Both”</td>
+</tr>
+<tr class="odd">
+<td>MED_END_SOURCE</td>
+<td>The data source where the MED_END_DATE is coming from. If EMR &amp;
+eCRF have the same date, then it is “Both”</td>
+</tr>
+<tr class="even">
+<td>MOA</td>
+<td>The mechanism of action for each medication. Includes, antiTNF,
+Aminosalicylates, Immunomodulators, Interleukin-12 and -23 Antagonist,
+JAKi, Integrin Receptor Antagonists, S1P</td>
+</tr>
+<tr class="odd">
+<td>MEDICATION_NUMBER</td>
+<td>counts the number of different medications in a patients’ journey.
+Only medications in the selected med_groups are considered. The
+medication with with earliest start date will have MEDICATION_NUMBER =
+1.</td>
+</tr>
+<tr class="even">
+<td>OVERLAPPING_MOA</td>
+<td>If multiple medications overlap, the overlapping MOA is listed
+here</td>
+</tr>
+<tr class="odd">
+<td>OVERLAPPING_DAYS</td>
+<td>The number of days the medication overlaps with another MOA</td>
+</tr>
+<tr class="even">
+<td>DATE_OF_CONSENT</td>
+<td>The date of enrollment into SPARC for the patient</td>
+</tr>
+<tr class="odd">
+<td>DATE_OF_CONSENT_WITHDRAWN</td>
+<td>The date of withdrawal from SPARC, if applicable</td>
+</tr>
+<tr class="even">
+<td>STARTED_AFTER_ENROLLMENT</td>
+<td>is 1 if the medication start date is after the date of consent.</td>
+</tr>
+<tr class="odd">
+<td>NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT</td>
+<td>1 if a patient indicates “No” to “Are you currently on any IBD
+medications?” at their baseline survey.</td>
+</tr>
+<tr class="even">
+<td>ADVANCED_MED</td>
+<td>is 1 if the record is for an advanced medication including
+Adalimumab, Certolizumab Pegol, Golimumab, Infliximab, Natalizumab,
+Other Biologic, Ustekinumab, Vedolizumab, Tofacitinib, Upadacitinib,
+Ozanimod, or Risankizumab. Biosimilars are included.</td>
+</tr>
+<tr class="odd">
+<td>FIRST_ADVANCED_MED</td>
+<td>is 1 if a medication record is the first advanced medication a
+patient receives.</td>
+</tr>
+<tr class="even">
+<td>FIRST_ADVANCED_MED_NUMBER</td>
+<td> If a record is the first advanced medication a patient receives,
+FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.</td>
+</tr>
+<tr class="odd">
+<td>BIONAIVE</td>
+<td>is 1 if patient has no prior reported advanced medication use</td>
+</tr>
+<tr class="even">
+<td>PREDNISONE</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="odd">
+<td>BUDESONIDE</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="even">
+<td>STEROIDS_ORAL_ECRF</td>
+<td>Flag 1 if a patient has a report of Steroids Oral on the eCRF that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="odd">
+<td>METHYLPREDNISOLONE</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="even">
+<td>PREDNISOLONE</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="odd">
+<td>STEROID_FOAM</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="even">
+<td>STEROID_ENEMA</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="odd">
+<td>STEROID_SUPPOSITORY</td>
+<td>Flag 1 if a patient has a prescription or report of use that
+overlaps with the MED_START_DATE and MED_END_DATE.</td>
+</tr>
+<tr class="even">
+<td>ANY_STEROID</td>
+<td>1 if any of the steroid flags are 1.</td>
+</tr>
+<tr class="odd">
+<td>RECTAL_STEROID</td>
+<td>1 if steroid foam, steroid enema or steroid suppository is 1</td>
+</tr>
+<tr class="even">
+<td>ORAL_IV_STEROID</td>
+<td>1 if prednisone, budesonide, steroids_oral_ecrf, methylprednisolone,
+or prednisolone are 1</td>
+</tr>
+</tbody>
+</table>
+
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Find Medication Start Dates for Biologics and Immunomodulators.</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co"># If export = TRUE then an excel spreadsheet is generated.</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>medication_starts <span class="ot">&lt;-</span> <span class="fu">sparc_med_journey</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  data<span class="sc">$</span>prescriptions,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  data<span class="sc">$</span>observations,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  data<span class="sc">$</span>demographics,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  data<span class="sc">$</span>encounter,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">med_groups =</span> <span class="fu">c</span>(<span class="st">&quot;Biologic&quot;</span>, <span class="st">&quot;Immunomodulators&quot;</span>),</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">export =</span> <span class="cn">TRUE</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>)</span></code></pre></div>
+<h1 id="medication-at-a-specific-time-point">Medication at a Specific
+Time-point</h1>
+<p>This medication journey can then be used to find the medications a
+patient is on at a specific time point using the
+<code>sparc_medication</code> function. This time point is referred to
+as an “index” date. The function looks to see if the index date is
+within the medication start and stop dates as generated by the
+<code>sparc_med_journey</code> function.</p>
+<p><code>sparc_medication</code> includes pre-programmed index dates for
+enrollment, latest, endoscopy, omics and biosample collection. A data
+frame with the DEIDENTIFIED_MASTER_PATIENT_ID and index_date can also be
+passed into the function. If two medications of the same MOA overlap,
+the start of the 2nd medication is used as the end date of the previous
+medication.</p>
+<p><code>sparc_medication</code> also requires a list of data.frames as
+generated by <code>load_data</code> which must include demographics,
+diagnosis, encounter, procedures, observations, biosample,
+omics_patient_mapping, and prescriptions.</p>
+<p>Currently, this function does not support antibiotic use. Functions
+to parse out this information are in development.</p>
+<p>A data.frame and excel file is generated with the following
+columns:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Column</strong></td>
+<td><strong>Description</strong></td>
+</tr>
+<tr class="even">
+<td>DEIDENTIFIED_MASTER_PATIENT_ID</td>
+<td>Unique patient id</td>
+</tr>
+<tr class="odd">
+<td>DATE_OF_CONSENT</td>
+<td>The date of enrollment into SPARC for the patient</td>
+</tr>
+<tr class="even">
+<td>DATE_OF_CONSENT_WITHDRAWN</td>
+<td>The date of withdrawal from SPARC, if applicable</td>
+</tr>
+<tr class="odd">
+<td>BIRTH_YEAR</td>
+<td>Year of patients birth</td>
+</tr>
+<tr class="even">
+<td>SEX</td>
+<td>Male, Female or Unknown</td>
+</tr>
+<tr class="odd">
+<td>DIAGNOSIS</td>
+<td>Crohn’s Disease, Ulcerative Colitis, or IBD Unclassified</td>
+</tr>
+<tr class="even">
+<td>DIAGNOSIS_DATE</td>
+<td>Date of IBD Diagnosis</td>
+</tr>
+<tr class="odd">
+<td>INDEX_DATE</td>
+<td>Date of interest as specified in “index_info”</td>
+</tr>
+<tr class="even">
+<td>NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT</td>
+<td>1 if a patient indicates “No” to “Are you currently on any IBD
+medications?” at their baseline survey.</td>
+</tr>
+<tr class="odd">
+<td>MEDICATION_AT_INDEX</td>
+<td>A concatenated list of medications the patient is on based on if the
+index date falls between the medication start and stop date.</td>
+</tr>
+<tr class="even">
+<td>BIONAIVE</td>
+<td>is 1 if patient has no prior reported biologic use</td>
+</tr>
+<tr class="odd">
+<td>MED_START_DATE_ECRF_XXX</td>
+<td>The start date in the ECRF for medication XXX</td>
+</tr>
+<tr class="even">
+<td>MED_END_DATE_ECRF_XXX</td>
+<td>The end date in the ECRF for medication XXX</td>
+</tr>
+<tr class="odd">
+<td>MED_START_DATE_EMR_XXX</td>
+<td>The start date in the EMR for medication XXX</td>
+</tr>
+<tr class="even">
+<td>MED_END_DATE_EMR_XXX</td>
+<td>The end date in the EMR for medication XXX</td>
+</tr>
+<tr class="odd">
+<td>CURRENT_MEDICATION_ECRF_XXX</td>
+<td>The current medication flag (yes/no) from eCRF for medication
+XXX</td>
+</tr>
+<tr class="even">
+<td>PREDNISONE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>BUDESONIDE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>STEROIDS_ORAL_ECRF</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>METHYLPREDNISOLONE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>PREDNISOLONE</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>STEROID_FOAM</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>STEROID_ENEMA</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="odd">
+<td>STEROID_SUPPOSITORY</td>
+<td>Flag if patient on listed steroid at index date.</td>
+</tr>
+<tr class="even">
+<td>ANY_STEROID</td>
+<td>Flag if patient on any of the steroids at index date.</td>
+</tr>
+<tr class="odd">
+<td>RECTAL_STEROID</td>
+<td>Flag is patient on steroid foam, steroid enema, or steroid
+suppository at index date.</td>
+</tr>
+<tr class="even">
+<td>ORAL_IV_STEROID</td>
+<td>Flag if patient on oral or IV steroid at the index date.</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Load Data needed for sparc_medication function</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">load_data</span>(<span class="at">datadir =</span> <span class="st">&quot;~/r_input/&quot;</span>, <span class="at">cohort =</span> <span class="st">&quot;SPARC&quot;</span>, <span class="at">domains =</span> <span class="fu">c</span>(<span class="st">&quot;demographics&quot;</span>, <span class="st">&quot;diagnosis&quot;</span>, <span class="st">&quot;encounter&quot;</span>, <span class="st">&quot;procedures&quot;</span>, <span class="st">&quot;observations&quot;</span>, <span class="st">&quot;biosample&quot;</span>, <span class="st">&quot;omics_patient_mapping&quot;</span>, <span class="st">&quot;prescriptions&quot;</span>), <span class="at">data_type =</span> <span class="st">&quot;Both&quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># Find Biologics and Immunomodulators a patient is on at enrollment.</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>med_at_enrollment <span class="ot">&lt;-</span> <span class="fu">sparc_medication</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">data =</span> data,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">index_info =</span> <span class="st">&quot;Enrollment&quot;</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">med_groups =</span> <span class="fu">c</span>(<span class="st">&quot;Biologic&quot;</span>, <span class="st">&quot;Immunomodulators&quot;</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="at">filename =</span> <span class="st">&quot;SPARC_MEDICATION_AT_ENROLLMENT.xlsx&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co"># Find Biologics and Immunomodulators a patient is on at endoscopy</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>med_at_endoscopy<span class="ot">&lt;-</span> <span class="fu">sparc_medication</span>(</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  <span class="at">data =</span> data,</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>  <span class="at">index_info =</span> <span class="st">&quot;Endoscopy&quot;</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>  <span class="at">med_groups =</span> <span class="fu">c</span>(<span class="st">&quot;Biologic&quot;</span>, <span class="st">&quot;Immunomodulators&quot;</span>),</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  <span class="at">filename =</span> <span class="st">&quot;SPARC_MEDICATION_AT_ENDOSCOPY.xlsx&quot;</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>)</span></code></pre></div>
+
+</body>
+</html>

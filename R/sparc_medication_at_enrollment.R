@@ -1,5 +1,3 @@
-
-
 #' sparc_medication_enrollment
 #'
 #' Finds the medications the participant is prescribed from the
@@ -12,10 +10,8 @@
 
 #'
 sparc_medication_enrollment <- function(cohort, med) {
-
-
-
   # MEDICATIONS AT ENROLLMENT ----
+
 
   med_enroll <- med %>%
     mutate(index_date = DATE_OF_CONSENT) %>%
@@ -31,6 +27,7 @@ sparc_medication_enrollment <- function(cohort, med) {
     filter(ON_MED == 1) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, MOA) %>%
     slice(which.max(MED_START_DATE)) %>%
+    ungroup() %>%
     pivot_wider(
       id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"),
       names_from = ON_MED,
@@ -57,7 +54,7 @@ sparc_medication_enrollment <- function(cohort, med) {
     pivot_wider(
       id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"),
       names_from = MEDICATION,
-      values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION_ECRF)
+      values_from = c(MED_START_DATE_ECRF, MED_END_DATE_ECRF, MED_START_DATE_EMR, MED_END_DATE_EMR, CURRENT_MEDICATION)
     )
 
 

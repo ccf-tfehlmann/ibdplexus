@@ -4,10 +4,12 @@
 \alias{extract_latest}
 \title{extract_latest}
 \usage{
-extract_latest(encounter)
+extract_latest(encounter, datasource = c("SF_SPARC", "ECRF_SPARC"))
 }
 \arguments{
 \item{encounter}{A dataframe with encounter data.}
+
+\item{datasource}{the data source(s) of interest in a character string. Default is c("SF_SPARC", "ECRF_SPARC").}
 }
 \value{
 A dataframe with  date and type of most recent encounter.

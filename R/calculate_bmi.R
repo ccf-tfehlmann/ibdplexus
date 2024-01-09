@@ -28,7 +28,7 @@ calculate_bmi <- function(observations) {
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, height_m, date)
 
 
-  bmi <- full_join(weight, height,by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "date")) %>%
+  bmi <- full_join(weight, height, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "date")) %>%
     mutate(bmi = weight_kg / (height_m^2)) %>%
     drop_na(bmi) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%

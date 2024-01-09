@@ -30,7 +30,7 @@ remove_empty_cols <- function(df) {
 
 #' to_wide
 #'
-#' Function to reshape table into a wide format. From rancho.
+#' Function to reshape table into a wide format.
 #'
 #' @param df dataframe
 #' @param y.var column names to be transposed
@@ -40,10 +40,14 @@ remove_empty_cols <- function(df) {
 to_wide <- function(df, y.var, value.var) {
   x.vars <- c("DEIDENTIFIED_MASTER_PATIENT_ID", "DEIDENTIFIED_PATIENT_ID", "DATA_SOURCE", "VISIT_ENCOUNTER_ID")
   x.var <- names(df)[names(df) %in% x.vars]
+  all.var <- c(x.var, y.var)
   if (y.var == value.var) {
-    df %>% select(x.var, y.var)
+    df %>% select(all_of(all.var))
   } else {
-    d <- reshape2::dcast(df, paste0(paste(x.var, collapse = " + "), "~", y.var), value.var = value.var, fun.aggregate = function(x) paste(unique(x), collapse = "; "))
+    d <- pivot_wider(df,
+      id_cols = all_of(x.var), names_from = all_of(y.var),
+      values_from = all_of(value.var), values_fn = ~ paste0(.x, collapse = "; ")
+    )
   }
 }
 
@@ -83,31 +87,80 @@ remove_outliers <- function(x, na.rm = TRUE, ...) {
 
 
 
-#' med_search
-#'
-#' filters prescription tables for medications of interest
-#'
-#' @param sf scripts data frame to filter through
-#' @param med_name list of medication names to search for
-#' @param med_string column of medication to search through
-#'
-#' @return filtered data frame with medications of interest
-#'
 
-med_search <- function(df, med_name, med_string) {
-
-  k = NULL
-
-  for (i in 1:length(med_name)) {
-    k[[i]] <- df %>%
-      filter(grepl(med_name[i], med_string, ignore.case = T)) %>%
-      mutate(drug = paste0(med_name[i]))
+#' folder_fix
+#'
+#' add "/" to end of folder name for functions
+#'
+#' @param folder The folder specified for the function
+#'
+#' @return the folder name in the correct format
+folder_fix <- function(folder) {
+  folder <- if (endsWith(folder, "/")) {
+    folder
+  } else {
+    paste0(folder, "/")
   }
-
-  names(k) <- med_name
-
-  k <- k[sapply(k, nrow) > 0]
-
-  k <- bind_rows(k) %>% distinct()
 }
 
+
+#' fix_col_names
+#'
+#' standardize column names for summary tables
+#'
+#' @param df The dataframe created for the summary table
+#'
+#' @return The dataframe with corrected names
+fix_col_names <- function(df){
+
+  # get current names, make all uppercase
+  names_start <- names(df) %>%
+    str_to_upper()
+
+  # replace periods followed by letters with "_", leave periods when specifying volume
+  names_fix <- NA
+
+  for (i in names_start){
+    if (grepl("\\.[a-zA-Z]", i)) {
+
+      names_fix[i] <- gsub("\\.", "_", i)
+
+    } else {
+
+      names_fix[i] <- i
+
+    }
+  }
+
+  # replace multiple instances of underscores and replace spaces with underscores
+  names_final <- names_fix[2:length(names_fix)] %>%
+    unname() %>%
+    str_replace_all("-", "_") %>%
+    str_replace_all(" ", "_") %>%
+    str_replace_all(":", "_") %>%
+    str_replace_all(">", "_") %>%
+    str_replace_all("<", "_") %>%
+    str_replace_all("%", "PCT") %>%
+    str_replace("__", "_") %>%
+    str_replace("___", "_") %>%
+    str_replace_all("'", "") %>%
+    str_replace_all("__", "_") %>%
+    str_replace_all(",", "") %>%
+    str_replace_all("\\(", "") %>%
+    str_replace_all("\\)", "") %>%
+    as_tibble()
+
+  # rename old column names new column names
+  df_colnames <- tibble(
+    "new_name" = names_final$value,
+    "old_name" = names(df)
+  )
+
+  var_names <- tibble::deframe(df_colnames)
+
+  df_new <- df %>%
+    rename(!!!var_names)
+
+  return(df_new)
+
+}

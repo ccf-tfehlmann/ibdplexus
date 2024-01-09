@@ -16,8 +16,6 @@ qorus_summary <- function(datadir,
                           filename = "QORUS_SUMMARY.xlsx",
                           index_range = "30",
                           emr_codes = NULL) {
-
-
   # LOAD FILES ----
 
   data <- load_data(datadir = datadir, cohort = "QORUS", domains = "ALL", data_type = "BOTH")

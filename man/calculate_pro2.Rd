@@ -15,3 +15,6 @@ A dataframe with all pro2 scores from eCRF and Smartform regardless of IBD diagn
 \description{
 Calculates pro2 from SPARC data.
 }
+\details{
+remission/mild/moderate/severe definition from https://pubmed.ncbi.nlm.nih.gov/25348809/
+}

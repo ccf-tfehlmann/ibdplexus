@@ -9,7 +9,6 @@
 
 
 count_patients <- function(
-  data
-){
+    data) {
   return(length(unique(data$DEIDENTIFIED_MASTER_PATIENT_ID)))
 }

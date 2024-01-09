@@ -1,0 +1,128 @@
+---
+title: ""
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{meds_at_visit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# RISK Summary Table
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+The [RISK cohort](https://www.crohnscolitisfoundation.org/research/current-research-initiatives/pediatric-risk-stratification) is a closed observational prospective cohort study which enrolled pediatric (\<16 years old) patients within 30 days of a suspected Crohn's Disease diagnosis. The final cohort enrolled 1,800 patients across 28 clinics in the U.S. and Canada, with a particular focus on the 913 children with a Crohn's Disease diagnosis who were complication free in the first 90 days post diagnosis. Follow-ups including clinical and demographic data were conducted every 6 months for a total of an 8-year follow-up period. Blood, stool and tissue samples were collected at a regularly scheduled procedure at baseline. Blood samples were collected every 12 months for a total of 3 years. Molecular data including iChip genotyping, 16S rDNA sequencing, RNASeq (10M reads, 30M reads, from FFPE slides) transcriptomics, methylation epigenetics, whole shotgun sequencing metagenomics (viral, bacterial and fungal), proteomics, and serology have been generated from available biosamples.
+
+All data used in any RISK summary functions should be loaded using the `ibdplexus` R package `load_data` function. `risk_summary` is a function in the ibdplexus package which exports an excel file with a RISK Summary table. The RISK Summary table has one row for each visit per patient. All data used to create the summary table comes from provider reported case report forms. There are several functions that are used in creating the final RISK summary table which are described below.
+
+## RISK Summary Table Overview
+
+```{r eval = TRUE, warning = FALSE, message = FALSE, echo = F}
+library(ibdplexus, quietly = T)
+library(tidyr, quietly = T)
+library(dplyr, quietly = T)
+library(readxl, quietly = T)
+```
+
+`risk_summary` creates a table with the following columns:
+
+```{r echo = F}
+knitr::kable(ibdplexus:::simple_risk_columns)
+```
+
+<!-- ### MEDICATIONS_AT_VISIT -->
+
+<!-- The column `MEDICATIONS_AT_VISIT` is a list of medications the patient was on at that visit. The medications at visit column is based on medications listed associated with the VISIT_ENCOUNTER_ID in the prescriptions table. -->
+
+<!-- If a medication had been administered but there was no start date recorded, assume the start date is the visit encounter date. -->
+
+## `wpcdai`
+
+The function `wpcdai` creates a dataframe with patient and visit encounter ID's, the wPCDAI calculated for a patient, and all PCDAI columns.
+
+wPCDAI is the weighted version of the Pediatric Crohn's Disease Activity Index. It is more feasible than the full PCDAI for many patients who may be missing some assessments or characteristics required for the calculation. wPCDAI has performed better than other abbreviated PCDAI calculations.$^2$ In the RISK summary table wPCDAI is calculated for any patient with the required values, even if they do not have a Crohn's Disease diagnosis.
+
+The required values for the wPCDAI calculation are found in the following columns. Each variable necessary for the calculation is assigned a numerical category to calculate the wPCDAI.$^3$ *Note the numerical categorization would be different to calculate the full PCDAI .*
+
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| Column Used in Calculation                       | Original Columns                                         | Logic                                                                           |
++==================================================+==========================================================+=================================================================================+
+| `PCDAI - MOST SEVERE ABDOMINAL PAIN PAST 7 DAYS` | `PCDAI - MOST SEVERE ABDOMINAL PAIN PAST 7 DAYS`         | None: 0                                                                         |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Mild (brief, does not interfere with activies): 10                              |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Moderate/Severe (daily, longer lasting, affects activities, nocturnal): 20      |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI-PT FUNCTING,GENERAL WELLBEING PAST 7 DAY` | `PCDAI-PT FUNCTING,GENERAL WELLBEING PAST 7 DAY`         | No limitations of activities, well: 0                                           |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Occassional difficulty in maintaining age appropriate activities, below par: 10 |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Frequent limitation of activity, very poor: 20                                  |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - STOOLS PER DAY PAST 7 DAYS`             | `PCDAI - STOOLS PER DAY PAST 7 DAYS`                     | 0-1 liquid stools, no blood: 0                                                  |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | 2 semi-formed stools with little blood, or 2-5 liquid stools +/- blood: 7.5     |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Gross bleedings or 6 or more liquid or noctural diarrhea: 15                    |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - ESR`                                    | `PCDAI - ESR (MM/HR) WITHIN LAST 2 WEEKS`                | ESR (mm/hr) \< 20: 0 \|                                                         |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | ESR (mm/hr) from 20 - 50: 7.5                                                   |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | ESR (mm/hr) \> 50: 15 \|                                                        |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - ALBUMIN`                                | `PCDAI - ALBUMIN (G/DL WITHIN LAST 2 WEEKS`              | Albumin (g/dL) $\geq$ 3.5: 0 \|                                                 |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Albumin (g/dL) from 3.1 - 3.4: 10                                               |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Albumin (g/dL) $\leq$ 3: 20 \|                                                  |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - WEIGHT`                                 | `PCDAI - WEIGHT`                                         | Weight gain or voluntary weight stable/loss: 0                                  |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Involuntary weight stable or weight loss 1-9%: 5                                |
+|                                                  |                                                          |                                                                                 |
+|                                                  |                                                          | Weight loss $\geq$ 10%: 10 \|                                                   |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - PERIRECTAL DISEASE`                     | | Perirectal Disease Columns                         |   | None/asymptomatic tags: 0                                                       |
+|                                                  | |----------------------------------------------------|   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: ASYMPTOMATIC TAGS`     |   | 1-2 indolent fistula/scant drainage/no tenderness: 7.5                          |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: INFLAMMED TAGS`        |   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: FISSURE`               |   | Active fistula, drainage, tenderness/abscess: 15                                |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE: INDOLENT FISTULA`      |   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE:ACTIVE FISTULA/ABSCESS` |   |                                                                                 |
+|                                                  | | `PCDAI -PERIRECTAL DISEASE:DRAINAGE OR TENDERNESS` |   |                                                                                 |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+| `PCDAI - EIM`                                    | | EIM Columns                                          | | No EIM: 0                                                                       |
+|                                                  | |------------------------------------------------------| |                                                                                 |
+|                                                  | | `PCDAI-EIM: FEVER > 38.5C FOR 3 DAYS OVER PAST WEEK` | | One or more EIM: 10                                                             |
+|                                                  | | `PCDAI - EIM: ORAL ULCERS`                           | |                                                                                 |
+|                                                  | | `PCDAI - EIM: UVEITIS`                               | |                                                                                 |
+|                                                  | | `PCDAI - EIM: DEFINITE ARTHRITIS`                    | |                                                                                 |
+|                                                  | | `PCDAI - EIM: E NODOSUM`                             | |                                                                                 |
+|                                                  | | `PCDAI - EIM: P GANGRENOSUM`                         | |                                                                                 |
++--------------------------------------------------+----------------------------------------------------------+---------------------------------------------------------------------------------+
+
+wPCDAI is calculated by summing the numeric values from the required columns. The scoring for disease activity for the wPCDAI are$^2$:
+
+| wPCDAI Score | Disease Activity |
+|--------------|------------------|
+| $<12.5$      | Remission        |
+| $12.5 - 40$  | Mild             |
+| $>40$        | Moderate         |
+| $>57.5$      | Severe           |
+
+A decrease of 17.5 points is taken evidence of improvement.$^2$
+
+## References
+
+1.  Satsangi J, Silverberg MS, Vermeire S, Colombel JF. The Montreal classification of inflammatory bowel disease: controversies, consensus, and implications. Gut. 2006 Jun;55(6):749-53. doi: 10.1136/gut.2005.082909. PMID: 16698746; PMCID: PMC1856208.
+
+2.  Turner D, Griffiths AM, Walters TD, Seah T, Markowitz J, Pfefferkorn M, Keljo D, Waxman J, Otley A, LeLeiko NS, Mack D, Hyams J, Levine A. Mathematical weighting of the pediatric Crohn's disease activity index (PCDAI) and comparison with its other short versions. Inflamm Bowel Dis. 2012 Jan;18(1):55-62. doi: 10.1002/ibd.21649. Epub 2011 Feb 23. PMID: 21351206.
+
+3.  Turner D, Levine A, Walters TD, Focht G, Otley A, López VN, Koletzko S, Baldassano R, Mack D, Hyams J, Griffiths AM. Which PCDAI Version Best Reflects Intestinal Inflammation in Pediatric Crohn Disease? J Pediatr Gastroenterol Nutr. 2017 Feb;64(2):254-260. doi: 10.1097/MPG.0000000000001227. PMID: 27050050.

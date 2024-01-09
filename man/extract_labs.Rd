@@ -7,7 +7,7 @@
 extract_labs(labs, test)
 }
 \arguments{
-\item{labs}{A dataframe with the labartory results in it. This can be loaded using load_data(datadir = "data/", cohort = "SPARC", domains = c("labs"), data_type = "CRF")}
+\item{labs}{A dataframe with the laboratory results in it. This can be loaded using load_data(datadir = "data/", cohort = "SPARC", domains = c("labs"), data_type = "CRF")}
 
 \item{test}{The test of interest - either fcal for fecal calprotectin or hscrp for High-sensitivity C-reactive Protein.}
 }

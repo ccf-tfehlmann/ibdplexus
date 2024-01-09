@@ -7,7 +7,8 @@
 sparc_medication(
   data,
   index_info = c("ENROLLMENT", "LATEST", "ENDOSCOPY", "OMICS", "BIOSAMPLE"),
-  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators"),
+  med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators",
+    "Targeted synthetic small molecules"),
   filename = "SPARC_MEDICATION.xlsx"
 )
 }

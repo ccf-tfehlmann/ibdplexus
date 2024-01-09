@@ -1,23 +1,25 @@
-
-
-
-
 #' load_data
 #'
 #' Load unzipped DDM txt or csv files.If multiple cohorts are unzipped in one directory from different times, only the most recent one will load.
 #'
-#' @param datadir The directory where data is saved.Need the backslash at the end of the file location.
+#' @param datadir The directory where data is saved.
 #' @param cohort The cohort to load. Either RISK, QORUS, or SPARC.
 #' @param domains The domains to load. Default is "ALL". Must be a character string. Other valid values are patterns matching input file names common examples are:  "demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions".
-#' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
+#' @param data_type The data source to load either case report forms (including covid survey), electronic medical record, or both. Options are both, crf or emr.
 #'
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
 load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
-
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
+  datadir <- folder_fix(datadir)
+
+  # INCLUDE COVID SURVEY IN CRF DATA SOURCE ----
+
+  if (data_type == "CRF") {
+    data_type <- paste0(data_type, "|COVID")
+  }
 
   # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 
@@ -29,7 +31,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
 
   cohorts <- lapply(paste0(datadir, list_names), function(x) {
-    read.csv(x, header = T, nrows = 2)
+    data.table::fread(x, header = T, select = c("DATA_SOURCE"), nrows = 10)
   })
 
   names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
@@ -41,10 +43,11 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   cohorts <- bind_rows(cohorts, .id = "df")
 
   cohorts <- cohorts %>%
+    filter(DATA_SOURCE != "EMR") %>%
     distinct(df, DATA_SOURCE) %>%
     mutate(
       Date = lubridate::ymd(gsub(".*_", "", df)),
-      Cohort = gsub("ECRF_", "", DATA_SOURCE)
+      Cohort = gsub("ECRF_|COVID_SURVEY_|SF_", "", DATA_SOURCE)
     ) %>%
     distinct(Cohort, Date, df) %>%
     mutate(df = gsub("_.*", "", df)) %>%
@@ -109,16 +112,19 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   names(data) <- gsub(paste0(datadir, "|[0-9]*|[0-9]|.txt|\\/|.csv"), "", (files))
   names(data) <- gsub("_SiteExtract", "", names(data))
   names(data) <- gsub("^[_]|_$|__$|___$|____$", "", names(data))
-  names(data) <- gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+  names(data) <- gsub("_CRF|_EMR|_COVID", "", names(data), ignore.case = T)
+  names(data) <- gsub("sparc_", "", names(data), ignore.case = T)
 
 
 
   # Combine Data with the Same Name (Collapses EMR and CRF data together)
   data <- data[order(names(data))]
 
+
   data <- data %>%
     lapply(., mutate_if, is.integer, as.character) %>%
     lapply(., mutate_if, is.numeric, as.character) %>%
+    lapply(., mutate_if, is.logical, as.character) %>%
     lapply(., mutate_if, is.factor, as.character)
 
 
@@ -155,14 +161,37 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
   data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
 
-if("observations" %in% names(data)){
-  data$observations <- data$observations %>%
-    mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
-    mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-    mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
+  if ("observations" %in% names(data)) {
+    data$observations <- data$observations %>%
+      mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
+      mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
+      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))
+  }
 
+  if ("encounter" %in% names(data)) {
+    data$encounter <- data$encounter %>%
+      mutate(
+        VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
+        VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE)
+      )
+  }
+
+  if ("labs" %in% names(data)) {
+    data$labs <- data$labs %>%
+      mutate(LAB_TEST_CONCEPT_NAME = case_when(
+        grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
+        grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
+        TRUE ~ LAB_TEST_CONCEPT_NAME
+      ))
+  }
 
   rm(list = c("files", "folderinfo"))
+  data <- lapply(data, function(x) {
+    x %>%
+      setNames(gsub(" |\\.|-", "_", names(.))) %>%
+      setNames(toupper(names(.)))
+  })
+
 
   return(data)
   gc()
@@ -176,7 +205,7 @@ if("observations" %in% names(data)){
 #'
 #' Load compressed files extracted from IBD Plexus.
 #'
-#' @param datadir The directory where data is saved.Need the backslash at the end of the file location.
+#' @param datadir The directory where data is saved.
 #' @param cohort The cohort to load. Either RISK, QORUS, or SPARC.
 #' @param domains The domains to load. Default is "All". Must be a character string.
 #' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
@@ -189,6 +218,16 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
+  datadir <- folder_fix(datadir)
+
+
+  # INCLUDE COVID SURVEY IN CRF DATA SOURCE ----
+
+  if (data_type == "CRF") {
+    data_type <- paste0(data_type, "|COVID")
+  }
+
+
 
   # GET FILES OF MOST RECENT DATA FOR EACH COHORT OF INTEREST ----
 
@@ -204,8 +243,9 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   list_names <- grep("family", list_names, ignore.case = T, value = T, invert = T)
 
 
+
   cohorts <- lapply(list_names, function(x) {
-    read.csv(unzip(filepath, files = x, exdir = exdir), header = T, nrows = 2)
+    data.table::fread(unzip(filepath, files = x, exdir = exdir), header = T, select = c("DATA_SOURCE"), nrows = 10)
   })
 
   names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
@@ -217,10 +257,11 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   cohorts <- bind_rows(cohorts, .id = "df")
 
   cohorts <- cohorts %>%
+    filter(DATA_SOURCE != "EMR") %>%
     distinct(df, DATA_SOURCE) %>%
     mutate(
       Date = ymd(gsub(".*_", "", df)),
-      Cohort = gsub("ECRF_", "", DATA_SOURCE)
+      Cohort = gsub("ECRF_|COVID_SURVEY_|SF_", "", DATA_SOURCE)
     ) %>%
     distinct(Cohort, Date, df) %>%
     mutate(df = gsub("_.*", "", df)) %>%
@@ -276,7 +317,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
 
   data <- lapply(files, function(x) {
-    read.csv(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header = T, sep = ",") %>% discard(~ all(is.na(.x)))
+    data.table::fread(unzip(filepath, files = x, exdir = exdir), stringsAsFactors = F, na.strings = c(NA, "", "NA"), header = T)
   })
 
 
@@ -285,12 +326,11 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   names(data) <- gsub("_SiteExtract", "", names(data))
   names(data) <- gsub("^[_]|_$|__$|___$|____$", "", names(data))
 
-  names(data) <- gsub("_CRF|_EMR", "", names(data), ignore.case = T)
+  names(data) <- gsub("_CRF|_EMR|_COVID", "", names(data), ignore.case = T)
+  names(data) <- gsub("sparc_", "", names(data), ignore.case = T)
 
 
   # Combine Data with the Same Name (Collapses EMR and CRF data)
-
-
 
 
 
@@ -301,6 +341,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   data <- data %>%
     lapply(., mutate_if, is.integer, as.character) %>%
     lapply(., mutate_if, is.numeric, as.character) %>%
+    lapply(., mutate_if, is.logical, as.character) %>%
     lapply(., mutate_if, is.factor, as.character)
 
 
@@ -332,11 +373,36 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
   data <- lapply(data, function(x) x %>% mutate(across(everything(), ~ replace(., . %in% c(""), NA))))
 
 
-  if("observations" %in% names(data)){
+  if ("observations" %in% names(data)) {
     data$observations <- data$observations %>%
       mutate(OBS_TEST_CONCEPT_NAME = ifelse(OBS_TEST_CONCEPT_NAME == "Constitutional- General Well-Being", "Constitutional - General Well-Being", OBS_TEST_CONCEPT_NAME)) %>%
       mutate(across(everything(), ~ replace(., . %in% c("N.A.", "NA", "N/A", "", " "), NA))) %>%
-      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))}
+      mutate(OBS_TEST_RESULT_DATE = lubridate::dmy(OBS_TEST_RESULT_DATE))
+  }
+
+  if ("encounter" %in% names(data)) {
+    data$encounter <- data$encounter %>%
+      mutate(
+        VISIT_ENCOUNTER_START_DATE = lubridate::dmy(VISIT_ENCOUNTER_START_DATE),
+        VISIT_ENCOUNTER_END_DATE = lubridate::dmy(VISIT_ENCOUNTER_END_DATE)
+      )
+  }
+
+
+  if ("labs" %in% names(data)) {
+    data$labs <- data$labs %>%
+      mutate(LAB_TEST_CONCEPT_NAME = case_when(
+        grepl("FECAL CALPROTECTIN \\(10-600", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (10-600 uG/G)",
+        grepl("FECAL CALPROTECTIN \\(30-1800", LAB_TEST_CONCEPT_NAME, ignore.case = T) ~ "FECAL CALPROTECTIN (30-1800 uG/G)",
+        TRUE ~ LAB_TEST_CONCEPT_NAME
+      ))
+  }
+
+  data <- lapply(data, function(x) {
+    x %>%
+      setNames(gsub(" |\\.|-", "_", names(.))) %>%
+      setNames(toupper(names(.)))
+  })
 
   return(data)
 }
