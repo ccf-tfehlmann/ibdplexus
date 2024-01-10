@@ -134,7 +134,7 @@ return_tables <- function(data,
 #' #cancerdx_woutcervical=emr_extract_diagnosis(data,inclusion="CUSTOM", exclusion = "CUSTOM",custominc="c|d0|d1|d2|d3|d4",customexc="d06")
 #'
 #' #example of text search only
-#' textonly_abscess <- emr_extract_diagnosis(data, text_search = T, code_search = F, inclusion = "abscess")
+#' #textonly_abscess <- emr_extract_diagnosis(data, text_search = T, code_search = F, inclusion = "abscess")
 
 emr_extract_diagnosis <- function(data,
                                       text_search = F,
