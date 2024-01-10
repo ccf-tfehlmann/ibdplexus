@@ -35,44 +35,44 @@
 #'
 #'
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results
-#' labdomemr = load_data(datadir="C:/Users/me/",domains=c("Labs","Demographics"),data_type="EMR")
-#' patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL")
+#' #labdomemr = load_data(datadir="C:/Users/me/",domains=c("Labs","Demographics"),data_type="EMR")
+#' #patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL")
 #'
 #' #example for creating a patient level dataset with an indicator for all High Sensitivity C-Reactive Protein lab results
-#' patient = lab_emr_patient(data=labdomemr,labtype="HS CRP",codetype="ALL")
+#' #patient = lab_emr_patient(data=labdomemr,labtype="HS CRP",codetype="ALL")
 #'
 #' #example for creating a patient level dataset with an indicator for all non-High Sensitivity C-Reactive Protein lab results
-#' patient = lab_emr_patient(data=labdomemr,labtype="NS CRP",codetype="ALL")
+#' #patient = lab_emr_patient(data=labdomemr,labtype="NS CRP",codetype="ALL")
 #'
 #' #example for creating a patient level dataset with an indicator for all Fecal Calprotectin lab results
-#'patient = lab_emr_patient(data=labdomemr,labtype="FCAL",codetype="ALL")
+#'#patient = lab_emr_patient(data=labdomemr,labtype="FCAL",codetype="ALL")
 #'
 #' #example for creating a patient level dataset with an indicator for LOINC C-Reactive Protein lab results
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="LOINC")
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="LOINC")
 #'
 #' #example for creating a patient level dataset with an indicator for C-Reactive Protein lab results using only keywords
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="KEYWORDS")
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="KEYWORDS")
 #'
 #' #example for creating a patient level dataset with an indicator for all elevated C-Reactive Protein lab results and all C-Reactive Protein lab results
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",positive_elevated=TRUE)
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",positive_elevated=TRUE)
 #
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results from after patients were enrolled in the respective study
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT")
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT")
 #'
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results from one year after patients were enrolled in the respective study
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=365)
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=365)
 #'
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results from two years after patients were enrolled in the respective study
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=730)
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=730)
 #'
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results from before patients were enrolled in the respective study
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT")
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT")
 #'
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results from one year before patients were enrolled in the respective study
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=365)
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=365)
 #'
 #' #example for creating a patient level dataset with an indicator for all C-Reactive Protein lab results from two years before patients were enrolled in the respective study
-#'patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=730)
+#'#patient = lab_emr_patient(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=730)
 #'
 #'
 

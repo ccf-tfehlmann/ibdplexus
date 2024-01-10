@@ -23,44 +23,44 @@
 #'
 #'
 #' #example for extracting all C-Reactive Protein lab results
-#'labdomemr = load_data(datadir="C:/Users/me/",domains=c("Labs","Demographics"),data_type="EMR")
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL")
+#'#labdomemr = load_data(datadir="C:/Users/me/",domains=c("Labs","Demographics"),data_type="EMR")
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL")
 #'
 #' #example for extracting all High Sensitivity C-Reactive Protein lab results
-#'hscrp = extract_lab_emr(data=labdomemr,labtype="HS CRP",codetype="ALL")
+#'#hscrp = extract_lab_emr(data=labdomemr,labtype="HS CRP",codetype="ALL")
 #'
 #' #example for extracting all non-High Sensitivity C-Reactive Protein lab results
-#'nscrp = extract_lab_emr(data=labdomemr,labtype="NS CRP",codetype="ALL")
+#'#nscrp = extract_lab_emr(data=labdomemr,labtype="NS CRP",codetype="ALL")
 #'
 #' #example for extracting all Fecal Calprotectin lab results
-#'fcal = extract_lab_emr(data=labdomemr,labtype="FCAL",codetype="ALL")
+#'#fcal = extract_lab_emr(data=labdomemr,labtype="FCAL",codetype="ALL")
 #'
 #' #example for extracting LOINC C-Reactive Protein lab results
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="LOINC")
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="LOINC")
 #'
 #' #example for extracting C-Reactive Protein lab results using only keywords
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="KEYWORDS")
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="KEYWORDS")
 #'
 #' #example for extracting all elevated C-Reactive Protein lab results
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",positive_elevated=TRUE)
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",positive_elevated=TRUE)
 #
 #' #example for extracting all C-Reactive Protein lab results from after patients were enrolled in the respective study
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT")
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT")
 #'
 #' #example for extracting all C-Reactive Protein lab results from one year after patients were enrolled in the respective study
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=365)
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=365)
 #'
 #' #example for extracting all C-Reactive Protein lab results from two years after patients were enrolled in the respective study
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=730)
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="AFTER ENROLLMENT",index_range=730)
 #'
 #' #example for extracting all C-Reactive Protein lab results from before patients were enrolled in the respective study
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT")
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT")
 #'
 #' #example for extracting all C-Reactive Protein lab results from one year before patients were enrolled in the respective study
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=365)
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=365)
 #'
 #' #example for extracting all C-Reactive Protein lab results from two years before patients were enrolled in the respective study
-#'crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=730)
+#'#crp = extract_lab_emr(data=labdomemr,labtype="CRP",codetype="ALL",datecutoff="BEFORE ENROLLMENT",index_range=730)
 #'
 #'
 #'

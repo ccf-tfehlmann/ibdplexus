@@ -39,27 +39,27 @@ User can add up to five indicator variables:
 
 #example for generating a patient level data frame with an indicator variable for patient family history of IBD
 
-data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
-patient = familyibdhist_emr_patient(data,relation=NULL,negativemention=FALSE,famhistnoibd=FALSE,nofamhist=FALSE)
-patient = familyibdhist_emr_patient(data)
+#data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
+#patient = familyibdhist_emr_patient(data,relation=NULL,negativemention=FALSE,famhistnoibd=FALSE,nofamhist=FALSE)
+#patient = familyibdhist_emr_patient(data)
 #example for generating a patient level data frame with indicator variables for patient family history of IBD and for only first degree family member history of IBD
 
 #data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
-patient = familyibdhist_emr_patient(data,relation="FIRST_DEG")
+#patient = familyibdhist_emr_patient(data,relation="FIRST_DEG")
 #example for generating a patient level data frame with indicator variables for patient family history of IBD and for records of no IBD family history
 
 #data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
-patient = familyibdhist_emr_patient(data,negativemention=TRUE)
+#patient = familyibdhist_emr_patient(data,negativemention=TRUE)
 #example for generating a patient level data frame with indicator variables for patient family history of IBD and for family history EMR but no mention of IBD
 
 #data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
-patient = familyibdhist_emr_patient(data,famhistnoibd=TRUE)
+#patient = familyibdhist_emr_patient(data,famhistnoibd=TRUE)
 #example for generating a patient level data frame with indicator variables for patient family history of IBD and for no family history EMR
 
 #data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
-patient = familyibdhist_emr_patient(data,nofamhist=TRUE)
+#patient = familyibdhist_emr_patient(data,nofamhist=TRUE)
 #example for generating a patient level data frame with all five indicator variables.
 
 #data = load_data(datadir="C:/Users/me/",domains=c("Patient_History","Demographics"),data_type="EMR")
-patient = familyibdhist_emr_patient(data,relation="FIRST_DEG",negativemention=TRUE,famhistnoibd=TRUE,nofamhist=TRUE)
+#patient = familyibdhist_emr_patient(data,relation="FIRST_DEG",negativemention=TRUE,famhistnoibd=TRUE,nofamhist=TRUE)
 }
