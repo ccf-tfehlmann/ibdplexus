@@ -161,7 +161,7 @@ emr_extract_diagnosis <- function(data,
   #   }
 
   # to do - add option to search for a specific code character and an unspecified keyword in the same search
-  list_of_inclusion_categories <- c("CANCER", "COLORECTAL CANCER", "WEIGHT LOSS",
+  list_of_inclusion_categories <- c("SYSTEMIC FUNGAL INFECTION", "CANCER", "COLORECTAL CANCER", "WEIGHT LOSS",
                                     "ABDOMINAL PAIN", "STOMA", "PSC", "GI BLEEDING",
                                     "GI ULCER", "PERIANAL ABSCESS OR FISTULA", "SYSTEMATIC FUNGAL INFECTION",
                                     "DEMYELINATING DISORDER", "CELIAC", "B2 OR B3", "MALNOURISHMENT",
@@ -341,7 +341,10 @@ emr_extract_diagnosis <- function(data,
         select(-fh) %>%
         mutate(risk = ifelse(grepl("RISK FOR", SRC_DIAG_CONCEPT_NAME, ignore.case = T), T, F)) %>%
         filter(risk == F) %>%
-        select(-risk)
+        select(-risk) %>%
+        mutate(closure = ifelse(grepl("CLOSURE", SRC_DIAG_CONCEPT_NAME, ignore.case = T), T, F)) %>%
+        filter(closure == F) %>%
+        select(-closure)
 
       dxemricd <- custom_exclusions(dxemricd, source_column = SRC_DIAG_CONCEPT_CODE)
     }
@@ -364,7 +367,10 @@ emr_extract_diagnosis <- function(data,
         select(-fh)  %>%
         mutate(risk = ifelse(grepl("RISK FOR", SOURCE_PROB_DESC, ignore.case = T), T, F)) %>%
         filter(risk == F) %>%
-        select(-risk)
+        select(-risk)  %>%
+        mutate(closure = ifelse(grepl("CLOSURE", SOURCE_PROB_DESC, ignore.case = T), T, F)) %>%
+        filter(closure == F) %>%
+        select(-closure)
 
       ppemricd <- custom_exclusions(ppemricd, source_column = SOURCE_PROB_CODE)
     }
@@ -387,7 +393,10 @@ emr_extract_diagnosis <- function(data,
         select(-fh)  %>%
         mutate(risk = ifelse(grepl("RISK FOR", SRC_HISTORY_CONCEPT_NAME, ignore.case = T), T, F)) %>%
         filter(risk == F) %>%
-        select(-risk)
+        select(-risk) %>%
+        mutate(closure = ifelse(grepl("CLOSURE", SRC_HISTORY_CONCEPT_NAME, ignore.case = T), T, F)) %>%
+        filter(closure == F) %>%
+        select(-closure)
 
       phemricd <- custom_exclusions(phemricd, source_column = SRC_HISTORY_CONCEPT_CODE)
     }
@@ -410,16 +419,15 @@ emr_extract_diagnosis <- function(data,
     text_inc <- str_to_lower(inclusion1)
     # make it so that if multiple words are put in as a string it is converted to
     # something that works with grepl
-    text_inc <- gsub(",", "|", text_inc)
-    text_inc <- gsub(";", "|", text_inc)
-    text_inc <- gsub(":", "|", text_inc)
-    text_inc <- gsub(" ", "", text_inc)
+    text_inc <- gsub(", ", "|", text_inc)
+    text_inc <- gsub("; ", "|", text_inc)
+    text_inc <- gsub(": ", "|", text_inc)
+    ## can't get rid of all spaces because of two word search terms
+    # text_inc <- gsub(" ", "", text_inc)
 
     # character string to keep before the text inclusion word to look for stop words
     keepbefore <- paste0(" ", text_inc, ".*")
 
-
-    #### TO-DO need to make drop flag for "screenings" ----
 
     if ("diagnosis" %in% names(data)) {
       dxemricd_text <- data$diagnosis %>%
@@ -439,7 +447,10 @@ emr_extract_diagnosis <- function(data,
         select(-fh) %>%
         mutate(risk = ifelse(grepl("RISK FOR", SRC_DIAG_CONCEPT_NAME, ignore.case = T), T, F)) %>%
         filter(risk == F) %>%
-        select(-risk)
+        select(-risk) %>%
+        mutate(closure = ifelse(grepl("CLOSURE", SRC_DIAG_CONCEPT_NAME, ignore.case = T), T, F)) %>%
+        filter(closure == F) %>%
+        select(-closure)
 
       dxemricd_text <- custom_exclusions(dxemricd_text, source_column = SRC_DIAG_CONCEPT_CODE)
 
@@ -474,7 +485,10 @@ emr_extract_diagnosis <- function(data,
         select(-fh) %>%
         mutate(risk = ifelse(grepl("RISK FOR", SOURCE_PROB_DESC, ignore.case = T), T, F)) %>%
         filter(risk == F) %>%
-        select(-risk)
+        select(-risk) %>%
+        mutate(closure = ifelse(grepl("CLOSURE", SOURCE_PROB_DESC, ignore.case = T), T, F)) %>%
+        filter(closure == F) %>%
+        select(-closure)
 
       ppemricd_text <- custom_exclusions(ppemricd_text, source_column = SOURCE_PROB_CODE)
 
@@ -508,7 +522,10 @@ emr_extract_diagnosis <- function(data,
         select(-fh) %>%
         mutate(risk = ifelse(grepl("RISK FOR", SRC_HISTORY_CONCEPT_NAME, ignore.case = T), T, F)) %>%
         filter(risk == F) %>%
-        select(-risk)
+        select(-risk) %>%
+        mutate(closure = ifelse(grepl("CLOSURE", SRC_HISTORY_CONCEPT_NAME, ignore.case = T), T, F)) %>%
+        filter(closure == F) %>%
+        select(-closure)
 
       phemricd_text <- custom_exclusions(phemricd_text, source_column = SRC_HISTORY_CONCEPT_CODE)
 
