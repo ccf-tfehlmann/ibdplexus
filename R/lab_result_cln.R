@@ -1,4 +1,4 @@
-#' familyibdhist_emr_extract
+#' lab_result_cln
 #'
 #' A function to clean the "Test Unit" and "Lab Results" fields in in the Lab EMR table to standard formats for analysis.
 #'
