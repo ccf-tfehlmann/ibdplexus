@@ -2,7 +2,7 @@
 % Please edit documentation in R/lab_result_cln.R
 \name{lab_result_cln}
 \alias{lab_result_cln}
-\title{familyibdhist_emr_extract}
+\title{lab_result_cln}
 \usage{
 lab_result_cln(labemrdata)
 }
