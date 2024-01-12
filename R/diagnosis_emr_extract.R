@@ -171,7 +171,7 @@ emr_extract_diagnosis <- function(data,
                                     "FULMINANT COLITIS", "INTRAABDOMINAL ABSCESS",
                                     "STRICTURE STENOSIS", "COLON ADENOMA", "INFECTION",
                                     "TUBERCULOSIS", "DIABETES", "HYPERTENSION", "COPD",
-                                    "CKD STAGE IIB OR MORE", " UNSTABLE ANGINA OR MYOCARDIAL INFARCTION",
+                                    "CKD STAGE IIB OR MORE", "UNSTABLE ANGINA OR MYOCARDIAL INFARCTION",
                                     "AUTOIMMUNE INFLAMMATORY DISEASE", "HEPATITIS B", "HEPATITIS C",
                                     "INHERITED AUTOIMMUNE DISORDER", "CUSTOM")
 
@@ -426,7 +426,107 @@ emr_extract_diagnosis <- function(data,
     # text_inc <- gsub(" ", "", text_inc)
 
     # character string to keep before the text inclusion word to look for stop words
+    # Cass - need to change this for multiple strings
     keepbefore <- paste0(" ", text_inc, ".*")
+
+    # text inclusion for specified categories -
+    if(inclusion1 %in% list_of_inclusion_categories) {
+      if ("CANCER" %in% inclusion1) {
+        text_inc <- "CANCER|MALIGNANT NEOPLASM|NEOPLASM OF UNCERTAIN BEHAVIOR"
+      } else if ("COLORECTAL CANCER" %in% inclusion1) {
+        text_inc <- "COLORECTAL CANCER|COLON ADENOCARCINOMA|MALIGNANT NEOPLASM OF COLON|RECTAL CANCER|
+        MALIGNANT NEOPLASM OF SIGMOID COLON|MALIGNANT NEOPLASM OF RECTOSIGMOID|RECTOSIGMOID CANCER|
+        ADENOCARCINOMA OF COLON|CANCER OF COLON|CANCER OF SIGMOID COLON|MALIGNANT NEOPLASM OF DESCENDING COLON|
+        COLON CANCER|MALIGNANT NEOPLASM OF RECTUM|MALIGNANT TUMOR OF RECTUM|RECTAL CANCER|
+        MALIGNANT NEOPLASM OF TRANSVERSE COLON"
+      } else if ("WEIGHT LOSS" %in% inclusion1) {
+        text_inc <- "WEIGHT LOSS|LOSS OF WEIGHT"
+      } else if ("ABDOMINAL PAIN" %in% inclusion1) {
+        text_inc <- "ABDOMINAL PAIN|DYSPEPSIA|FLANK PAIN|PELVIC PAIN|EPIGASTRIC PAIN|ABDOMINAL DISCOMFORT|
+        ABDOMINAL CRAMPING|ACUTE ABDOMEN"
+      } else if ("STOMA" %in% inclusion1) {
+        text_inc <-  "STOMA|ILEOSTOMY|COLOSTOMY"
+      } else if ("PSC" %in% inclusion1) {
+        text_inc <- "PSC |PRIMARY SCLEROSING CHOLANGITIS"
+      } else if ("GI BLEEDING" %in% inclusion1) {
+        text_inc <- "GI BLEEDING|BLOOD IN STOOL|HEMATOCHEZIA|MELENA|BLOODY STOOLS|GASTROINTESTINAL HEMORRHAGE|
+        BLACK TARRY STOOLS"
+      } else if ("GI ULCER" %in% inclusion1) {
+        text_inc <- "GI ULCER|ULCER OF ILEUM|ULCER OF ANUS|UCLER OF RECTUM"
+      } else if ("PERIANAL ABSCESS OR FISTULA" %in% inclusion1) {
+        text_inc <- "PERIANAL ABSCESS OR FISTULA"
+      } else if ("SYSTEMIC FUNGAL INFECTION" %in% inclusion1) {
+        text_inc <- "SYSTEMIC FUNGAL INFECTION"
+      } else if ("DEMYELINATING DISORDER" %in% inclusion1) {
+        text_inc <- "DEMYELINATING DISORDER|MULTIPLE SCLEROSIS|DEMYELINATING DISEASE"
+      } else if ("CELIAC" %in% inclusion1) {
+        text_inc <- "CELIAC"
+      } else if ("B2 OR B3" %in% inclusion1) {
+        # CASS: COME BACK HERE
+        text_inc <- "CROHN'S DISEASE WITH INTESTINAL OBSTRUCTION|CROHN'S DISEASE OF SMALL INTESTINE WITH INTESTINAL OBSTRUCTION|
+        CROHN DISEASE, WITH INTESTINAL OBSTRUCTION|CROHN'S DISEASE OF BOTH SMALL AND LARGE INTESTINE WITH INTESTINAL OBSTRUCTION|
+        CROHN'S DISEASE OF ILEUM WITH INTESTINAL OBSTRUCTION|CROHN'S DISEASE OF LARGE INTESTINE WITH INTESTINAL OBSTRUCTION"
+      } else if ("MALNOURISHMENT" %in% inclusion1) {
+        text_inc <- "MALNOURISHMENT|ALIMENTARY EDEMA|MALNUTRITION"
+      } else if ("ANEMIA" %in% inclusion1) {
+        text_inc <- "ANEMIA"
+      } else if ("DIARRHEA" %in% inclusion1) {
+        text_inc <- "DIARRHEA"
+      } else if ("NAUSEA OR VOMITING" %in% inclusion1) {
+        text_inc <- "NAUSEA|VOMITING"
+      } else if ("FEVER" %in% inclusion1) {
+        text_inc <- "FEVER|FEBRILE"
+      } else if ("CDI" %in% inclusion1) {
+        text_inc <- "CLOSTRIDIUM DIFFICILE|C. DIFFICILE"
+      } else if ("ARTHRITIS OR LOW BACK PAIN" %in% inclusion1) {
+        text_inc <- "ARTHRITIS|LOW BACK PAIN|ARTHOPATHY"
+      } else if ("DACTYLITIS" %in% inclusion1) {
+        # CASS COME BACK -
+        text_inc <- "DACTYLITIS"
+      } else if ("HYPOALBUMINEMIA" %in% inclusion1) {
+        # CASS COME BACK
+        text_inc <- "HYPOALBUMINEMIA"
+      } else if ("NON UC IBD DIAGNOSIS" %in% inclusion1) {
+        text_inc <- "NON UC IBD DIAGNOSIS|CROHN'S|IBD UNCLASSIFIED|INDETERMINATE COLITIS"
+      } else if ("TOXIC MEGACOLON" %in% inclusion1) {
+        text_inc <- "TOXIC MEGACOLON"
+      } else if ("FULMINANT COLITIS" %in% inclusion1) {
+        text_inc <- "FULMINANT COLITIS"
+      } else if ("INTRAABDOMINAL ABSCESS" %in% inclusion1) {
+        text_inc <- "INTRAABDOMINAL ABSCESS|ABSCESS OF ABDOMINAL|ABDOMINAL WALL ABSCESS|
+        MESENTERIC ABSCESS|PERITONEAL ABSCESS|INTRA-ABDOMINAL ABSCESS"
+      } else if ("STRICTURE STENOSIS" %in% inclusion1) {
+        text_inc <- "STRICTURE|STENOSIS"
+      } else if ("COLON ADENOMA" %in% inclusion1) {
+        text_inc <- "COLON ADENOMA|BENIGN NEOPLASM OF COLON|DYSPLASIA OF COLON|
+        ADENOMA OF COLON|COLON DYSPLASIA|COLONIC ADENOMA"
+      } else if ("INFECTION" %in% inclusion1) {
+        # CASS -
+        text_inc <- "INFECTION"
+      } else if ("TUBERCULOSIS" %in% inclusion1) {
+        text_inc <- "TUBERCULOSIS|TB INFECTION"
+      } else if ("DIABETES" %in% inclusion1) {
+        text_inc <- "DIABETES"
+      } else if ("HYPERTENSION" %in% inclusion1) {
+        text_inc <- " HTN |HYPERTENSION"
+      } else if ("COPD" %in% inclusion1) {
+        text_inc <- " COPD |CHRONIC OBSTRUCTIVE PULMONARY DISEASE|CROHNIC BRONCHITIS|
+        CHRONIC AIRWAY OBSTRUCTION|CHRONIC OBSTRUCTIVE ASTHMA"
+      } else if ("CKD STAGE IIB OR MORE" %in% inclusion1) {
+        text_inc <- " CKD |CHRONIC KIDNEY DISEASE|CHRONIC RENAL FAILURE"
+      } else if ("UNSTABLE ANGINA OR MYOCARDIAL INFARCTION" %in% inclusion1) {
+        text_inc <- "UNSTABLE ANGINA|MYOCARDIAL INFARCTION|ANGINA PECTORIS"
+      } else if ("AUTOIMMUNE INFLAMMATORY DISEASE" %in% inclusion1) {
+        text_inc <- "AUTOIMMUNE INFLAMMATORY DISEASE"
+      } else if ("HEPATITIS B" %in% inclusion1) {
+        text_inc <- "HEPATITIS B"
+      } else if ("HEPATITIS C" %in% inclusion1) {
+        text_inc <- "HEPATITIS C "
+      } else if ("INHERITED AUTOIMMUNE DISORDER" %in% inclusion1) {
+        text_inc <- "INHERITED AUTOIMMUNE DISORDER"
+      }
+
+    }
 
 
     if ("diagnosis" %in% names(data)) {
