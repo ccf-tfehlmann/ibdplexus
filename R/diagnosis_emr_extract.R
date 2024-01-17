@@ -502,7 +502,7 @@ emr_extract_diagnosis <- function(data,
         text_inc <- "COLON ADENOMA|BENIGN NEOPLASM OF COLON|DYSPLASIA OF COLON|
         ADENOMA OF COLON|COLON DYSPLASIA|COLONIC ADENOMA"
       } else if ("INFECTION" %in% inclusion1) {
-        # CASS -
+        # CASS - NEED TO ADD WITHOUT
         text_inc <- "INFECTION"
       } else if ("TUBERCULOSIS" %in% inclusion1) {
         text_inc <- "TUBERCULOSIS|TB INFECTION"
