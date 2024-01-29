@@ -378,16 +378,24 @@ full_pcdai <- function (observations, encounter, labs) {
     mutate(across(c("PCDAI - ABDOMINAL TENDERNESS", "PCDAI - ABDOMINAL MASS",
                     "PCDAI -INVOLUNTARY ABDOMINAL GUARDING"), ~ifelse(.x == "Dat_0_no" | .x == "Dat_1_yes", .x, NA))) %>%
     mutate(`PCDAI - ABDOMEN` = case_when(
-      `PCDAI - ABDOMINAL TENDERNESS` == "Dat_0_no" & `PCDAI - ABDOMINAL MASS` == "Dat_0_no" ~ 0,
+      `PCDAI - ABDOMINAL TENDERNESS` == "Dat_0_no" & `PCDAI - ABDOMINAL MASS` == "Dat_0_no" &
+        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` != "Dat_1_yes" ~ 0,
       `PCDAI - ABDOMINAL TENDERNESS` == "Dat_1_yes" & is.na(`PCDAI - ABDOMINAL MASS`) |
-        `PCDAI - ABDOMINAL MASS` == "Dat_1_yes" & `PCDAI - ABDOMINAL TENDERNESS` == "Dat_0_no" |
+        `PCDAI - ABDOMINAL MASS` == "Dat_1_yes" & `PCDAI - ABDOMINAL TENDERNESS` == "Dat_0_no" &
+        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` != "Dat_1_yes" |
         `PCDAI - ABDOMINAL MASS` == "Dat_0_no" & `PCDAI - ABDOMINAL TENDERNESS` == "Dat_1_yes" &
-        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` == "Dat_0_no" |
-        `PCDAI - ABDOMINAL MASS` == "Dat_0_no" & `PCDAI - ABDOMINAL TENDERNESS` == "Dat_1_yes" &
-        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` == "Dat_1_yes" ~ 5,
+        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` == "Dat_0_no" ~ 5,
       `PCDAI - ABDOMINAL TENDERNESS` == "Dat_1_yes" & `PCDAI - ABDOMINAL MASS` == "Dat_1_yes"  ~ 10,
+      `PCDAI - ABDOMINAL TENDERNESS` == "Dat_0_no" & `PCDAI - ABDOMINAL MASS` == "Dat_0_no" &
+        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` == "Dat_1_yes" ~ 10,
+      `PCDAI - ABDOMINAL TENDERNESS` == "Dat_1_yes" & `PCDAI - ABDOMINAL MASS` == "Dat_0_no" &
+        `PCDAI -INVOLUNTARY ABDOMINAL GUARDING` == "Dat_1_yes" ~ 10,
       TRUE ~ NA
     )) %>%
+    # most conservative abdominal score approach
+    mutate(`PCDAI - ABDOMEN` = ifelse(is.na(`PCDAI - ABDOMINAL TENDERNESS`) |
+                                        is.na(`PCDAI -INVOLUNTARY ABDOMINAL GUARDING`) |
+                                        is.na(`PCDAI - ABDOMINAL MASS`), NA, `PCDAI - ABDOMEN`)) %>%
     # convert perirectal disease column from wpcdai calculation
     mutate(`PCDAI - PERIRECTAL` = case_when(
       `PCDAI - PERIRECTAL DISEASE` == 0 ~ 0,
