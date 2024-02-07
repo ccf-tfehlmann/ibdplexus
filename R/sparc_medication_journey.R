@@ -77,7 +77,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
         (MED_END_DATE == MED_END_DATE_EMR | MED_END_DATE == MED_DISCONT_START_DATE_EMR) & is.na(MED_END_DATE_ECRF) ~ "EMR",
         TRUE ~ NA_character_
       )
-    )
+    ) %>%
+    drop_na(MED_START_DATE)
 
 
   # Add if medication is current ----
@@ -282,6 +283,9 @@ if("biologic" %in% med_groups){
 
   # fix col names
   med <- fix_col_names(med)
+
+  # remove everyone without a date of consent
+  med <- med %>% drop_na(DATE_OF_CONSENT)
 
   if (export == "TRUE") {
     write.xlsx(med, paste0("SPARC_medication_journey_", Sys.Date(), ".xlsx"), colnames = T)
