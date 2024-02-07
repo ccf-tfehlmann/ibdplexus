@@ -25,8 +25,8 @@ sparc_med_starts <- function(medication, encounter) {
   start_ecrf <- medication %>%
     filter(DATA_SOURCE %in% c("ECRF_SPARC" , "ECRF")) %>%
     mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1900, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1900, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
+      MED_START_DATE = if_else(year(MED_START_DATE) > 1925, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
+      MED_END_DATE = if_else(year(MED_END_DATE) > 1925, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
     ) %>%
     drop_na(MED_START_DATE) %>%
     pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
@@ -59,8 +59,8 @@ sparc_med_starts <- function(medication, encounter) {
     )) %>%
     filter(drop == 0) %>%
     mutate(
-      MED_START_DATE = if_else(year(MED_START_DATE) > 1900, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
-      MED_END_DATE = if_else(year(MED_END_DATE) > 1900, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
+      MED_START_DATE = if_else(year(MED_START_DATE) > 1925, MED_START_DATE, as.Date(NA, format = "%d-%m-%y")),
+      MED_END_DATE = if_else(year(MED_END_DATE) > 1925, MED_END_DATE, as.Date(NA, format = "%d-%m-%y"))
     ) %>%
     pivot_longer(cols = c(MED_START_DATE, MED_END_DATE), names_to = "type", values_to = "date") %>%
     drop_na(date) %>%
