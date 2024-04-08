@@ -217,7 +217,7 @@ extract_demo <- function(demographics, study) {
 #' @param demographics A dataframe with demographics data.
 #' @param study Cohort from which the data should be extracted. Either SPARC or QORUS.
 #'
-#' @return A dataframe with birth year and sex information.
+#' @return A dataframe with race and ethnicity.
 #' @export
 extract_race <- function(demographics, study) {
   data_source <- paste0("ECRF_", toupper(study))
