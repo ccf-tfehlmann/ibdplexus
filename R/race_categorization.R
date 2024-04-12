@@ -31,11 +31,19 @@ categorize_race <- function(race) {
       TRUE ~ "Other")) %>%
     mutate(R = ifelse(grepl(";|/", RACE) | RACE == "ASIAN AND EUROPEAN" , "Mixed", R)) %>%
     mutate(E = case_when(grepl("Hispanic|Mexican|Cuban|Puerto", R, ignore.case = T) |
-                           E %in% c("HISPANIC", "HISPANIC OR LATINO", "ANOTHER HISPANIC, LATINO/A, OR SPANISH ORIGIN") ~ "Hispanic or Latino",
+                           E %in% c("HISPANIC", "HISPANIC OR LATINO", "ANOTHER HISPANIC, LATINO/A, OR SPANISH ORIGIN",
+                                    "SPANISH/HISPANIC ORIGIN", "HISPANIC OR LATINO/A/E") ~ "Hispanic or Latino",
                          !(grepl("Hispanic|Mexican|Cuban|Puerto", RACE, ignore.case = T)) &
-                           E %in% c("NON-HISPANIC OR LATINO/A", "NOT HISPANIC", "NOT HISPANIC OR LATINO", "NOT HISPANIC, LATINO/A, OR SPANISH ORIGIN", "NON-HISPANIC OR LATINO") ~ "Not Hispanic or Latino",
-                         E %in% c("DECLINED", "NONE OF THESE", "PREFER NOT TO DISCLOSE", "UNABLE TO PROVIDE", "UNREPORTED/CHOSE NOT TO DISCLOSE", "Unable to provide", "PREFER NOT TO DISCLOSE; UNKNOWN OR PATIENT UNABLE TO RESPOND") ~ "Patient Declined",
-                         E %in% c("UNKNOWN") ~ "Unknown",
+                           E %in% c("NON-HISPANIC OR LATINO/A", "NOT HISPANIC", "NOT HISPANIC OR LATINO",
+                                    "NOT HISPANIC, LATINO/A, OR SPANISH ORIGIN", "NON-HISPANIC OR LATINO",
+                                    "NOT HISPANIC OR LATINO/A/E") ~ "Not Hispanic or Latino",
+                         E %in% c("DECLINED", "NONE OF THESE", "PREFER NOT TO DISCLOSE",
+                                  "UNABLE TO PROVIDE", "UNREPORTED/CHOSE NOT TO DISCLOSE",
+                                  "Unable to provide", "PREFER NOT TO DISCLOSE; UNKNOWN OR PATIENT UNABLE TO RESPOND",
+                                  "PREFER NOT TO ANSWER", "CHOOSE NOT TO DISCLOSE",
+                                  "DECLINE TO ANSWER", "DECLINE TO SPECIFY", "UNREPORTED/CHOSE NOT TO DISCLOSE") ~ "Patient Declined",
+                         E %in% c("UNKNOWN", "I DO NOT KNOW", "UNKNOWN OR PATIENT UNABLE TO RESPOND",
+                                  "UNABLE TO PROVIDE") ~ "Unknown",
                          TRUE ~ E)) %>%
     dplyr::mutate(RACE_CAT = gsub("(?<=\\b)([a-z])", "\\U\\1", tolower(R), perl=TRUE), ETHNICITY_CAT = gsub("(?<=\\b)([a-z])", "\\U\\1", tolower(E), perl=TRUE)) %>%
     mutate(ETHNICITY_CAT = ifelse(is.na(ETHNICITY), "Missing", ETHNICITY),
