@@ -1,6 +1,6 @@
-# temp code to test SPARC
-demo <- load_data(datadir = "~/r_input/", domains = "demographics", cohort = "SPARC", data_type = "BOTH") %>% bind_rows()
-r <- extract_race(demo, "SPARC")
+# # temp code to test SPARC
+# demo <- load_data(datadir = "~/r_input/", domains = "demographics", cohort = "SPARC", data_type = "BOTH") %>% bind_rows()
+# r <- extract_race(demo, "SPARC")
 
 #' categorize race
 #'
