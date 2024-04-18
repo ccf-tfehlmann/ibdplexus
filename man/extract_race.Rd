@@ -12,7 +12,7 @@ extract_race(demographics, study)
 \item{study}{Cohort from which the data should be extracted. Either SPARC or QORUS.}
 }
 \value{
-A dataframe with birth year and sex information.
+A dataframe with race and ethnicity.
 }
 \description{
 Extract race & ethnicity information SPARC & QORUS from a table with demographic information.
