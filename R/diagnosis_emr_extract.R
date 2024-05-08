@@ -277,7 +277,7 @@ emr_extract_diagnosis <- function(data,
     if ("diagnosis" %in% names(data)) {
       dxemricd <- data$diagnosis %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID,
                                               DIAG_CONCEPT_CODE, DIAGNOSIS_DATE) %>% filter(row_number() ==
-                                                                                              1) %>% filter(DIAG_SYSTEM_NAME != "Local" & DATA_SOURCE ==
+                                                                                              1) %>% ungroup() %>% filter(DIAG_SYSTEM_NAME != "Local" & DATA_SOURCE ==
                                                                                                               "EMR") %>% filter(grepl(inc, SRC_DIAG_CONCEPT_CODE,
                                                                                                                                       ignore.case = TRUE))
 
@@ -287,7 +287,7 @@ emr_extract_diagnosis <- function(data,
     if ("patient_problem" %in% names(data)) {
       ppemricd <- data$patient_problem %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                     SOURCE_PROB_CODE, PROBLEM_START_DATE) %>% filter(row_number() ==
-                                                                                                       1) %>% filter(SOURCE_PROB_CODE_SYSTEM_NAME != "Local" &
+                                                                                                       1) %>% ungroup() %>% filter(SOURCE_PROB_CODE_SYSTEM_NAME != "Local" &
                                                                                                                        DATA_SOURCE == "EMR") %>% filter(grepl(inc, SOURCE_PROB_CODE, ignore.case = TRUE))
 
       ppemricd <- custom_exclusions(ppemricd, source_column = SOURCE_PROB_CODE)
@@ -296,7 +296,7 @@ emr_extract_diagnosis <- function(data,
     if ("patient_history" %in% names(data)) {
       phemricd <- data$patient_history %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                     SRC_HISTORY_CONCEPT_CODE, EVENT_ONSET_DATE) %>%
-        filter(row_number() == 1) %>% filter(HISTORY_TYPE ==
+        filter(row_number() == 1) %>% ungroup() %>% filter(HISTORY_TYPE ==
                                                "Medical_HX" & DATA_SOURCE == "EMR") %>% filter(grepl(inc,
                                                                                                      SRC_HISTORY_CONCEPT_CODE, ignore.case = TRUE))
       phemricd <- custom_exclusions(phemricd, source_column = SRC_HISTORY_CONCEPT_CODE)
