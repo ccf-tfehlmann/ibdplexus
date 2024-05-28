@@ -543,18 +543,18 @@ sparc_scores <- function(data,
   # Subscore PDAI ----
 
 pdai <- data$procedures %>%
-    drop_na(RUTGEERT_GRADE) %>%
+    drop_na(ENDOSCOPIC_SUBSCORE_PDAI) %>%
     left_join(cohort) %>%
     mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
     mutate(datediff = abs(SCORE_DATE - index_date)) %>%
     filter(datediff <= t) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(RUTGEERT_GRADE)) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(ENDOSCOPIC_SUBSCORE_PDAI)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     filter(datediff == min(abs(datediff))) %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, SCORE_DATE, RUTGEERT_GRADE) %>% # intersect(names(.), names(calculate_mes(data$procedures)))) %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, SCORE_DATE, ENDOSCOPIC_SUBSCORE_PDAI) %>% # intersect(names(.), names(calculate_mes(data$procedures)))) %>%
     rename(
       ENDO_DATE = SCORE_DATE
     ) %>%
