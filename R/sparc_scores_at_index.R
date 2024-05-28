@@ -511,14 +511,98 @@ sparc_scores <- function(data,
     )
 
   es <- bind_rows(ses, mes) %>%
+    distinct()
+
+  # cohort <- left_join(cohort, es)
+
+
+  # Pouch score ----
+  # CLB:  NOT filtering for a specific diagnosis - should be?
+
+  pouch <- data$procedures %>%
+    drop_na(ENDOSCOPIC_POUCH_SCORE) %>%
+    left_join(cohort) %>%
+    mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
+    mutate(datediff = abs(SCORE_DATE - index_date)) %>%
+    filter(datediff <= t) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(ENDOSCOPIC_POUCH_SCORE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+    filter(datediff == min(abs(datediff))) %>%
+    slice(1) %>%
     distinct() %>%
+    ungroup() %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, SCORE_DATE, ENDOSCOPIC_POUCH_SCORE) %>% # intersect(names(.), names(calculate_mes(data$procedures)))) %>%
+    rename(
+      ENDO_DATE = SCORE_DATE
+    ) %>%
+    distinct() # %>%
+    # mutate(POUCHOSCOPY = 1) %>%
+    # rename(!!paste("POUCHOSCOPY", t, sep = "_") := POUCHOSCOPY)
+
+
+  # Subscore PDAI ----
+
+pdai <- data$procedures %>%
+    drop_na(RUTGEERT_GRADE) %>%
+    left_join(cohort) %>%
+    mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
+    mutate(datediff = abs(SCORE_DATE - index_date)) %>%
+    filter(datediff <= t) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(RUTGEERT_GRADE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+    filter(datediff == min(abs(datediff))) %>%
+    slice(1) %>%
+    distinct() %>%
+    ungroup() %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, SCORE_DATE, RUTGEERT_GRADE) %>% # intersect(names(.), names(calculate_mes(data$procedures)))) %>%
+    rename(
+      ENDO_DATE = SCORE_DATE
+    ) %>%
+    distinct() # %>%
+    # mutate(POUCHOSCOPY = 1) %>%
+    # rename(!!paste("POUCHOSCOPY", t, sep = "_") := POUCHOSCOPY)
+
+  # join all pouchoscopy scores
+
+  pouches <- full_join(pouch, pdai)
+
+  # cohort <- left_join(cohort, pouches)
+
+  # Rutgeerts Grade ----
+
+  ## rename N/A as NA
+  rutgeerts <- data$procedures %>%
+    drop_na(RUTGEERT_GRADE) %>%
+    mutate(RUTGEERT_GRADE = ifelse(RUTGEERT_GRADE == "N/A", NA, RUTGEERT_GRADE)) %>%
+    left_join(cohort) %>%
+    mutate(SCORE_DATE = dmy(PROC_START_DATE)) %>%
+    mutate(datediff = abs(SCORE_DATE - index_date)) %>%
+    filter(datediff <= t) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(RUTGEERT_GRADE)) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
+    filter(datediff == min(abs(datediff))) %>%
+    slice(1) %>%
+    distinct() %>%
+    ungroup() %>%
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, SCORE_DATE, RUTGEERT_GRADE) %>% # intersect(names(.), names(calculate_mes(data$procedures)))) %>%
+    rename(
+      ENDO_DATE = SCORE_DATE
+    ) %>%
+    distinct() # %>%
+    # mutate(RUTGEERTS_ENDOSCOPY = 1) %>%
+    # rename(!!paste("RUTGEERTS_ENDOSCOPY", t, sep = "_") := RUTGEERTS_ENDOSCOPY)
+
+  # cohort <- left_join(cohort, rutgeerts)
+
+  ## CLB:  NEED TO CHANGE POUCHOSCOPY/IELOSCOPY TO ENDOSCOPY_t
+
+  all_endo_scores <- es %>%
+    full_join(pouches) %>%
+    full_join(rutgeerts) %>%
     mutate(ENDOSCOPY = 1) %>%
     rename(!!paste("ENDOSCOPY", t, sep = "_") := ENDOSCOPY)
 
-  cohort <- left_join(cohort, es)
-
-
-
+  cohort <- left_join(cohort, all_endo_scores)
 
   # Ostomy ----
 
