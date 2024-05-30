@@ -13,7 +13,8 @@
 
 extract_endoscopy <- function(procedures) {
   endoscopy <- procedures %>%
-    filter(PROC_CONCEPT_NAME %in% c("Colonoscopy/Sigmoidoscopy")) %>%
+    filter(DATA_SOURCE == "ECRF_SPARC") %>%
+    filter(PROC_CONCEPT_NAME %in% c("Colonoscopy/Sigmoidoscopy", "Pouchoscopy")) %>%
     mutate(PROC_START_DATE = dmy(PROC_START_DATE)) %>%
     rename(index_date = PROC_START_DATE) %>%
     drop_na(index_date) %>%
