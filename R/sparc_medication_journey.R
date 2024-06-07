@@ -121,8 +121,8 @@ if("biologic" %in% med_groups){
       grepl("Adalimumab|Certolizumab|Golimumab|Infliximab", MEDICATION, ignore.case = T) ~ "antiTNF",
       MEDICATION %in% c("Tofacitinib", "Upadacitinib") ~ "JAKi",
       MEDICATION %in% c("Vedolizumab", "Natalizumab") ~ "IRA",
-      MEDICATION %in% c("Ustekinumab", "Risankizumab") ~ "ILA",
-      MEDICATION %in% c("Ozanimod") ~ "S1P",
+      MEDICATION %in% c("Ustekinumab", "Risankizumab", "Mirikizumab") ~ "ILA",
+      MEDICATION %in% c("Ozanimod", "Etrasimod") ~ "S1P",
       TRUE ~ med_type
     )) %>%
     select(MEDICATION, MOA)
