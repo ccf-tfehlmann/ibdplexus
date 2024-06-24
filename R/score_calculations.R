@@ -271,16 +271,16 @@ calculate_scdai <- function(observations) {
 }
 
 
-#' calculate_mayo
+#' calculate_ucdai
 #'
-#' Calculates 6pt & 9pt mayo scores from SPARC data.
+#' Calculates 6pt & 9pt UCDAI scores from SPARC data.
 #'
 #' @param observations observation table usually uploaded using load_data
 #'
 #' @return A dataframe with all 6pt & 9pt scores from eCRF and Smartform regardless of IBD diagnosis.
 #'
 #'
-calculate_mayo <- function(observations) {
+calculate_ucdai <- function(observations) {
   # Smartform
 
   ucdai_sf <- observations %>%
@@ -399,7 +399,7 @@ calculate_mayo <- function(observations) {
     ungroup() %>%
     select(sort(names(.))) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, everything()) %>%
-    dplyr::mutate(mayo6.category = case_when(
+    dplyr::mutate(ucdai6.category = case_when(
       UCDAI.6.score < 2 ~ "Remission",
       UCDAI.6.score >= 2 & UCDAI.6.score <= 3 ~ "Mild",
       UCDAI.6.score >= 4 & UCDAI.6.score <= 5 ~ "Moderate",
@@ -407,7 +407,7 @@ calculate_mayo <- function(observations) {
       TRUE ~ as.character(NA)
     )) %>%
     setNames(toupper(names(.))) %>%
-    setNames(gsub("UCDAI", "MAYO", names(.))) %>%
+    # setNames(gsub("UCDAI", "MAYO", names(.))) %>%
     setNames(gsub("\\.", "_", names(.)))
 }
 

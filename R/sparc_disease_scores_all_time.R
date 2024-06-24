@@ -1,7 +1,7 @@
 #' calculate_disease_scores
 #'
 #' Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI
-#' (CD patients only), 6pt Mayo (UC Patients only), Manitoba, PGA, MES (UC
+#' (CD patients only), 6pt UCDAI (UC Patients only), Manitoba, PGA, MES (UC
 #' patients only), SES-CD (CD patients only), PRO2 (CD patients only) for SPARC
 #' patients
 #' Data can be loaded for this function using:
@@ -41,11 +41,11 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
 
 
-  # 6/9 point Mayo/ucdai ----
+  # 6/9 point UCDAI ----
 
-  mayo <- calculate_mayo(observations)
+  ucdai <- calculate_ucdai(observations)
 
-  mayo <- mayo %>%
+  ucdai <- ucdai %>%
     left_join(dx) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     select(-DIAGNOSIS) %>%
@@ -120,7 +120,7 @@ calculate_disease_scores <- function(demographics, diagnosis, procedures, encoun
 
   # ALL SCORES ----
 
-  sparc_scores <- list(diagnosis = dx, scdai = scdai, mayo = mayo, manitoba = manitoba, pga = pga, ses = ses, mes = mes, pro2 = pro2, pro3 = pro3)
+  sparc_scores <- list(diagnosis = dx, scdai = scdai, ucdai = ucdai, manitoba = manitoba, pga = pga, ses = ses, mes = mes, pro2 = pro2, pro3 = pro3)
 
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 

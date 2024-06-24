@@ -162,10 +162,10 @@ qorus_summary <- function(datadir,
 
   cohort <- left_join(cohort, scdai)
 
-  # 6pt Mayo ----
+  # 6pt UCDAI ----
 
 
-  mayo6 <- data$observations %>%
+  ucdai6 <- data$observations %>%
     filter(DATA_SOURCE == "ECRF_QORUS") %>%
     filter(grepl("Stool|Blood", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
     mutate(OBS_TEST_RESULT_DATE = dmy(OBS_TEST_RESULT_DATE)) %>%
@@ -215,7 +215,7 @@ qorus_summary <- function(datadir,
     mutate(UCDAI.6.score = Stool.Freq.Score + Rectal.Bleeding.Score, Source = "ECRF") %>%
     mutate(UCDAI.date = OBS_TEST_RESULT_DATE) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, UCDAI.6.score, UCDAI.date, Source, Stool.Freq.Score, Rectal.Bleeding.Score) %>%
-    dplyr::mutate(mayo6.category = case_when(
+    dplyr::mutate(ucdai6.category = case_when(
       UCDAI.6.score < 2 ~ "Remission",
       UCDAI.6.score >= 2 & UCDAI.6.score <= 3 ~ "Mild",
       UCDAI.6.score >= 4 & UCDAI.6.score <= 5 ~ "Moderate",
@@ -231,14 +231,10 @@ qorus_summary <- function(datadir,
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, UCDAI.6.score, index_date, UCDAI.date, Stool.Freq.Score, Rectal.Bleeding.Score) %>%
     ungroup() %>%
     select(sort(names(.))) %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, everything()) %>%
-    rename(
-      Mayo.6pt.Score = UCDAI.6.score,
-      Mayo.6pt.Date = UCDAI.date
-    )
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, everything())
 
 
-  cohort <- left_join(cohort, mayo6)
+  cohort <- left_join(cohort, ucdai6)
 
 
   # Ostomy ----
@@ -272,7 +268,7 @@ qorus_summary <- function(datadir,
     left_join(ostomy) %>%
     mutate(ostomy = case_when(
       DIAGNOSIS == "Crohn's Disease" & is.na(sCDAI.score) ~ ostomy,
-      DIAGNOSIS == "Ulcerative Colitis" & is.na(Mayo.6pt.Score) ~ ostomy,
+      DIAGNOSIS == "Ulcerative Colitis" & is.na(UCDAI.6pt.Score) ~ ostomy,
       DIAGNOSIS == "IBD Unclassified" ~ ostomy,
       TRUE ~ as.character(NA)
     ))

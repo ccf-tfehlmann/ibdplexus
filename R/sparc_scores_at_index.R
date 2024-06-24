@@ -425,23 +425,23 @@ sparc_scores <- function(data,
   cohort <- cohort %>% left_join(pro3, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date))
 
 
-  # 6pt mayo
+  # 6pt UCDAI
 
-  mayo <- calculate_mayo(data$observations) %>%
+  ucdai <- calculate_ucdai(data$observations) %>%
     left_join(cohort) %>%
-    mutate(datediff = abs(MAYO_DATE - index_date)) %>%
+    mutate(datediff = abs(UCDAI_DATE - index_date)) %>%
     filter(DIAGNOSIS == "Ulcerative Colitis" & datediff <= t) %>%
-    drop_na(MAYO_6_SCORE) %>%
-    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(MAYO_SOURCE), desc(MAYO_6_SCORE)) %>%
+    drop_na(UCDAI_6_SCORE) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(UCDAI_SOURCE), desc(UCDAI_6_SCORE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     filter(datediff == min(abs(datediff))) %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mayo(data$observations))))
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_ucdai(data$observations))))
 
 
-  cohort <- cohort %>% left_join(mayo)
+  cohort <- cohort %>% left_join(ucdai)
 
   # pga
 
@@ -649,7 +649,7 @@ pdai <- data$procedures %>%
     left_join(ostomy) %>%
     mutate(ostomy = case_when(
       DIAGNOSIS == "Crohn's Disease" & is.na(SCDAI_CATEGORY) ~ ostomy,
-      DIAGNOSIS == "Ulcerative Colitis" & is.na(MAYO6_CATEGORY) ~ ostomy,
+      DIAGNOSIS == "Ulcerative Colitis" & is.na(UCDAI6_CATEGORY) ~ ostomy,
       TRUE ~ as.character(NA)
     ))
 
@@ -659,7 +659,7 @@ pdai <- data$procedures %>%
   cohort <- cohort %>%
     mutate(DISEASE_ACTIVITY = case_when(
       DIAGNOSIS == "Crohn's Disease" ~ SCDAI_CATEGORY,
-      DIAGNOSIS == "Ulcerative Colitis" ~ MAYO6_CATEGORY,
+      DIAGNOSIS == "Ulcerative Colitis" ~ UCDAI6_CATEGORY,
       TRUE ~ as.character(NA)
     )) %>%
     mutate(DISEASE_ACTIVITY = case_when(

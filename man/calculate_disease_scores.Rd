@@ -31,7 +31,7 @@ An excel spreadsheet with the scores as different tabs and a list of dataframes 
 }
 \description{
 Creates an excel spreadsheet and list of data frames with diagnosis, sCDAI
-(CD patients only), 6pt Mayo (UC Patients only), Manitoba, PGA, MES (UC
+(CD patients only), 6pt UCDAI (UC Patients only), Manitoba, PGA, MES (UC
 patients only), SES-CD (CD patients only), PRO2 (CD patients only) for SPARC
 patients
 Data can be loaded for this function using:
