@@ -166,7 +166,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
     dx <- dx %>% left_join(dxy, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
   } else {
     dx <- diagnosis %>%
-      filter(DATA_SOURCE %in% c("ECRF_QORUS")) %>%
+      filter(DATA_SOURCE %in% c("ECRF_QORUS", "ECRF")) %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis")) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       mutate(
