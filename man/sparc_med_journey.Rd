@@ -11,19 +11,28 @@ sparc_med_journey(
   encounter,
   med_groups = c("Biologic", "Aminosalicylates", "Immunomodulators",
     "Targeted synthetic small molecules"),
+  overlap = FALSE,
   export = FALSE
 )
 }
 \arguments{
-\item{prescriptions}{A dataframe with prescriptions data usually generated using load_data.}
+\item{prescriptions}{A dataframe with prescriptions data usually generated
+using load_data.}
 
-\item{demographics}{a dataframe with demographic data usually generated using load_data.}
+\item{demographics}{a dataframe with demographic data usually generated using
+load_data.}
 
-\item{observations}{a dataframe with observations data usually generated using load_data.}
+\item{observations}{a dataframe with observations data usually generated
+using load_data.}
 
-\item{encounter}{A dataframe with encounter data usually generated using load_data.}
+\item{encounter}{A dataframe with encounter data usually generated using
+load_data.}
 
-\item{med_groups}{A list of medication groups of interest. For details, refer to \code{\link{sparc_med_filter}}.}
+\item{med_groups}{A list of medication groups of interest. For details, refer
+to \code{\link{sparc_med_filter}}.}
+
+\item{overlap}{A parameter that specifies if the med journey output should
+include OVERLAPPING_DAYS and OVERLAPPING_MOA columns.}
 
 \item{export}{if excel spreadsheet should be exported. FALSE is default.}
 }
@@ -36,16 +45,26 @@ is only for long term medications including Biologics, Aminosalicylates, and
 Immunomodulators.
 }
 \details{
-Medication start and stop dates are chosen independently from both eCRF and EMR sources. Medications with a start or stop date before 1980 are dropped.
-For EMR data, if a medication start date is missing, the visit encounter start date is used. These records are flagged in the column VISIT_ENCOUNTER_MED_START.
+Medication start and stop dates are chosen independently from both
+  eCRF and EMR sources. Medications with a start or stop date before 1980 are
+  dropped. For EMR data, if a medication start date is missing, the visit
+  encounter start date is used. These records are flagged in the column
+  VISIT_ENCOUNTER_MED_START.
 
-If a patient has medication information for the same drug from eCRF and EMR, the eCRF data is preferred and used to generate MED_START_DATE and MED_END_DATE. If only EMR data is available for that medication, then EMR data is used.
-Any overlap between medications is reported along with the number of days the medications overlap.
-If no end date is given for a prescription, the duration of the overlap is calculated assuming an ongoing prescription. The effective end date
-is set using a database wide cutoff based on the the date of the latest encounter any patient had (as returned by \code{\link{extract_latest}}).
-Patient level cutoffs are not used because the last recorded encounter of a specific patient may precede the latest available EMR by years.
+  If a patient has medication information for the same drug from eCRF and
+  EMR, the eCRF data is preferred and used to generate MED_START_DATE and
+  MED_END_DATE. If only EMR data is available for that medication, then EMR
+  data is used. Any overlap between medications is reported along with the
+  number of days the medications overlap. If no end date is given for a
+  prescription, the duration of the overlap is calculated assuming an ongoing
+  prescription. The effective end date is set using a database wide cutoff
+  based on the the date of the latest encounter any patient had (as returned
+  by \code{\link{extract_latest}}). Patient level cutoffs are not used
+  because the last recorded encounter of a specific patient may precede the
+  latest available EMR by years.
 
-The following columns are convenience flags and indices to facilitate easy filtering of the data:
+  The following columns are convenience flags and indices to facilitate easy
+  filtering of the data:
 
 \describe{
   \item{MEDICATION_NUMBER}{counts the number of different medications in a patients' journey. Only medications in the selected med_groups are considered.

@@ -286,20 +286,49 @@ start date is used. These records are flagged in the column
 VISIT\_ENCOUNTER\_MED\_START.
 
 If a patient has medication information for the same drug from eCRF and
-EMR, the earliest MED\_START\_DATE is used and the latest
-MED\_END\_DATE. If the visit encounter start date is used as a proxy
-medication start date for the EMR data and eCRF medication information
-is available, then the eCRF start date is used for the MED\_START\_DATE.
-The columns MED\_START\_SOURCE and MED\_END\_SOURCE tell the data source
-of the respective date. I
+EMR, the earliest MED\_START\_DATE is used. If the visit encounter start
+date is used as a proxy medication start date for the EMR data and eCRF
+medication information is available, then the eCRF start date is used
+for the MED\_START\_DATE. The columns MED\_START\_SOURCE and
+MED\_END\_SOURCE tell the data source of the respective date.
 
-Any overlap between medications is reported along with the number of
-days the medications overlap.
+### Medication End Dates in SPARC Med Journey
+
+In order to capture the latest medication end date for a prescription
+for a patient there are several steps of logic used. This stepwise logic
+is outlined below, and was developed in order to not prematurely report
+medication end dates for long-term ongoing medications. The column
+\`LOGIC\_USED\` describes which medication end date logic was used.
+
+1.  When eCRF med end date is available, this is used. (LOGIC\_USED ==
+    “ECRF END DATE”)
+2.  No med end date is filled when the latest EMR med end date is in the
+    future. (LOGIC\_USED == “NO MED END DATES”)
+3.  No med end date is filled when the Last Medication Verification Date
+    and/or the Current Medication Date are later than the latest EMR med
+    end date. (LOGIC\_USED == “CURRENT MEDICATION DATE OVERRIDE” |
+    LOGIC\_USED == “MED VERIFICATION DATE OVERRIDE”)
+4.  No med end date is filled when the latest EMR med end date is within
+    90 days of the most recent EMR data available for that patient.
+    (LOGIC\_USED == “WITHIN 90 DAYS of EMR ENCOUNTER DATE”)
+5.  If none of the above are true, the med end date is the latest EMR
+    med end date, or when not available the latest EMR med start date.
+    (LOGIC\_USED == “EMR, NOT MORE RECENT THAN LAST VERIFIED, CURRENT,
+    AND NOT WITHIN 90 DAYS ENCOUNTER EMR”)
+6.  No med end date is filled when there is no other data available.
+    (LOGIC\_USED == “NO MED END DATES”)
+
+### Overlapping Medications in SPARC Med Journey
+
+The parameter `overlap` can be set to TRUE to include columns in the
+final output that report any overlap between medications along with the
+number of days the medications overlap.
 
 If no end date is given for a prescription, the duration of the overlap
 is calculated assuming an ongoing prescription. The effective end date
 is set using a database wide cutoff based on the the date of the latest
-encounter any patient had (as returned by the function `extract_latest`.
+encounter any patient had (as returned by the function
+`extract_latest)`.
 
 There are flags for if a patient was on a steroid at the same time as
 the listed medication.
@@ -325,6 +354,24 @@ the listed medication.
 <td>Corresponds to new_med_name in the med_grp data.frame</td>
 </tr>
 <tr class="even">
+<td>MED_START_DATE</td>
+<td>Final Medication Start Date (The earliest date of
+MED_START_DATE_ECRF and MED_END_DATE_EMR)</td>
+</tr>
+<tr class="odd">
+<td>MED_END_DATE</td>
+<td>Final Medication End Date using med end date logic described
+above</td>
+</tr>
+<tr class="even">
+<td>MED_START_SOURCE</td>
+<td>Source of medication start date</td>
+</tr>
+<tr class="odd">
+<td>MED_END_SOURCE</td>
+<td>Source of medication end date</td>
+</tr>
+<tr class="even">
 <td>MED_START_DATE_ECRF</td>
 <td>Medication Start Date from the eCRF data source</td>
 </tr>
@@ -338,18 +385,52 @@ the listed medication.
 stopped</td>
 </tr>
 <tr class="odd">
-<td>NUMBER_OF_DOSE_CHANGES_ECRF</td>
-<td>Counts the number of times a patient reported a change in dose. This
-field is free text and the r script only parses out numbers.</td>
-</tr>
-<tr class="even">
-<td>DECREASE_IN_FREQUENCY</td>
-<td>Flags if there is a decrease in frequency of a medication.</td>
-</tr>
-<tr class="odd">
-<td>LAST_MEDICATION_VERIFICATION_DATE</td>
+<td>LAST_MEDICATION_VERIFICATION_DATE_ECRF</td>
 <td>The most recent date a medication’s information was verified to be
 true at time of endoscopy. This feature was added in Nov 2022.</td>
+</tr>
+<tr class="even">
+<td>MED_START_DATE_EMR</td>
+<td>Earliest med start date from the EMR</td>
+</tr>
+<tr class="odd">
+<td>VISIT_ENCOUNTER_MED_START_EMR</td>
+<td>For EMR data, flags if a medication start date is missing and the
+visit encounter start date was used instead</td>
+</tr>
+<tr class="even">
+<td>MED_END_DATE_EMR</td>
+<td>Medication End Date from the EMR data source</td>
+</tr>
+<tr class="odd">
+<td>MED_DISCONT_START_DATE_EMR</td>
+<td>Medication discontinue date from the EMR data source</td>
+</tr>
+<tr class="even">
+<td>LAST_MED_START_EMR</td>
+<td>The latest med start date from the EMR. If there is no med end date
+later than this med start date, this may be used in med end date
+selection logic.</td>
+</tr>
+<tr class="odd">
+<td>MOST_RECENT_EMR_ENCOUNTER_DATE</td>
+<td>Latest EMR encounter date</td>
+</tr>
+<tr class="even">
+<td>MOST_RECENT_EMR_PRES_DATE</td>
+<td>Latest EMR prescription date</td>
+</tr>
+<tr class="odd">
+<td>LAST_UPDATE_DATE</td>
+<td>Latest date from all the available dates from earlier columns.</td>
+</tr>
+<tr class="even">
+<td>LOGIC_USED</td>
+<td>The logic used to determine the medication end date.</td>
+</tr>
+<tr class="odd">
+<td>DECREASE_IN_FREQUENCY</td>
+<td>Flags if there is a decrease in frequency of a medication.</td>
 </tr>
 <tr class="even">
 <td>REASON_STOPPED</td>
@@ -358,23 +439,10 @@ but have a reason stopped populated because of a dose and/or frequency
 change.</td>
 </tr>
 <tr class="odd">
-<td>VISIT_ENCOUNTER_MED_START</td>
-<td>For EMR data, flags if a medication start date is missing and the
-visit encounter start date was used instead</td>
-</tr>
-<tr class="even">
 <td>MED_START_DATE_EMR</td>
 <td>Medication Start Date from the EMR data source</td>
 </tr>
-<tr class="odd">
-<td>MED_END_DATE_EMR</td>
-<td>Medication End Date from the EMR data source</td>
-</tr>
 <tr class="even">
-<td>MED_DISCONT_START_DATE_EMR</td>
-<td>Medication discontinue date from the EMR data source</td>
-</tr>
-<tr class="odd">
 <td>LOADING_DOSE_EMR</td>
 <td><p>1 if a patients prescription pattern for specific biologics
 represents the loading pattern of that medication.</p>
@@ -415,146 +483,147 @@ weeks</td>
 </tbody>
 </table></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>PRESCRIPTION_NUMBER_EMR</td>
 <td>Number of rows for this medication in the prescription emr data</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MEDICATION_REFILLS_EMR</td>
 <td>Number of refills from most recent prescription in the EMR data</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>ECRF_PRESCRIPTION_DATA</td>
 <td>1 if data for this medication is available in the eCRF data
 source</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MED_START_DATE</td>
 <td>The earliest date of MED_START_DATE_ECRF and MED_END_DATE_EMR</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MED_END_DATE</td>
 <td>The latest date of MED_END_DATE_ECRF and MED_END_DATE_EMR</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MED_START_SOURCE</td>
 <td>The data source where the MED_START_DATE is coming from. If EMR
 &amp; eCRF have the same date, then it is “Both”</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MED_END_SOURCE</td>
 <td>The data source where the MED_END_DATE is coming from. If EMR &amp;
 eCRF have the same date, then it is “Both”</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MOA</td>
 <td>The mechanism of action for each medication. Includes, antiTNF,
 Aminosalicylates, Immunomodulators, Interleukin-12 and -23 Antagonist,
 JAKi, Integrin Receptor Antagonists, S1P</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>MEDICATION_NUMBER</td>
 <td>counts the number of different medications in a patients’ journey.
 Only medications in the selected med_groups are considered. The
 medication with with earliest start date will have MEDICATION_NUMBER =
 1.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>OVERLAPPING_MOA</td>
-<td>If multiple medications overlap, the overlapping MOA is listed
-here</td>
+<td>Optional column, must run overlap = T. If multiple medications
+overlap, the overlapping MOA is listed here</td>
+</tr>
+<tr class="odd">
+<td>OVERLAPPING_DAYS</td>
+<td>Optional column, must run overlap = T. The number of days the
+medication overlaps with another MOA</td>
 </tr>
 <tr class="even">
-<td>OVERLAPPING_DAYS</td>
-<td>The number of days the medication overlaps with another MOA</td>
-</tr>
-<tr class="odd">
 <td>DATE_OF_CONSENT</td>
 <td>The date of enrollment into SPARC for the patient</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>DATE_OF_CONSENT_WITHDRAWN</td>
 <td>The date of withdrawal from SPARC, if applicable</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>STARTED_AFTER_ENROLLMENT</td>
 <td>is 1 if the medication start date is after the date of consent.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>NO_CURRENT_IBD_MEDICATION_AT_ENROLLMENT</td>
 <td>1 if a patient indicates “No” to “Are you currently on any IBD
 medications?” at their baseline survey.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ADVANCED_MED</td>
 <td>is 1 if the record is for an advanced medication including
 Adalimumab, Certolizumab Pegol, Golimumab, Infliximab, Natalizumab,
 Other Biologic, Ustekinumab, Vedolizumab, Tofacitinib, Upadacitinib,
 Ozanimod, or Risankizumab. Biosimilars are included.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>FIRST_ADVANCED_MED</td>
 <td>is 1 if a medication record is the first advanced medication a
 patient receives.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>FIRST_ADVANCED_MED_NUMBER</td>
 <td> If a record is the first advanced medication a patient receives,
 FIRST_BIOLOGIC_NUMBER is equal to the MEDICATION_NUMBER.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>BIONAIVE</td>
 <td>is 1 if patient has no prior reported advanced medication use</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>PREDNISONE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>BUDESONIDE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>STEROIDS_ORAL_ECRF</td>
 <td>Flag 1 if a patient has a report of Steroids Oral on the eCRF that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>METHYLPREDNISOLONE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>PREDNISOLONE</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>STEROID_FOAM</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>STEROID_ENEMA</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>STEROID_SUPPOSITORY</td>
 <td>Flag 1 if a patient has a prescription or report of use that
 overlaps with the MED_START_DATE and MED_END_DATE.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ANY_STEROID</td>
 <td>1 if any of the steroid flags are 1.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>RECTAL_STEROID</td>
 <td>1 if steroid foam, steroid enema or steroid suppository is 1</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ORAL_IV_STEROID</td>
 <td>1 if prednisone, budesonide, steroids_oral_ecrf, methylprednisolone,
 or prednisolone are 1</td>
