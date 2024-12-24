@@ -436,10 +436,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     overlap <- overlap(med)
 
     med <- med %>%
-      left_join(overlap, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE", "MED_END_DATE"))
-
-
-
+      left_join(overlap, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE", "MED_END_DATE")) %>%
+      select(-R)
   }
 
   # overlap <- med %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
