@@ -68,7 +68,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Add last medication verification date ----
 
-  verify <- ibdplexus:::med_verification(medication)
+  verify <- med_verification(medication)
 
   # med <- med %>% left_join(verify)
 
@@ -76,18 +76,18 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   ## if there is last verification date, use ECRF start date, otherwise earliest
 
-  med_start <- ibdplexus:::sparc_med_starts(medication, encounter)#  %>%
+  med_start <- sparc_med_starts(medication, encounter)#  %>%
   # left join(verify) here ----
   # mutate(MED_START_DATE = if_else(!is.na(MED_START_DATE_ECRF), MED_START_DATE_ECRF, MED_START_DATE))
 
 
   # Find medication end/discontinuation date ----
   # using local version of sparc_med_ends -- keeping no end date from EMR right now
-  med_end <- ibdplexus:::sparc_med_ends(medication)
+  med_end <- sparc_med_ends(medication)
 
   # Add if medication is current ----
 
-  current <- ibdplexus.internal:::clb_current_med_dates(medication, encounter)
+  current <- current_med_dates(medication, encounter)
 
   # med <- med %>%
   #   left_join(current, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) #%>%
@@ -336,7 +336,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Reason Stopped in Smartform or eCRF ----
 
-  stop_crf <- ibdplexus:::reason_stopped(prescriptions)
+  stop_crf <- reason_stopped(prescriptions)
 
   med <- med %>% left_join(stop_crf, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION"))
 
@@ -348,7 +348,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   if("biologic" %in% med_groups){
 
-    first_use_emr <- ibdplexus:::emr_loading_pattern(medication, encounter)
+    first_use_emr <- emr_loading_pattern(medication, encounter)
 
     med <- med %>%
       left_join(first_use_emr, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE_EMR"))}
@@ -379,7 +379,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   # Flags a Dose Escalation ----
 
 
-  dose_escalation <- ibdplexus:::dose_escalation(medication) %>%
+  dose_escalation <- dose_escalation(medication) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, DOSE_ESCALATION) %>%
     right_join(moa) %>%
     filter(!(MOA %in% c("aminosalicylates", "immunomodulators"))) %>%
@@ -392,7 +392,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   # Flags a Frequency Change ----
 
   if("biologic" %in% med_groups){
-    frequency_change <- ibdplexus:::frequency_change(medication) %>%
+    frequency_change <- frequency_change(medication) %>%
       ungroup() %>%
       left_join(moa) %>%
       filter(!(MOA %in% c("aminosalicylates", "immunomodulators"))) %>%
@@ -406,7 +406,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   # Flag if on Steroids at the Same time ----
 
   med <- med %>%
-    left_join(ibdplexus:::steroid_use(prescriptions, observations, demographics, encounter,med))
+    left_join(steroid_use(prescriptions, observations, demographics, encounter,med))
 
 
 
@@ -427,13 +427,13 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
 
   # Flag if medications overlap  ----
-  last_encounter_date <- ibdplexus:::extract_latest(encounter) %>%
+  last_encounter_date <- extract_latest(encounter) %>%
     pull("index_date") %>%
     max(na.rm = TRUE)
 
   if (overlap == TRUE) {
 
-    overlap <- ibdplexus.internal:::clb_overlap(med)
+    overlap <- overlap(med)
 
     med <- med %>%
       left_join(overlap, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION", "MED_START_DATE", "MED_END_DATE"))
@@ -462,7 +462,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
 
   # Flag if medication started after enrollment ----
 
-  consent <- ibdplexus:::extract_consent(demographics, "SPARC")
+  consent <- extract_consent(demographics, "SPARC")
 
   started_after_enrollment <- consent %>%
     left_join(med, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
@@ -516,7 +516,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   # names(med) <- gsub(" ", "_", toupper(names(med)))
 
   # fix col names
-  med <- ibdplexus:::fix_col_names(med)
+  med <- fix_col_names(med)
 
   # remove everyone without a date of consent
   med <- med %>% drop_na(DATE_OF_CONSENT)

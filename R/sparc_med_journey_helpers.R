@@ -1,4 +1,4 @@
-#' clb_current_med_dates
+#' current_med_dates
 #'
 #' current_med_dates function for CLB version of SPARC med journey
 #'
@@ -8,7 +8,7 @@
 #'
 #' @return A dataframe with the first medication start date for each drug.
 
-clb_current_med_dates <- function (medication, encounter) {
+current_med_dates <- function (medication, encounter) {
   current <- medication %>% filter(DATA_SOURCE %in% c("ECRF_SPARC",
                                                       "ECRF")) %>%
     mutate(MED_START_DATE = if_else(year(MED_START_DATE) >  1900,
@@ -31,7 +31,7 @@ clb_current_med_dates <- function (medication, encounter) {
 
 }
 
-#' clb_overlaps
+#' overlaps
 #'
 #' current_med_dates function for CLB version of SPARC med journey
 #'
@@ -40,7 +40,7 @@ clb_current_med_dates <- function (medication, encounter) {
 #'
 #' @return A dataframe with the medication overlaps for each drug.
 
-clb_overlap <- function (med) {
+overlap <- function (med) {
 
   #### CLB Overlaps NEW CODE 12/13/2024----
   ## might need to make this its own function
