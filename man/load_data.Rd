@@ -6,7 +6,7 @@
 \usage{
 load_data(
   datadir,
-  cohort = c("RISK", "QORUS", "SPARC"),
+  cohort = c("RISK", "QORUS", "SPARC", "SIRQC"),
   domains = c("ALL"),
   data_type = c("BOTH", "CRF", "EMR")
 )
@@ -14,7 +14,7 @@ load_data(
 \arguments{
 \item{datadir}{The directory where data is saved.}
 
-\item{cohort}{The cohort to load. Either RISK, QORUS, or SPARC.}
+\item{cohort}{The cohort to load. Either RISK, QORUS, SPARC or SIRQC.}
 
 \item{domains}{The domains to load. Default is "ALL". Must be a character string. Other valid values are patterns matching input file names common examples are:  "demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions".}
 

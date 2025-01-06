@@ -6,7 +6,7 @@
 \usage{
 load_zipped_data(
   datadir,
-  cohort = c("RISK", "QORUS", "SPARC"),
+  cohort = c("RISK", "QORUS", "SPARC", "SIRQC"),
   domains = c("ALL"),
   data_type = c("BOTH", "CRF", "EMR"),
   exdir = "."
@@ -15,7 +15,7 @@ load_zipped_data(
 \arguments{
 \item{datadir}{The directory where data is saved.}
 
-\item{cohort}{The cohort to load. Either RISK, QORUS, or SPARC.}
+\item{cohort}{The cohort to load. Either RISK, QORUS, SPARC or SIQRC.}
 
 \item{domains}{The domains to load. Default is "All". Must be a character string.}
 

@@ -3,13 +3,13 @@
 #' Load unzipped DDM txt or csv files.If multiple cohorts are unzipped in one directory from different times, only the most recent one will load.
 #'
 #' @param datadir The directory where data is saved.
-#' @param cohort The cohort to load. Either RISK, QORUS, or SPARC.
+#' @param cohort The cohort to load. Either RISK, QORUS, SPARC or SIRQC.
 #' @param domains The domains to load. Default is "ALL". Must be a character string. Other valid values are patterns matching input file names common examples are:  "demographics", "diagnosis", "encounter", "procedures", "observations", "biosample", "omics_patient_mapping", "prescriptions".
 #' @param data_type The data source to load either case report forms (including covid survey), electronic medical record, or both. Options are both, crf or emr.
 #'
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
-load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
+load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC", "SIRQC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR")) {
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
@@ -31,7 +31,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
 
   cohorts <- lapply(paste0(datadir, list_names), function(x) {
-    data.table::fread(x, header = T, select = c("DATA_SOURCE"), nrows = 10)
+    data.table::fread(x, header = T, select = c("DATA_SOURCE"))
   })
 
   names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
@@ -44,14 +44,16 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 
   cohorts <- cohorts %>%
     filter(DATA_SOURCE != "EMR") %>%
-    distinct(df, DATA_SOURCE) %>%
+    group_by(df, DATA_SOURCE) %>%
+    count() %>%
     mutate(
       Date = lubridate::ymd(gsub(".*_", "", df)),
       Cohort = gsub("ECRF_|COVID_SURVEY_|SF_", "", DATA_SOURCE)
     ) %>%
-    distinct(Cohort, Date, df) %>%
+    distinct(Cohort, Date, df,n) %>%
     mutate(df = gsub("_.*", "", df)) %>%
     group_by(Cohort) %>%
+    filter(n == max(n)) %>%
     filter(Date == max(lubridate::ymd(Date)))
 
 
@@ -206,7 +208,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 #' Load compressed files extracted from IBD Plexus.
 #'
 #' @param datadir The directory where data is saved.
-#' @param cohort The cohort to load. Either RISK, QORUS, or SPARC.
+#' @param cohort The cohort to load. Either RISK, QORUS, SPARC or SIQRC.
 #' @param domains The domains to load. Default is "All". Must be a character string.
 #' @param data_type The data source to load either case report forms, electronic medical record or both. Options are both, crf or emr.
 #' @param exdir The file to save the files once unzipped. If left blank will be the working directory. Do not include backslash at the end of the file location.
@@ -214,7 +216,7 @@ load_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c
 #'
 #' @return A list of dataframes for each domain. If both sources are loaded, emr and crf data are combined.
 #' @export
-load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR"), exdir = ".") {
+load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC", "SIRQC"), domains = c("ALL"), data_type = c("BOTH", "CRF", "EMR"), exdir = ".") {
   cohort <- toupper(cohort)
   domains <- toupper(domains)
   data_type <- toupper(data_type)
@@ -245,8 +247,9 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
 
   cohorts <- lapply(list_names, function(x) {
-    data.table::fread(unzip(filepath, files = x, exdir = exdir), header = T, select = c("DATA_SOURCE"), nrows = 10)
+    data.table::fread(unzip(filepath, files = x, exdir = exdir), header = T, select = c("DATA_SOURCE"))
   })
+
 
   names(cohorts) <- gsub("(.*/\\s*)|.txt|.csv|[a-z]|[A-Z]|_\\d+\\.", "", list_names)
   names(cohorts) <- gsub("___", "__", names(cohorts))
@@ -258,15 +261,19 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
 
   cohorts <- cohorts %>%
     filter(DATA_SOURCE != "EMR") %>%
-    distinct(df, DATA_SOURCE) %>%
+    group_by(df, DATA_SOURCE) %>%
+    count() %>%
     mutate(
-      Date = ymd(gsub(".*_", "", df)),
+      Date = lubridate::ymd(gsub(".*_", "", df)),
       Cohort = gsub("ECRF_|COVID_SURVEY_|SF_", "", DATA_SOURCE)
     ) %>%
-    distinct(Cohort, Date, df) %>%
+    distinct(Cohort, Date, df,n) %>%
     mutate(df = gsub("_.*", "", df)) %>%
     group_by(Cohort) %>%
-    filter(Date == max(ymd(Date)))
+    filter(n == max(n)) %>%
+    filter(Date == max(lubridate::ymd(Date)))
+
+
 
 
   files <- data.frame(files = folders) %>%
@@ -274,7 +281,7 @@ load_zipped_data <- function(datadir, cohort = c("RISK", "QORUS", "SPARC"), doma
     mutate(df = gsub("(.*/\\s*)|.txt|[a-z]|[A-Z]|_\\d+\\.", "", files)) %>%
     mutate(df = gsub("_.*", "", df)) %>%
     left_join(cohorts, by = "df") %>%
-    group_by(Cohort) %>%
+    #group_by(Cohort) %>%
     filter(Cohort %in% cohort) %>%
     ungroup() %>%
     select(files)
