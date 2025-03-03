@@ -113,6 +113,7 @@ sparc_biosample_flags <- function(data, index_range) {
     mutate(days_between = MED_START_DATE - SAMPLE_DATE_COLLECTED) %>%
     filter(days_between <= (90 + r) & days_between >= (90 - r)) %>%
     mutate(`3 MONTHS POST MED CHANGE` = 1) %>%
+    ungroup() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DATE_SAMPLE_COLLECTED, `3 MONTHS POST MED CHANGE`) %>%
     distinct()
 
