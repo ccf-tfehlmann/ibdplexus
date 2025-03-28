@@ -75,7 +75,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, DATA_SOURCE, DIAGNOSIS) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>%
+      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>% # most recently reported diagnosis from smartform
       mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
       ungroup() %>%
       pivot_wider(
@@ -93,9 +93,9 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, DATA_SOURCE, DIAGNOSIS, DIAGNOSIS_DATE) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, desc(VISIT_ENCOUNTER_START_DATE)) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      filter(VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE)) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
-      filter(case_when(!is.na(DIAGNOSIS_DATE) ~ dmy(DIAGNOSIS_DATE) == max(dmy(DIAGNOSIS_DATE)), TRUE ~ is.na(DIAGNOSIS_DATE))) %>%
+      filter(case_when(!is.na(DIAGNOSIS_DATE) ~ dmy(DIAGNOSIS_DATE) == max(dmy(DIAGNOSIS_DATE), na.rm = T),
+                       is.na(DIAGNOSIS_DATE) ~ VISIT_ENCOUNTER_START_DATE == max(VISIT_ENCOUNTER_START_DATE),
+                       TRUE ~ is.na(DIAGNOSIS_DATE))) %>% # most recent diagnosis or keep missing diagnosis to get most recently reported
       mutate(c = paste0(DATA_SOURCE, "_", seq_along(DEIDENTIFIED_MASTER_PATIENT_ID))) %>%
       ungroup() %>%
       pivot_wider(
@@ -133,6 +133,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS) %>%
       ungroup()
 
+# Diagnosis Date - first date
 
     dx_date_ecrf <- diagnosis %>%
       filter(DATA_SOURCE %in% c("ECRF_SPARC", "ECRF_QORUS", "ECRF")) %>%
@@ -140,7 +141,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       mutate(DIAGNOSIS_DATE = dmy(DIAGNOSIS_DATE)) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       slice(which.min(DIAGNOSIS_DATE)) %>%
-      mutate(DIAGNOSIS_DATE = as.numeric(year(DIAGNOSIS_DATE))) %>%
+      mutate(DIAGNOSIS_DATE = as.numeric(year(DIAGNOSIS_DATE))) %>% # get year of diagnosis date in ECRF
       select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS_DATE) %>%
       ungroup()
 
@@ -148,15 +149,15 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       filter(DATA_SOURCE == "SF_SPARC") %>%
       filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease", "IBD Unclassified", "Ulcerative Colitis", "Inflammatory Bowel Disease")) %>%
       drop_na(DIAGNOSIS_DATE) %>%
-      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      slice(which.min(as.numeric(DIAGNOSIS_DATE))) %>%
       mutate(DIAGNOSIS_DATE = as.numeric(DIAGNOSIS_DATE)) %>%
+      group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      slice(which.min(DIAGNOSIS_DATE)) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS_DATE) %>%
       ungroup()
 
     dxy <- bind_rows(dx_date_sf, dx_date_ecrf) %>%
       left_join(demographics, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
-      filter(DIAGNOSIS_DATE >= as.numeric(BIRTH_YEAR)) %>%
+      filter(DIAGNOSIS_DATE >= as.numeric(BIRTH_YEAR) | is.na(BIRTH_YEAR)) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS_DATE) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
       slice(which.min(DIAGNOSIS_DATE)) %>%
