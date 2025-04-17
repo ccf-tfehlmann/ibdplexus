@@ -501,7 +501,7 @@ sparc_scores <- function(data,
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, desc(MAYO_ENDOSCOPY_SCORE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
     filter(datediff == min(abs(datediff))) %>%
-    slice(1) %>%
+    slice(1) %>% # take most severe if two on same date
     distinct() %>%
     ungroup() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, intersect(names(.), names(calculate_mes(data$procedures)))) %>%
@@ -599,7 +599,14 @@ pdai <- data$procedures %>%
   all_endo_scores <- es %>%
     full_join(pouches) %>%
     full_join(rutgeerts) %>%
-    mutate(ENDOSCOPY = 1) %>%
+    mutate(datediff = abs(ENDO_DATE - index_date)) %>%
+    filter(datediff <= t) %>%
+    arrange(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+    filter(datediff == min(abs(datediff))) %>%
+    ungroup() %>%
+    select(-datediff) %>%
+     mutate(ENDOSCOPY = 1) %>%
     rename(!!paste("ENDOSCOPY", t, sep = "_") := ENDOSCOPY)
 
   cohort <- left_join(cohort, all_endo_scores)
