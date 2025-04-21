@@ -65,6 +65,6 @@ The function produces a table with the following columns. The sparc_scores() fun
 #| echo: false
 DT::datatable(ibdplexus:::summary_fields, rownames = FALSE,extensions = 'Buttons', options = list(dom = 'Bfrtip', buttons = c('copy', 'excel')))
 
-#knitr::kable(ibdplexus:::summary_fields)
+#knitr::kable(data.frame(ibdplexus:::summary_fields) |> dplyr::mutate(NOTES = gsub("[\r\n]", " ", NOTES)))
 
 ```
