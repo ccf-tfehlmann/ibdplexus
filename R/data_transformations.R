@@ -266,7 +266,7 @@ extract_race <- function(demographics, study) {
 extract_labs <- function(labs, test) {
   if (test == "hscrp") {
     result <- labs %>%
-      filter(LAB_TEST_CONCEPT_NAME == "HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)")
+      filter(LAB_TEST_CONCEPT_NAME == "HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)-ROCHE C502" | LAB_TEST_CONCEPT_NAME == "HIGH-SENSITIVITY C-REACTIVE PROTEIN (MG/L)-BECKMAN AU5800")
   } else {
     result <- labs %>%
       filter(grepl("FECAL CALPROTECTIN", LAB_TEST_CONCEPT_NAME))
