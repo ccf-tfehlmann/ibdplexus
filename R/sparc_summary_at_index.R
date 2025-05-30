@@ -850,7 +850,7 @@ sparc_summary <- function(data,
       PROC_STATUS_CONCEPT_NAME == "No" ~ "Not Performed",
       TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
     )) %>%
-    drop_na(PROC_START_DATE) %>%
+    #drop_na(PROC_START_DATE) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
@@ -883,7 +883,7 @@ sparc_summary <- function(data,
       TRUE ~ as.character(PROC_STATUS_CONCEPT_NAME)
     )) %>%
     left_join(cohort_index_info) %>%
-    drop_na(INDICATION) %>%
+   # drop_na(INDICATION) %>%
     mutate(diff = (VISIT_ENCOUNTER_START_DATE) - index_date) %>%
     # filter(diff <= t) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date) %>%
