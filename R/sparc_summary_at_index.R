@@ -774,14 +774,7 @@ sparc_summary <- function(data,
     filter(DATA_SOURCE == "SF_SPARC") %>%
     left_join(data$encounter) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    filter(PROC_CONCEPT_NAME %in% c(
-      "Colon Resection - Cecum",
-      "Colon Resection - Ascending colon",
-      "Colon Resection - Transverse colon",
-      "Colon Resection - Descending colon",
-      "Colon Resection - Sigmoid",
-      "Colon Resection - Rectum"
-    )) %>%
+    filter(grepl("Colon Resection",PROC_CONCEPT_NAME, ignore.case = T)) %>%
     distinct(
       DEIDENTIFIED_MASTER_PATIENT_ID, PROC_CONCEPT_NAME, PROC_STATUS_CONCEPT_CODE, SRC_PROC_CONCEPT_NAME, SRC_PROC_CONCEPT_CODE,
       VISIT_ENCOUNTER_START_DATE, PHYSICIAN_NOTES_PROC_AVAIL
