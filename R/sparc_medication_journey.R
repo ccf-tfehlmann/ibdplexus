@@ -103,7 +103,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(VISIT_ENCOUNTER_START_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
-    rename(MOST_RECENT_EMR_ENCOUNTER_DATE = VISIT_ENCOUNTER_START_DATE)
+    rename(MOST_RECENT_EMR_ENCOUNTER_DATE = VISIT_ENCOUNTER_START_DATE) %>%
+    ungroup()
 
 
   most_recent_EMR_pres <- prescriptions %>%
@@ -112,7 +113,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(MED_START_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MED_START_DATE) %>%
-    rename(MOST_RECENT_EMR_PRES_DATE = MED_START_DATE)
+    rename(MOST_RECENT_EMR_PRES_DATE = MED_START_DATE) %>%
+    ungroup()
 
   # Combine start & stop date ----
 
@@ -126,6 +128,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
       LAST_MED_START_EMR = MED_START_DATE,
       MEDICATION = new_med_name
     ) %>%
+    ungroup() %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, LAST_MED_START_EMR)
 
   #### 11/12/2024 ----
@@ -147,7 +150,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
       LATER_MED_START = MED_START_DATE,
       MEDICATION = new_med_name
     ) %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, LAST_NO_END, LATER_MED_START)
+    ungroup() %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID,MEDICATION, LAST_NO_END, LATER_MED_START)
 
   med <- full_join(med_start, med_end, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "MEDICATION")) %>%
     left_join(later_med_start, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION)) %>%
@@ -162,22 +166,24 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     )) %>%
     # mutate(LAST_MED_START_EMR = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
     #                                     MED_START_DATE_EMR, LAST_MED_START_EMR)) %>%
+    # apply med end date logic here ----
     mutate(MED_END_DATE = NA) %>%
     # select med end date from ecrf first
     mutate(MED_END_DATE = if_else(!is.na(MED_END_DATE_ECRF), MED_END_DATE_ECRF, MED_END_DATE)) %>%
-    # make latest EMR med start date med_end_date
+    # make latest EMR med start date med_end_date when no med end date in EMR
     mutate(MED_END_DATE_EMR = if_else(!is.na(LATER_MED_START), LATER_MED_START, MED_END_DATE_EMR)) %>%
     # add other EMR med end dates
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE) & !is.na(MED_END_DATE_EMR), MED_END_DATE_EMR, MED_END_DATE)) %>%
     # create flag to keep track of the original med end dates EMR
     mutate(ORIGINAL_MED_END_EMR = MED_END_DATE_EMR) %>%
     # check with most recent EMR prescription date and EMR encounter date
+    # EMR medication end date <= 90 days of most recent EMR data
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & difftime(MOST_RECENT_EMR_PRES_DATE, MED_END_DATE,
                                                                       units = "days"
     ) >= 90 | difftime(MOST_RECENT_EMR_ENCOUNTER_DATE, MED_END_DATE, units = "days") >= 90, MED_END_DATE,
     NA
     )) %>%
-    # flag for the last medication verification date and current medication date
+    # flag for the last medication verification date and current medication date after med end date in EMR
     mutate(flag1 = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE) & MED_END_DATE_EMR > LAST_MEDICATION_VERIFICATION_DATE, 1, 0)) %>%
     mutate(flag1 = if_else(!is.na(CURRENT_MEDICATION) &
                              MED_END_DATE_EMR > CURRENT_MEDICATION & is.na(LAST_MEDICATION_VERIFICATION_DATE), 1, flag1)) %>%
