@@ -161,9 +161,9 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(most_recent_EMR, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     left_join(most_recent_EMR_pres, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     left_join(last_start_emr, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION)) %>%
-    mutate(flag = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
-                          1, 0
-    )) %>%
+  #  mutate(flag = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
+  #                        1, 0
+  #  )) %>%
     # mutate(LAST_MED_START_EMR = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
     #                                     MED_START_DATE_EMR, LAST_MED_START_EMR)) %>%
     # apply med end date logic here ----
@@ -174,7 +174,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     mutate(MED_END_DATE_EMR = if_else(!is.na(LATER_MED_START), LATER_MED_START, MED_END_DATE_EMR)) %>%
     # add other EMR med end dates
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE) & !is.na(MED_END_DATE_EMR), MED_END_DATE_EMR, MED_END_DATE)) %>%
-    # create flag to keep track of the original med end dates EMR
+    # create original med end date for emr to keep track of the original med end dates EMR
     mutate(ORIGINAL_MED_END_EMR = MED_END_DATE_EMR) %>%
     # check with most recent EMR prescription date and EMR encounter date
     # EMR medication end date <= 90 days of most recent EMR data
@@ -184,6 +184,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     NA
     )) %>%
     # flag for the last medication verification date and current medication date after med end date in EMR
+
     mutate(flag1 = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE) & MED_END_DATE_EMR > LAST_MEDICATION_VERIFICATION_DATE, 1, 0)) %>%
     mutate(flag1 = if_else(!is.na(CURRENT_MEDICATION) &
                              MED_END_DATE_EMR > CURRENT_MEDICATION & is.na(LAST_MEDICATION_VERIFICATION_DATE), 1, flag1)) %>%
