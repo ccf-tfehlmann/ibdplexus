@@ -199,7 +199,10 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
       !is.na(MED_END_DATE_ECRF) ~ "ECRF END DATE",
       is.na(MED_END_DATE_ECRF) & (flag_medver == 1 | flag_current == 1) ~ "MED VERIFICATION OR CURRENT FLAG OVERRIDE",
       is.na(MED_END_DATE_ECRF) & (flag_pres90 == 1 | flag_enc90 == 1) ~ "EMR END DATE WITHIN 90 DAYS of EMR ENCOUNTER DATE",
-      is.na(MED_END_DATE_ECRF) & !is.na(MED_END_DATE) ~ "EMR END DATE",
+      is.na(MED_END_DATE_ECRF) & (!is.na(MED_END_DATE)) & !is.na(MED_END_DATE_EMR) ~ "EMR END DATE",
+      is.na(MED_END_DATE_ECRF) & (!is.na(MED_END_DATE)) & is.na(MED_END_DATE_EMR) & MED_END_DATE == LAST_MED_START_EMR
+~ "LAST MED START DATE IN EMR",
+
       TRUE ~ "NO MED END DATES"
     )) %>%
     mutate(
@@ -229,7 +232,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
         ) & is.na(MED_END_DATE_ECRF) ~ "EMR",
         MED_END_DATE != MED_END_DATE_ECRF & (MED_END_DATE == MED_END_DATE_EMR
                                              ## | MED_END_DATE == MED_DISCONT_START_DATE_EMR
-        ) & LATER_MED_START == MED_END_DATE ~ "EMR",
+        ) | (LAST_MED_START_EMR == MED_END_DATE) ~ "EMR",
         TRUE ~ NA_character_
       )
     ) %>%
