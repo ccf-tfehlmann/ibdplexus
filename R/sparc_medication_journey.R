@@ -177,9 +177,9 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     # EMR medication end date <= 90 days of most recent EMR data
     ## flag for within 90 days of most recent EMR prescription date
     mutate(flag_pres90 = if_else(difftime(MOST_RECENT_EMR_PRES_DATE, MED_END_DATE,
-                                          units = "days") >= 90, 1, 0)) %>%
+                                          units = "days") < 90, 1, 0)) %>%
     ## flag for within 90 days of most recent EMR encounter date
-    mutate(flag_enc90 = if_else(difftime(MOST_RECENT_EMR_ENCOUNTER_DATE, MED_END_DATE, units = "days") >= 90, 1, 0)) %>%
+    mutate(flag_enc90 = if_else(difftime(MOST_RECENT_EMR_ENCOUNTER_DATE, MED_END_DATE, units = "days") < 90, 1, 0)) %>%
     ## flag for med end date > last medication verification date
     mutate(flag_medver = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE) &
                                    MED_END_DATE_EMR < LAST_MEDICATION_VERIFICATION_DATE, 1, 0)) %>%
