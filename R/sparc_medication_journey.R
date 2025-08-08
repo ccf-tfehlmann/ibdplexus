@@ -269,7 +269,9 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
       !is.na(MED_END_DATE) & MED_END_DATE == LATER_MED_START & LAST_NO_END == 1 ~ "LAST MED START EMR",
       TRUE ~ NA
     )) %>%
-    select(-c(flag1, LATER_MED_START, LAST_NO_END, flag)) %>%
+    select(-c(flag1, LATER_MED_START, LAST_NO_END
+              # , flag
+              )) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE,
       MED_END_DATE, MED_START_SOURCE, MED_END_SOURCE, MED_START_DATE_ECRF,
