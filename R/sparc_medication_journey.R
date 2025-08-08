@@ -161,47 +161,46 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(most_recent_EMR, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     left_join(most_recent_EMR_pres, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     left_join(last_start_emr, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION)) %>%
-  #  mutate(flag = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
-  #                        1, 0
-  #  )) %>%
-    # mutate(LAST_MED_START_EMR = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
-    #                                     MED_START_DATE_EMR, LAST_MED_START_EMR)) %>%
+    mutate(LAST_MED_START_EMR = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
+                                        MED_START_DATE_EMR, LAST_MED_START_EMR)) %>%
     # apply med end date logic here ----
-    mutate(MED_END_DATE = NA) %>%
+  mutate(MED_END_DATE = NA) %>%
     # select med end date from ecrf first
     mutate(MED_END_DATE = if_else(!is.na(MED_END_DATE_ECRF), MED_END_DATE_ECRF, MED_END_DATE)) %>%
     # make latest EMR med start date med_end_date when no med end date in EMR
     mutate(MED_END_DATE_EMR = if_else(!is.na(LATER_MED_START), LATER_MED_START, MED_END_DATE_EMR)) %>%
     # add other EMR med end dates
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE) & !is.na(MED_END_DATE_EMR), MED_END_DATE_EMR, MED_END_DATE)) %>%
+    # use last med start date when all other med end dates are missing
+    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE), LAST_MED_START_EMR, MED_END_DATE)) %>%
     # create original med end date for emr to keep track of the original med end dates EMR
     mutate(ORIGINAL_MED_END_EMR = MED_END_DATE_EMR) %>%
     # check with most recent EMR prescription date and EMR encounter date
     # EMR medication end date <= 90 days of most recent EMR data
-    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & difftime(MOST_RECENT_EMR_PRES_DATE, MED_END_DATE,
-                                                                      units = "days"
-    ) >= 90 | difftime(MOST_RECENT_EMR_ENCOUNTER_DATE, MED_END_DATE, units = "days") >= 90, MED_END_DATE,
-    NA
+    ## flag for within 90 days of most recent EMR prescription date
+    mutate(flag_pres90 = if_else(difftime(MOST_RECENT_EMR_PRES_DATE, MED_END_DATE,
+                                          units = "days") >= 90, 1, 0)) %>%
+    ## flag for within 90 days of most recent EMR encounter date
+    mutate(flag_enc90 = if_else(difftime(MOST_RECENT_EMR_ENCOUNTER_DATE, MED_END_DATE, units = "days") >= 90, 1, 0)) %>%
+    ## flag for med end date > last medication verification date
+    mutate(flag_medver = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE) &
+                                   MED_END_DATE_EMR < LAST_MEDICATION_VERIFICATION_DATE, 1, 0)) %>%
+    ## flag for med end date > current medication date
+    mutate(flag_current = if_else(!is.na(CURRENT_MEDICATION) &
+                                    MED_END_DATE_EMR < CURRENT_MEDICATION, 1, 0)) %>%
+    mutate(across(flag_pres90:flag_current, ~replace_na(.x, 0))) %>%
+    ## remove med end date when it is EMR med end date and any of the above flags == 1
+    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & flag_pres90 == 1 | is.na(MED_END_DATE_ECRF) & flag_enc90 == 1 |
+                                    is.na(MED_END_DATE_ECRF) & flag_medver == 1 | is.na(MED_END_DATE_ECRF) & flag_current == 1,
+                                  NA, MED_END_DATE)) %>%
+    ## add in logic using flags
+    mutate(LOGIC_USED = case_when(
+      !is.na(MED_END_DATE_ECRF) ~ "ECRF END DATE",
+      flag_medver == 1 | flag_current == 1 ~ "MED VERIFICATION OR CURRENT FLAG OVERRIDE",
+      flag_pres90 == 1 | flag_enc90 == 1 ~ "EMR END DATE WITHIN 90 DAYS of EMR ENCOUNTER DATE",
+      is.na(MED_END_DATE_ECRF) & !is.na(MED_END_DATE) ~ "EMR, NOT MORE RECENT THAN LAST VERIFIED, CURRENT, AND NOT WITHIN 90 DAYS ENCOUNTER EMR",
+      TRUE ~ "NO MED END DATES"
     )) %>%
-    # flag for the last medication verification date and current medication date after med end date in EMR
-
-    mutate(flag1 = if_else(!is.na(LAST_MEDICATION_VERIFICATION_DATE) & MED_END_DATE_EMR > LAST_MEDICATION_VERIFICATION_DATE, 1, 0)) %>%
-    mutate(flag1 = if_else(!is.na(CURRENT_MEDICATION) &
-                             MED_END_DATE_EMR > CURRENT_MEDICATION & is.na(LAST_MEDICATION_VERIFICATION_DATE), 1, flag1)) %>%
-    mutate(flag1 = if_else(is.na(flag1), 0, flag1)) %>%
-    mutate(flag1 = if_else(is.na(LAST_MEDICATION_VERIFICATION_DATE) & is.na(CURRENT_MEDICATION), 1, flag1)) %>%
-    # mutate(MED_END_DATE = if_else(flag == 0, NA, MED_END_DATE)) %>%
-    # chk that med end date is not within 90 days of most recent EMR
-    mutate(MED_END_DATE = if_else(!is.na(MED_END_DATE) &
-                                    is.na(MED_END_DATE_ECRF) &
-                                    flag1 == 1 & difftime(MOST_RECENT_EMR_ENCOUNTER_DATE,
-                                                          MED_END_DATE_EMR,
-                                                          units = "days"
-                                    ) >= 90,
-                                  MED_END_DATE_EMR, NA
-    )) %>%
-    # make sure no ecrf end dates dropped
-    mutate(MED_END_DATE = if_else(!is.na(MED_END_DATE_ECRF), MED_END_DATE_ECRF, MED_END_DATE)) %>%
     mutate(
       MED_START_SOURCE = case_when(
         MED_START_DATE == MED_START_DATE_ECRF & MED_START_DATE != MED_START_DATE_EMR ~ "ECRF",
@@ -238,40 +237,14 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     relocate(CURRENT_MEDICATION, .after = MED_END_DATE) %>%
     relocate(LAST_MEDICATION_VERIFICATION_DATE, .after = MED_END_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION) %>%
-    mutate(LAST_UPDATE_DATE = if_else(is.na(MED_END_DATE),
+    # create last update date for all patients
+    mutate(LAST_UPDATE_DATE = if_else(!is.na(DEIDENTIFIED_MASTER_PATIENT_ID),
                                       max(c_across(LAST_MEDICATION_VERIFICATION_DATE:
                                                      MED_END_DATE_EMR), na.rm = T), NA
     )) %>%
     mutate(LAST_UPDATE_DATE = if_else(is.infinite(LAST_UPDATE_DATE), NA, LAST_UPDATE_DATE)) %>%
-    mutate(LOGIC_USED = case_when(
-      !is.na(MED_END_DATE_ECRF) & MED_END_DATE == MED_END_DATE_ECRF ~ "ECRF END DATE",
-      flag1 == 1 & difftime(MOST_RECENT_EMR_ENCOUNTER_DATE,
-                            MED_END_DATE_EMR,
-                            units = "days"
-      ) >= 90 &
-        is.na(LAST_NO_END) ~ "EMR, NOT MORE RECENT THAN LAST VERIFIED, CURRENT, AND NOT WITHIN 90 DAYS ENCOUNTER EMR",
-      # Note for Cass: SHould this have & !is.na(LAST_NO_END) ---
-      flag1 == 1 & difftime(MOST_RECENT_EMR_ENCOUNTER_DATE,
-                            MED_END_DATE_EMR,
-                            units = "days"
-      ) < 90 ~ "WITHIN 90 DAYS of EMR ENCOUNTER DATE",
-      is.na(MED_END_DATE) & flag1 == 1 ~ "WITHIN 90 DAYS of EMR ENCOUNTER DATE",
-      # Note - check that this has actually no med end date ----
-      is.na(MED_END_DATE) & is.na(MED_END_DATE_EMR) & is.na(MED_END_DATE_ECRF) ~ "NO MED END DATES",
-      is.na(MED_END_DATE) & !is.na(LAST_MEDICATION_VERIFICATION_DATE) &
-        MED_END_DATE_EMR < LAST_MEDICATION_VERIFICATION_DATE ~ "MED VERIFICATION DATE OVERRIDE",
-      is.na(MED_END_DATE) & !is.na(CURRENT_MEDICATION) &
-        MED_END_DATE_EMR < CURRENT_MEDICATION ~ "CURRENT MEDICATION DATE OVERRIDE",
-      is.na(MED_END_DATE) & !is.na(LAST_MEDICATION_VERIFICATION_DATE) &
-        MED_END_DATE_EMR == LAST_MEDICATION_VERIFICATION_DATE ~ "MED VERIFICATION DATE OVERRIDE",
-      is.na(MED_END_DATE) & !is.na(CURRENT_MEDICATION) &
-        MED_END_DATE_EMR == CURRENT_MEDICATION ~ "CURRENT MEDICATION DATE OVERRIDE",
-      !is.na(MED_END_DATE) & MED_END_DATE == LATER_MED_START & LAST_NO_END == 1 ~ "LAST MED START EMR",
-      TRUE ~ NA
-    )) %>%
-    select(-c(flag1, LATER_MED_START, LAST_NO_END
-              # , flag
-              )) %>%
+    ungroup() %>%
+    select(-c(starts_with("flag_"), LATER_MED_START, LAST_NO_END)) %>%
     select(
       DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE,
       MED_END_DATE, MED_START_SOURCE, MED_END_SOURCE, MED_START_DATE_ECRF,
