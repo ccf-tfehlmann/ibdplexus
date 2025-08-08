@@ -193,7 +193,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     ## drop med end date if either the most recent emr prescription date > 90
     ## days or the most recent emr encounter date > 90 days from the latest med
     ## end date we have for that medication
-    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & flag_pres90 == 1 & flag_enc90 == 1, MED_END_DATE, MED_END_DATE))
+    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & flag_pres90 == 1 & flag_enc90 == 1, MED_END_DATE, MED_END_DATE)) %>%
     ## add in logic using flags
     mutate(LOGIC_USED = case_when(
       !is.na(MED_END_DATE_ECRF) ~ "ECRF END DATE",
