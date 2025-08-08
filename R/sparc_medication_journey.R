@@ -161,6 +161,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     left_join(most_recent_EMR, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     left_join(most_recent_EMR_pres, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     left_join(last_start_emr, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION)) %>%
+    # if there is no med start date in the EMR, then make it the last med start date
     mutate(LAST_MED_START_EMR = if_else(!is.na(MED_START_DATE_EMR) & is.na(LAST_MED_START_EMR),
                                         MED_START_DATE_EMR, LAST_MED_START_EMR)) %>%
     # apply med end date logic here ----
@@ -196,9 +197,9 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     ## add in logic using flags
     mutate(LOGIC_USED = case_when(
       !is.na(MED_END_DATE_ECRF) ~ "ECRF END DATE",
-      flag_medver == 1 | flag_current == 1 ~ "MED VERIFICATION OR CURRENT FLAG OVERRIDE",
-      flag_pres90 == 1 | flag_enc90 == 1 ~ "EMR END DATE WITHIN 90 DAYS of EMR ENCOUNTER DATE",
-      is.na(MED_END_DATE_ECRF) & !is.na(MED_END_DATE) ~ "EMR, NOT MORE RECENT THAN LAST VERIFIED, CURRENT, AND NOT WITHIN 90 DAYS ENCOUNTER EMR",
+      is.na(MED_END_DATE_ECRF) & (flag_medver == 1 | flag_current == 1) ~ "MED VERIFICATION OR CURRENT FLAG OVERRIDE",
+      is.na(MED_END_DATE_ECRF) & (flag_pres90 == 1 | flag_enc90 == 1) ~ "EMR END DATE WITHIN 90 DAYS of EMR ENCOUNTER DATE",
+      is.na(MED_END_DATE_ECRF) & !is.na(MED_END_DATE) ~ "EMR END DATE",
       TRUE ~ "NO MED END DATES"
     )) %>%
     mutate(
