@@ -102,6 +102,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     # mutate(VISIT_ENCOUNTER_START_DATE = dmy(VISIT_ENCOUNTER_START_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(VISIT_ENCOUNTER_START_DATE)) %>%
+    # removing future encounter dates
+    filter(VISIT_ENCOUNTER_START_DATE <= Sys.Date()) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
     rename(MOST_RECENT_EMR_ENCOUNTER_DATE = VISIT_ENCOUNTER_START_DATE) %>%
     ungroup()
@@ -110,6 +112,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
   most_recent_EMR_pres <- prescriptions %>%
     filter(DATA_SOURCE == "EMR") %>%
     mutate(MED_START_DATE = dmy(MED_START_DATE)) %>%
+    # removing future prescription dates
+    filter(MED_START_DATE <= Sys.Date()) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(MED_START_DATE)) %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MED_START_DATE) %>%
