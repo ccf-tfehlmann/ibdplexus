@@ -187,6 +187,8 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     mutate(flag_current = if_else(!is.na(CURRENT_MEDICATION) &
                                     MED_END_DATE_EMR < CURRENT_MEDICATION, 1, 0)) %>%
     mutate(across(flag_pres90:flag_current, ~replace_na(.x, 0))) %>%
+    ## remove med end date when it is EMR and in the future
+    mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & MED_END_DATE > Sys.Date(), NA, MED_END_DATE)) %>%
     ## remove med end date when it is EMR med end date and any of the verification flags == 1
     mutate(MED_END_DATE = if_else(is.na(MED_END_DATE_ECRF) & flag_medver == 1 | is.na(MED_END_DATE_ECRF) & flag_current == 1,
                                   NA, MED_END_DATE)) %>%
@@ -197,12 +199,10 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     ## add in logic using flags
     mutate(LOGIC_USED = case_when(
       !is.na(MED_END_DATE_ECRF) ~ "ECRF END DATE",
+      is.na(MED_END_DATE_ECRF) & MED_END_DATE_EMR > Sys.Date() ~ "EMR END DATE IN FUTURE",
       is.na(MED_END_DATE_ECRF) & (flag_medver == 1 | flag_current == 1) ~ "MED VERIFICATION OR CURRENT FLAG OVERRIDE",
       is.na(MED_END_DATE_ECRF) & flag_pres90 == 1 & flag_enc90 == 1 ~ "EMR END DATE WITHIN 90 DAYS of EMR DATA DATE",
       is.na(MED_END_DATE_ECRF) & (!is.na(MED_END_DATE)) & !is.na(MED_END_DATE_EMR) ~ "EMR END DATE",
-      is.na(MED_END_DATE_ECRF) & (!is.na(MED_END_DATE)) & is.na(MED_END_DATE_EMR) & MED_END_DATE == LAST_MED_START_EMR
-      ~ "LAST MED START DATE IN EMR",
-
       TRUE ~ "NO MED END DATES"
     )) %>%
     mutate(
