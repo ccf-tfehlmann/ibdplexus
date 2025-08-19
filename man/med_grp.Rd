@@ -5,7 +5,7 @@
 \alias{med_grp}
 \title{med_grp}
 \format{
-A data frame with 107 rows and 3 variables:
+A data frame with 175 rows and 3 variables:
 \describe{
   \item{MEDICATION_NAME}{Medication Name as it appears in SF, ECRF or EMR}
   \item{med_type}{The class of medication. Medication classes include: Aminosalicylates, antibiotics, antidiarrheals, biologics, corticosteroids, immunomodulators, probiotics, and targeted synthetic small molecules}
@@ -27,5 +27,6 @@ Adalimumab Biosimilar added December 2022.
 Additional Adalimumab Biosimilars added July 2023.
 Steroid list expanded July 2023.
 New targeted synthetic small molecules med_type added.
+Ustekinumab and other Biosimilars added August 2025.
 }
 \keyword{datasets}
