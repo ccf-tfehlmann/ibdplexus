@@ -180,6 +180,19 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     drop_na(new_med_name) %>%
     select(-drug) %>%
     distinct() %>%
+    #if new_med_name = Infliximab (Inflectra or Zymfentra)  is subcutaneous assign to Zymfentra otherwise assign inflectra
+    #if study drug then replace with "study drug"
+    mutate(new_med_name = case_when(new_med_name %in% c("Infliximab (Inflectra or Zymfentra)","Infliximab (Zymfentra)", "Infliximab (Inflectra)") & ROUTE_OF_MEDICATION %in% c("Injection", "Subcutaneous") & (!(grepl("inflectra", med1, ignore.case = T)) | !(grepl("inflectra", med2, ignore.case = T)) | !(grepl("inflectra", med3, ignore.case = T))) ~ "Infliximab (Zymfentra)",
+                                    new_med_name %in% c("Infliximab (Inflectra or Zymfentra)","Infliximab (Zymfentra)", "Infliximab (Inflectra)") & ((grepl("inflectra", med1, ignore.case = T)) | (grepl("inflectra", med2, ignore.case = T)) | (grepl("inflectra", med3, ignore.case = T))) ~ "Infliximab (Inflectra)",
+                                    grepl("Study|Investigational", med1, ignore.case = T) | grepl("Study|Investigational", med2, ignore.case = T) | grepl("Study|Investigational", med3, ignore.case = T) ~ "Study Medication",
+                                    TRUE ~ new_med_name)) %>%
+    distinct() %>%
+    filter(new_med_name != "Study Medication") %>%
+    #If same med id maps to biosimilar and originator, keep biosimilar
+    mutate(biosimilar_flag = ifelse(is.na(biosimilar_flag), 0, biosimilar_flag)) %>%
+    group_by(MED_ID) %>%
+    filter(biosimilar_flag == max(biosimilar_flag)) %>%
+    ungroup() %>%
     full_join(no_med_enroll) %>%
     mutate(
       MED_START_DATE = dmy(MED_START_DATE),
