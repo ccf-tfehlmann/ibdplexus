@@ -47,6 +47,7 @@
 #'   \item{MEDICATION_NAME}{Medication Name as it appears in SF, ECRF or EMR}
 #'   \item{med_type}{The class of medication. Medication classes include: Aminosalicylates, antibiotics, antidiarrheals, biologics, corticosteroids, immunomodulators, probiotics, and targeted synthetic small molecules}
 #'   \item{new_med_name}{Standardized medication name}
+#'   \item{biosimilar_flag}{Equals 1 for biosimilars}
 #'
 #' }
 "med_grp"
