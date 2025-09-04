@@ -182,10 +182,31 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     distinct() %>%
     #if new_med_name = Infliximab (Inflectra or Zymfentra)  is subcutaneous assign to Zymfentra otherwise assign inflectra
     #if study drug then replace with "study drug"
-    mutate(new_med_name = case_when(new_med_name %in% c("Infliximab (Inflectra or Zymfentra)","Infliximab (Zymfentra)", "Infliximab (Inflectra)") & (ROUTE_OF_MEDICATION %in% c("Subcutaneous") & (!(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med1, ignore.case = T)) | !(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med2, ignore.case = T)) | !(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med3, ignore.case = T)))) | (grepl("Zymfentra|SUBCUTANEOUS|Pen", med1, ignore.case = T) |  grepl("Zymfentra|SUBCUTANEOUS|Pen", med2, ignore.case = T)  | grepl("Zymfentra|SUBCUTANEOUS|Pen", med3, ignore.case = T) )~ "Infliximab (Zymfentra)",
-                                    new_med_name %in% c("Infliximab (Inflectra or Zymfentra)","Infliximab (Zymfentra)", "Infliximab (Inflectra)") & (((grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med1, ignore.case = T)) | (grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med2, ignore.case = T)) | (grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med3, ignore.case = T))) | grepl("intravenous|IV", ROUTE_OF_MEDICATION, ignore.case = T)) ~ "Infliximab (Inflectra)",
-                                    grepl("Study|Investigational", med1, ignore.case = T) | grepl("Study|Investigational", med2, ignore.case = T) | grepl("Study|Investigational", med3, ignore.case = T) ~ "Study Medication",
-                                    TRUE ~ new_med_name)) %>%
+    mutate(
+      new_med_name = case_when(
+        new_med_name %in% c("Infliximab (Inflectra or Zymfentra)", "Infliximab (Zymfentra)", "Infliximab (Inflectra)") &
+          ROUTE_OF_MEDICATION %in% c("Subcutaneous") &
+          (!(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med1, ignore.case = T)) |
+             !(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med2, ignore.case = T))|
+             !(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med3, ignore.case = T)))  ~ "Infliximab (Zymfentra)",
+        new_med_name %in% c("Infliximab (Inflectra or Zymfentra)", "Infliximab (Zymfentra)", "Infliximab (Inflectra)") &
+          (!(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med1, ignore.case = T)) |
+             !(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med2, ignore.case = T))|
+             !(grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med3, ignore.case = T))) ~ "Infliximab (Zymfentra)",
+        new_med_name %in% c("Infliximab (Inflectra or Zymfentra)", "Infliximab (Zymfentra)", "Infliximab (Inflectra)") &
+          (grepl("Zymfentra|SUBCUTANEOUS|Pen", med1, ignore.case = T) |
+             grepl("Zymfentra|SUBCUTANEOUS|Pen", med2, ignore.case = T) |
+             grepl("Zymfentra|SUBCUTANEOUS|Pen", med3, ignore.case = T))  ~ "Infliximab (Zymfentra)",
+      new_med_name %in% c("Infliximab (Inflectra or Zymfentra)", "Infliximab (Zymfentra)", "Infliximab (Inflectra)") &
+        (((grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med1, ignore.case = T)) |
+            (grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med2, ignore.case = T)) |
+            (grepl("inflectra|Ivpb|100 MG Injection|IV|intravenous|infusion", med3, ignore.case = T))) |
+           grepl("intravenous|IV", ROUTE_OF_MEDICATION, ignore.case = T)) ~ "Infliximab (Inflectra)",
+      grepl("Study|Investigational", med1, ignore.case = T) |
+        grepl("Study|Investigational", med2, ignore.case = T) |
+        grepl("Study|Investigational", med3, ignore.case = T) ~ "Study Medication",
+      TRUE ~ new_med_name
+    )) %>%
     distinct() %>%
     filter(new_med_name != "Study Medication") %>%
     #If same med id maps to biosimilar and originator, keep biosimilar
@@ -196,8 +217,7 @@ sparc_med_filter <- function(prescriptions, observations, demographics, encounte
     full_join(no_med_enroll) %>%
     mutate(
       MED_START_DATE = dmy(MED_START_DATE),
-      MED_END_DATE = dmy(MED_END_DATE)
-    )
+      MED_END_DATE = dmy(MED_END_DATE))
 
   if("corticosteroids" %in% med_groups){
 
