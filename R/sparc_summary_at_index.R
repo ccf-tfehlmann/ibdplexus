@@ -1354,7 +1354,9 @@ sparc_summary <- function(data,
 
 
   if ("OMICS" %in% index_info) {
-    cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
+    cohort <-  data$omics_patient_mapping %>%
+      mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
+      mutate(index_date = SAMPLE_COLLECTED_DATE) %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
   } else if ("BIOSAMPLE" %in% index_info) {
     cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE")) %>%
       left_join(biosample_flags, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, BIOSAMPLE_CONCEPT_NAME, SRC_BIOSAMPLE_CONCEPT_NAME,
