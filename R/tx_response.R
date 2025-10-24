@@ -43,6 +43,12 @@ tx_response <- function(data,
     # Find the file that ends with your target suffix
     matching_file_se <- file.list[grepl(paste0("-", sum_endo_suffix, "$"), file.list)]
 
+    # Get file information for data extract date
+    file_details <- file.info(matching_file_se)
+
+    # Extract the creation time (ctime), to use later
+    creation_date <- as.Date(file_details$ctime)
+
 
     # Check and read the file
     if (length(matching_file_se) == 1) {
@@ -99,6 +105,12 @@ tx_response <- function(data,
 
     # Find the file that ends with your target suffix
     matching_file <- file.list[grepl(paste0(reports_suffix, "$"), file.list)]
+
+    # Get file information for data extract date
+    file_details <- file.info(matching_file)
+
+    # Extract the creation time (ctime), to use later
+    creation_date <- as.Date(file_details$ctime)
 
 
     # Check and read the file
@@ -179,8 +191,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(summary_endoscopy_filtered, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(ENDO_DURING = if_else(ENDO_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -200,8 +211,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(summary_endoscopy_filtered, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(ENDO_DURING = if_else(ENDO_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -221,8 +231,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(ucdai6, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(UCDAI_DURING = if_else(UCDAI_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -242,8 +251,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(scdai, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(SCDAI_DURING = if_else(SCDAI_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -263,8 +271,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(pga, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(PGA_DURING = if_else(PGA_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -283,8 +290,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(pga, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(PGA_DURING = if_else(PGA_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -396,8 +402,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(crp_clean, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(CRP_DURING = if_else(CRP_SPECIMEN_COLLECTION_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -416,8 +421,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(crp_clean, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(CRP_DURING = if_else(CRP_SPECIMEN_COLLECTION_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -436,8 +440,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(fcal_cleaned, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(FCAL_DURING = if_else(FCAL_SPECIMEN_COLLECTION_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -458,8 +461,7 @@ tx_response <- function(data,
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION, MED_START_DATE, MED_END_DATE) %>%
     left_join(fcal_cleaned, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID), relationship = "many-to-many") %>%
-    #### NOTE: DO WE WANT TO USE DATA EXTRACT DATE INSTEAD OF SYS.DATA() HERE? ----
-  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, Sys.Date())) %>%
+  mutate(MED_END_DATE_DEL = if_else(!is.na(MED_END_DATE), MED_END_DATE, creation_date)) %>%
     mutate(MED_INTERVAL = interval(MED_START_DATE, MED_END_DATE_DEL)) %>%
     select(-MED_END_DATE_DEL) %>%
     mutate(FCAL_DURING = if_else(FCAL_SPECIMEN_COLLECTION_DATE %within% MED_INTERVAL, 1, 0)) %>%
@@ -838,7 +840,7 @@ tx_response <- function(data,
   #### INDUCTION
   ALL_FULL_TABLES_INDUCTION <- ALL_FULL_TABLES_ADD_HOSP  %>%
     mutate(TIME_ON_MED = if_else(!is.na(MED_END_DATE), difftime(MED_END_DATE, MED_START_DATE, units = "days"),
-                                 difftime(Sys.Date(), MED_START_DATE, units = "days"))) %>%
+                                 difftime(creation_date, MED_START_DATE, units = "days"))) %>%
     mutate(FAIL_INDUCTION_FLAG = case_when(MEDICATION == "Tofacitinib" & TIME_ON_MED < 56 |
                                              MEDICATION == "Ustekinumab" & TIME_ON_MED < 56 |
                                              MEDICATION == "Risankizumab" & TIME_ON_MED < 56 |
