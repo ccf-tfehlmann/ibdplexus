@@ -2,7 +2,7 @@
 % Please edit documentation in R/tx_response.R
 \name{tx_response}
 \alias{tx_response}
-\title{Create TX Response Table - all responses}
+\title{Create Treatment Response Table - all responses}
 \usage{
 tx_response(
   data,
@@ -32,7 +32,7 @@ tx_response(
 
 \item{month_interest}{Range of months around month of interest for which to include relevant disease activity measures. Defaults to 3 months.}
 
-\item{filtered_med}{Defaults to F. Set to T to filter only for specific medications}
+\item{filtered_med}{Defaults to F. Set to T to filter only for specific medications.}
 
 \item{med_interest}{String of medications separated by | to search for when filtered_med = T. Possible medications are: Adalimumab, Azathioprine, Balsalazide, Certolizumab Pegol, Cyclosporine, Etrasimod, Golimumab, Guselkumab, Infliximab, Mercaptopurine, Mesalamine, Methotrexate, Mirikizumab, Natalizumab, Olsalazine, Ozanimod, Risankizumab, Sulfasalazine, Tacrolimus, Tofacitinib, Upadacitinib, Ustekinumab, Vedolizumab"}
 }
@@ -40,7 +40,7 @@ tx_response(
 Tx response data file
 }
 \description{
-Create TX Response Table - all responses
+Create Treatment Response Table - all responses
 }
 \examples{
 # upload data

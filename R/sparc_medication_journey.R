@@ -452,7 +452,7 @@ sparc_med_journey <- function(prescriptions, demographics, observations, encount
     MEDICATION %in% c(
       "Adalimumab", "Certolizumab Pegol", "Golimumab", "Infliximab", "Etrasimod", "Natalizumab", "Other Biologic", "Ustekinumab", "Vedolizumab", "Tofacitinib", "Upadacitinib", "Ustekinumab", "Ozanimod", "Risankizumab", "Guselkumab", "Mirikizumab"
     ) ~ 1,
-    grepl("Adalimumab|Infliximab", MEDICATION, ignore.case = T) ~ 1,
+    grepl("Adalimumab|Infliximab|Ustekinumab|Natalizumab", MEDICATION, ignore.case = T) ~ 1,
     TRUE ~ 0
   )) %>%
   group_by(DEIDENTIFIED_MASTER_PATIENT_ID, b) %>%
