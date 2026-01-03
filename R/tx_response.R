@@ -1133,7 +1133,7 @@ tx_response <- function(data,
       rename_with(~paste("MONTH", month_interest, "_END"), .cols = MONTHX_END) %>%
       rename_with(~paste("MONTH", month_interest, "_START"), .cols = MONTHX_START) %>%
       mutate(TIME_CATEGORY = paste0(month_interest, " (+/-", month_range, ") months")) %>%
-      select(INDEX_DATE) %>%
+      select(-INDEX_DATE) %>%
       rename(INDEX_DATE = MONTHX) %>%
       rename(DISEASE_ACTIVITY_MEASURE_DATE = DA_DATE) %>%
       select(-c(IN_RANGE, MONTHX_INT, POS_INT_FLAG, MONTHX_END_FIX, MONTHX_END, MONTHX_START)) %>%
