@@ -1059,6 +1059,9 @@ tx_response <- function(data,
 
   if (all_events == T) {
 
+    ALL_FULL_TABLES_FINAL_2.0 <- ALL_FULL_TABLES_FINAL_2.0 %>%
+      rename(DISEASE_ACTIVITY_MEASURE_DATE = INDEX_DATE)
+
     ALL_FULL_TABLES_FINAL_ONE <- ALL_FULL_TABLES_FINAL_2.0 %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, MEDICATION) %>%
       slice(which.min(TIME_BETWEEN)) %>%
@@ -1129,14 +1132,14 @@ tx_response <- function(data,
       mutate(IN_RANGE = if_else(DA_DATE %within% MONTHX_INT, 1, 0)) %>%
       filter(IN_RANGE == 1) %>%
       # select(-DA_DATE) %>%
-      rename_with(~paste("MONTH", month_interest, "_INT"), .cols = MONTHX_INT) %>%
-      rename_with(~paste("MONTH", month_interest, "_END"), .cols = MONTHX_END) %>%
-      rename_with(~paste("MONTH", month_interest, "_START"), .cols = MONTHX_START) %>%
+      rename_with(~paste0("MONTH", month_interest, "_INT"), .cols = MONTHX_INT) %>%
+      rename_with(~paste0("MONTH", month_interest, "_END"), .cols = MONTHX_END) %>%
+      rename_with(~paste0("MONTH", month_interest, "_START"), .cols = MONTHX_START) %>%
       mutate(TIME_CATEGORY = paste0(month_interest, " (+/-", month_range, ") months")) %>%
       select(-INDEX_DATE) %>%
       rename(INDEX_DATE = MONTHX) %>%
       rename(DISEASE_ACTIVITY_MEASURE_DATE = DA_DATE) %>%
-      select(-c(IN_RANGE, MONTHX_INT, POS_INT_FLAG, MONTHX_END_FIX, MONTHX_END, MONTHX_START)) %>%
+      select(-c(IN_RANGE, POS_INT_FLAG, starts_with("MONTH"))) %>%
       relocate(DISEASE_ACTIVITY_MEASURE_DATE, .before = INDEX_DATE)
 
 
