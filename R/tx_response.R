@@ -1059,7 +1059,7 @@ tx_response <- function(data,
 
   if (all_events == T) {
 
-    ALL_FULL_TABLES_FINAL_2.0 <- ALL_FULL_TABLES_FINAL_2.0 %>%
+    ALL_FULL_TABLES_FINAL_2.0_FINAL <- ALL_FULL_TABLES_FINAL_2.0 %>%
       rename(DISEASE_ACTIVITY_MEASURE_DATE = INDEX_DATE)
 
     ALL_FULL_TABLES_FINAL_ONE <- ALL_FULL_TABLES_FINAL_2.0 %>%
@@ -1106,7 +1106,7 @@ tx_response <- function(data,
       )
     )
 
-    sheets <- list("ALL SCORES" = ALL_FULL_TABLES_FINAL_2.0,
+    sheets <- list("ALL SCORES" = ALL_FULL_TABLES_FINAL_2.0_FINAL,
                    "CLOSEST SCORE" = ALL_FULL_TABLES_FINAL_ONE,
                    "MOST RIGOROUS" = ALL_FULL_TABLES_FINAL_RIGOR,
                    "DICTIONARY" = dictionary
