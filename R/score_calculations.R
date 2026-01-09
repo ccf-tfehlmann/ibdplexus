@@ -115,7 +115,7 @@ calculate_scdai <- function(observations) {
 
   scdai_sf <- observations %>%
     filter(DATA_SOURCE == "SF_SPARC") %>%
-    filter(grepl("Abdominal Pain|General Well|Number of Daily Bowel Movements", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
+    filter(grepl("Abdominal Pain|General Well|Number of Daily Bowel Movements|Liquid Bowel Movements", OBS_TEST_CONCEPT_NAME, ignore.case = T)) %>%
     filter(OBS_TEST_CONCEPT_NAME != "Baseline Number of Daily Bowel Movements") %>%
     mutate(result = ifelse(is.na(DESCRIPTIVE_SYMP_TEST_RESULTS), TEST_RESULT_NUMERIC, DESCRIPTIVE_SYMP_TEST_RESULTS)) %>%
     mutate(result = case_when(
@@ -143,10 +143,11 @@ calculate_scdai <- function(observations) {
     ) %>%
     mutate(
       A = ifelse(is.na(`Abdominal Pain - Pain Scale`), `Abdominal Pain Score`, `Abdominal Pain - Pain Scale`),
-      B = ifelse(is.na(`Current Average Number of Daily Bowel Movements`), `Current Maximum Number of Daily Bowel Movements`, `Current Average Number of Daily Bowel Movements`),
+      B = ifelse(is.na(`Current Average Number of Daily Liquid Bowel Movements`), `Current Average Number of Daily Bowel Movements`, `Current Average Number of Daily Liquid Bowel Movements`),
       G = ifelse(is.na(`Constitutional - General Well-Being`), `Constitutional - General Well-Being`, `Constitutional - General Well-Being`),
       G = ifelse(is.na(G), `General Well Being Score`, G)
     ) %>%
+    mutate(B = ifelse(is.na(B), `Current Maximum Number of Daily Bowel Movements`, B)) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     mutate(
@@ -158,6 +159,7 @@ calculate_scdai <- function(observations) {
     mutate(Daily.BM.Question = case_when(
       B == `Current Maximum Number of Daily Bowel Movements` ~ "Current Maximum Number of Daily Bowel Movements",
       B == `Current Average Number of Daily Bowel Movements` ~ "Current Average Number of Daily Bowel Movements",
+      B == `Current Average Number of Daily Liquid Bowel Movements` ~ "Current Average Number of Daily Liquid Bowel Movements",
       TRUE ~ as.character(NA)
     )) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
