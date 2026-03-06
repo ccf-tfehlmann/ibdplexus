@@ -609,8 +609,16 @@ pdai <- data$procedures %>%
      mutate(ENDOSCOPY = 1) %>%
     rename(!!paste("ENDOSCOPY", t, sep = "_") := ENDOSCOPY)
 
-  cohort <- left_join(cohort, all_endo_scores)
-
+  # keep closest endoscopy, with ENDOSCOPY_60 flag
+  cohort <- left_join(cohort, all_endo_scores %>% rename(INDEX_DATE_ES = index_date),
+                      by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
+    group_by(across(all_of(names(cohort)))) %>%
+    mutate(datediff = abs(INDEX_DATE_ES - index_date)) %>%
+    filter(datediff == min(abs(datediff)) | is.na(datediff)) %>%
+    slice(1) %>%
+    distinct() %>%
+    ungroup() %>%
+    mutate(ENDOSCOPY_60 = if_else((datediff <= t | is.na(datediff)), 0, ENDOSCOPY_60))
   # Ostomy ----
 
   ostomy_sf <- data$procedures %>%
