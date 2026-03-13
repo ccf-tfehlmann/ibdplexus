@@ -618,7 +618,7 @@ pdai <- data$procedures %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    mutate(ENDOSCOPY_60 = if_else((datediff <= t | is.na(datediff)), 0, ENDOSCOPY_60))
+    mutate(ENDOSCOPY_60 = if_else((datediff >= t | is.na(datediff)), 0, ENDOSCOPY_60))
   # Ostomy ----
 
   ostomy_sf <- data$procedures %>%
