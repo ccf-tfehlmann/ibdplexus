@@ -320,27 +320,27 @@ sparc_summary <- function(data,
 
   # first part of CD journey
   CD_PHENO_JOURNEY_first <- enc_cd_pts %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE,
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE,
            `Crohn's Disease Phenotype`) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    slice(which.min(VISIT_ENCOUNTER_START_DATE)) %>%
+    slice(which.min(OBS_TEST_RESULT_DATE)) %>%
     rename(FIRST = `Crohn's Disease Phenotype`)
 
   # final part of CD journey
   CD_PHENO_JOURNEY_final <- enc_cd_pts %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE,
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE,
            `Crohn's Disease Phenotype`) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-    slice(which.max(VISIT_ENCOUNTER_START_DATE))  %>%
+    slice(which.max(OBS_TEST_RESULT_DATE))  %>%
     rename(FINAL = `Crohn's Disease Phenotype`)
 
 
   # middle behaviors
   CD_PHENO_JOURNEY_middle <- enc_cd_pts %>%
     left_join(CD_PHENO_JOURNEY_final,
-              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE)) %>%
     left_join(CD_PHENO_JOURNEY_first,
-              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     fill(FIRST, .direction = "updown") %>%
     fill(FINAL, .direction = "updown") %>%
