@@ -283,9 +283,9 @@ sparc_summary <- function(data,
     filter(OBS_TEST_CONCEPT_NAME %in% c("Crohn's Disease Phenotype", "IBD Manifestations - Abdominal Abscess, Fistula, or Other Penetrating Complication") | str_detect(OBS_TEST_CONCEPT_NAME, "^Phenotype")) %>%
     drop_na(DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID,
-             OBS_TEST_CONCEPT_NAME, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
+             OBS_TEST_CONCEPT_NAME, OBS_TEST_RESULT_DATE, DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     filter(OBS_TEST_CONCEPT_NAME == "Crohn's Disease Phenotype") %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     mutate(fil = case_when(
       DESCRIPTIVE_SYMP_TEST_RESULTS == "Inflammatory, non-penetrating, non-stricturing" ~ 1,
       DESCRIPTIVE_SYMP_TEST_RESULTS == "Stricturing" ~ 2,
@@ -296,7 +296,7 @@ sparc_summary <- function(data,
     select(-fil) %>%
     left_join(data$encounter %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE),
               by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%
-    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE), names_from = OBS_TEST_CONCEPT_NAME,
+    pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE), names_from = OBS_TEST_CONCEPT_NAME,
                 values_from = DESCRIPTIVE_SYMP_TEST_RESULTS) %>%
     mutate(`Crohn's Disease Phenotype` = case_when(
       `Crohn's Disease Phenotype` == "Inflammatory, non-penetrating, non-stricturing" ~ "Inflammatory non-penetrating, non-stricturing (B1)",
@@ -306,8 +306,8 @@ sparc_summary <- function(data,
       TRUE ~ `Crohn's Disease Phenotype`
     )) %>%
     ungroup() %>%
-    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE, `Crohn's Disease Phenotype`, .keep_all = T) %>%
-    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_START_DATE) %>%
+    distinct(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE, `Crohn's Disease Phenotype`, .keep_all = T) %>%
+    group_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE) %>%
     mutate(`CD_CHOOSE` = case_when(
       `Crohn's Disease Phenotype` == "Inflammatory non-penetrating, non-stricturing (B1)" ~ 1,
       `Crohn's Disease Phenotype` == "Stricturing (B2)" ~ 2,
@@ -320,7 +320,7 @@ sparc_summary <- function(data,
 
   # first part of CD journey
   CD_PHENO_JOURNEY_first <- enc_cd_pts %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE,
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE,
            `Crohn's Disease Phenotype`) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.min(OBS_TEST_RESULT_DATE)) %>%
@@ -328,7 +328,7 @@ sparc_summary <- function(data,
 
   # final part of CD journey
   CD_PHENO_JOURNEY_final <- enc_cd_pts %>%
-    select(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE,
+    select(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE,
            `Crohn's Disease Phenotype`) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     slice(which.max(OBS_TEST_RESULT_DATE))  %>%
@@ -338,9 +338,9 @@ sparc_summary <- function(data,
   # middle behaviors
   CD_PHENO_JOURNEY_middle <- enc_cd_pts %>%
     left_join(CD_PHENO_JOURNEY_final,
-              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE)) %>%
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE)) %>%
     left_join(CD_PHENO_JOURNEY_first,
-              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, OBS_TEST_RESULT_DATE)) %>%
+              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID, OBS_TEST_RESULT_DATE)) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
     fill(FIRST, .direction = "updown") %>%
     fill(FINAL, .direction = "updown") %>%
