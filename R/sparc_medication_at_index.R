@@ -147,6 +147,7 @@ sparc_medication <- function(data,
       filter(ON_MED == 1) %>%
       group_by(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, MOA) %>%
       slice(which.max(MED_START_DATE)) %>%
+      ungroup() %>%
       pivot_wider(
         id_cols = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date"),
         names_from = MEDICATION,
@@ -226,23 +227,24 @@ sparc_medication <- function(data,
   names(final_cohort) <- gsub(" ", "_", names(final_cohort))
   names(final_cohort) <- gsub("\\(|\\)", "", names(final_cohort))
 
-  #assign col names into new tibble
-  col_names <- tibble(x=final_cohort %>% names()) %>% filter(grepl("^MED_|^CURRENT_", x))
-
-  #extract out into new columns name components
-  col_names_order <- col_names %>%
-    mutate(order = case_when(grepl("END", x) ~ 2,
-                             grepl("START", x) ~ 1,
-                             grepl("CURRENT", x) ~ 3)) %>%
-    separate_wider_delim(x,delim = "_", too_few = "align_start", names_sep = "_",cols_remove = FALSE) %>%
-    # mutate(before=str_extract(x,".*(?=_)"),
-    #        after=str_extract(x,"_(?!.*_).*")
-    # ) %>%
-    arrange(x_5,x_6,match(x_4, c("ECRF","EMR")), match(x_2, c("START", "END"))) %>%
-    pull(x_x)
+  # #assign col names into new tibble
+  # col_names <- tibble(x=final_cohort %>% names()) %>% filter(grepl("^MED_|^CURRENT_", x))
+  #
+  # #extract out into new columns name components
+  # col_names_order <- col_names %>%
+  #   mutate(order = case_when(grepl("END", x) ~ 2,
+  #                            grepl("START", x) ~ 1,
+  #                            grepl("CURRENT", x) ~ 3)) %>%
+  #   separate_wider_delim(x,delim = "_", too_few = "align_start", names_sep = "_",cols_remove = FALSE) %>%
+  #   # mutate(before=str_extract(x,".*(?=_)"),
+  #   #        after=str_extract(x,"_(?!.*_).*")
+  #   # ) %>%
+  #   arrange(x_5,x_6,match(x_4, c("ECRF","EMR")), match(x_2, c("START", "END"))) %>%
+  #   pull(x_x)
 
   #rearrange colnames by this logic
-  final_cohort <- final_cohort %>% select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, MEDICATION_AT_INDEX, any_of(col_names_order), everything()) %>%
+  final_cohort <- final_cohort %>%
+   # select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, INDEX_DATE, MEDICATION_AT_INDEX, any_of(col_names_order), everything()) %>%
     select(-c(DATE_OF_CONSENT, DATE_OF_CONSENT_WITHDRAWN, BIRTH_YEAR, SEX, DIAGNOSIS_DATE))
 
 
