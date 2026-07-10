@@ -10,6 +10,9 @@
 #' @param month_interest Range of months around month of interest for which to include relevant disease activity measures. Defaults to 3 months.
 #' @param filtered_med Defaults to F. Set to T to filter only for specific medications.
 #' @param med_interest String of medications separated by | to search for when filtered_med = T. Possible medications are: Adalimumab, Azathioprine, Balsalazide, Certolizumab Pegol, Cyclosporine, Etrasimod, Golimumab, Guselkumab, Infliximab, Mercaptopurine, Mesalamine, Methotrexate, Mirikizumab, Natalizumab, Olsalazine, Ozanimod, Risankizumab, Sulfasalazine, Tacrolimus, Tofacitinib, Upadacitinib, Ustekinumab, Vedolizumab"
+#' @param crp_value Numeric value for CRP INACTIVE/ACTIVE cutoff in mg/L. Defaults to 8.
+#' @param fcal_low Numeric value for lower limit of FCal for INACTIVE/ACTIVE cutoff in ug/g. Anything below this will be INACTIVE. Defaults to 50.
+#' @param fcal_high Numeric value for lower limit of FCal for INACTIVE/ACTIVE cutoff in ug/g. Anything below this will be ACTIVE. Defaults to 200. Anything between fcal_low and fcal_high will be INDETERMINATE.
 #'
 #' @return Tx response data file
 #' @export
@@ -28,7 +31,10 @@ tx_response <- function(data,
                         month_range = 3,
                         month_interest = 12,
                         filtered_med = F,
-                        med_interest = "Adalimumab|Certolizumab Pegol|Etrasimod|Golimumab|Guselkumab|Infliximab|Mirikizumab|Natalizumab||Ozanimod|Risankizumab|Tofacitinib|Upadacitinib|Ustekinumab|Vedolizumab") {
+                        med_interest = "Adalimumab|Certolizumab Pegol|Etrasimod|Golimumab|Guselkumab|Infliximab|Mirikizumab|Natalizumab||Ozanimod|Risankizumab|Tofacitinib|Upadacitinib|Ustekinumab|Vedolizumab",
+                        crp_value = 8,
+                        fcal_low = 50,
+                        fcal_high = 200) {
 
   #### Read in required report paths below ----
    # update params with more detail on reports, etc.
@@ -349,7 +355,7 @@ tx_response <- function(data,
   crp_cleaned2 <- crp_central_lab %>%
     mutate(lab_result_cln_numeric = as.numeric(lab_result_cln_numeric)) %>%
     mutate(CRP_ACTIVE = ifelse(lab_result_cln_numeric <
-                                 8, "INACTIVE", NA)) %>% mutate(CRP_ACTIVE = ifelse(is.na(CRP_ACTIVE),
+                                 crp_value, "INACTIVE", NA)) %>% mutate(CRP_ACTIVE = ifelse(is.na(CRP_ACTIVE),
                                                                                     "ACTIVE", CRP_ACTIVE)) %>% mutate(CRP_SPECIMEN_COLLECTION_DATE = dmy(SPECIMEN_COLLECTION_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, CRP_SPECIMEN_COLLECTION_DATE,
              CRP_ACTIVE, lab_result_cln_numeric) %>% mutate(CRP_SOURCE = "CENTRAL LAB") %>%
@@ -370,12 +376,12 @@ tx_response <- function(data,
                                 "INACTIVE", NA)) %>% mutate(FCAL_ACTIVE = ifelse(lab_result_cln ==
                                                                                    "UPPER LIMIT", "ACTIVE", FCAL_ACTIVE)) %>% mutate(lab_result_cln_numeric = as.numeric(lab_result_cln)) %>%
     mutate(FCAL_ACTIVE = ifelse(lab_result_cln_numeric <
-                                  50 & is.na(FCAL_ACTIVE) & test_unit_cln == "UG/G",
+                                  fcal_low & is.na(FCAL_ACTIVE) & test_unit_cln == "UG/G",
                                 "INACTIVE", FCAL_ACTIVE)) %>% mutate(FCAL_ACTIVE = ifelse(lab_result_cln_numeric >=
-                                                                                            50 & lab_result_cln_numeric <= 200 & is.na(FCAL_ACTIVE) &
+                                                                                            fcal_low & lab_result_cln_numeric <= fcal_high & is.na(FCAL_ACTIVE) &
                                                                                             test_unit_cln == "UG/G", "INDETERMINATE", FCAL_ACTIVE)) %>%
     mutate(FCAL_ACTIVE = ifelse(lab_result_cln_numeric >
-                                  200 & is.na(FCAL_ACTIVE) & test_unit_cln == "UG/G",
+                                  fcal_high & is.na(FCAL_ACTIVE) & test_unit_cln == "UG/G",
                                 "ACTIVE", FCAL_ACTIVE)) %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                                      SPECIMEN_COLLECTION_DATE, FCAL_ACTIVE, lab_result_cln) %>% filter(!is.na(FCAL_ACTIVE)) %>%
     mutate(FCAL_SPECIMEN_COLLECTION_DATE = dmy(SPECIMEN_COLLECTION_DATE)) %>%
@@ -389,11 +395,11 @@ tx_response <- function(data,
 
   fcal_cleaned <- fcal_central_lab %>% ungroup() %>%
     mutate(TEST_RESULT_NUMERIC = as.numeric(TEST_RESULT_NUMERIC)) %>%
-    mutate(FCAL_ACTIVE = ifelse(TEST_RESULT_NUMERIC < 50, "INACTIVE", NA)) %>%
+    mutate(FCAL_ACTIVE = ifelse(TEST_RESULT_NUMERIC < fcal_low, "INACTIVE", NA)) %>%
     mutate(FCAL_ACTIVE = ifelse(TEST_RESULT_NUMERIC >=
-                                  50 & TEST_RESULT_NUMERIC <= 200 & is.na(FCAL_ACTIVE),
+                                  fcal_low & TEST_RESULT_NUMERIC <= fcal_high & is.na(FCAL_ACTIVE),
                                 "INDETERMINATE", FCAL_ACTIVE)) %>% mutate(FCAL_ACTIVE = ifelse(TEST_RESULT_NUMERIC >
-                                                                                                 200 & is.na(FCAL_ACTIVE), "ACTIVE", FCAL_ACTIVE)) %>%
+                                                                                                 fcal_high & is.na(FCAL_ACTIVE), "ACTIVE", FCAL_ACTIVE)) %>%
     mutate(FCAL_SPECIMEN_COLLECTION_DATE = dmy(SPECIMEN_COLLECTION_DATE)) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, FCAL_SPECIMEN_COLLECTION_DATE,
              FCAL_ACTIVE, TEST_RESULT_NUMERIC) %>% mutate(FCAL_SOURCE = "CENTRAL LAB") %>%

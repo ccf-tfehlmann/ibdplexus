@@ -14,7 +14,10 @@ tx_response(
   month_interest = 12,
   filtered_med = F,
   med_interest =
-    "Adalimumab|Certolizumab Pegol|Etrasimod|Golimumab|Guselkumab|Infliximab|Mirikizumab|Natalizumab||Ozanimod|Risankizumab|Tofacitinib|Upadacitinib|Ustekinumab|Vedolizumab"
+    "Adalimumab|Certolizumab Pegol|Etrasimod|Golimumab|Guselkumab|Infliximab|Mirikizumab|Natalizumab||Ozanimod|Risankizumab|Tofacitinib|Upadacitinib|Ustekinumab|Vedolizumab",
+  crp_value = 8,
+  fcal_low = 50,
+  fcal_high = 200
 )
 }
 \arguments{
@@ -35,6 +38,12 @@ tx_response(
 \item{filtered_med}{Defaults to F. Set to T to filter only for specific medications.}
 
 \item{med_interest}{String of medications separated by | to search for when filtered_med = T. Possible medications are: Adalimumab, Azathioprine, Balsalazide, Certolizumab Pegol, Cyclosporine, Etrasimod, Golimumab, Guselkumab, Infliximab, Mercaptopurine, Mesalamine, Methotrexate, Mirikizumab, Natalizumab, Olsalazine, Ozanimod, Risankizumab, Sulfasalazine, Tacrolimus, Tofacitinib, Upadacitinib, Ustekinumab, Vedolizumab"}
+
+\item{crp_value}{Numeric value for CRP INACTIVE/ACTIVE cutoff in mg/L. Defaults to 8.}
+
+\item{fcal_low}{Numeric value for lower limit of FCal for INACTIVE/ACTIVE cutoff in ug/g. Anything below this will be INACTIVE. Defaults to 50.}
+
+\item{fcal_high}{Numeric value for lower limit of FCal for INACTIVE/ACTIVE cutoff in ug/g. Anything below this will be ACTIVE. Defaults to 200. Anything between fcal_low and fcal_high will be INDETERMINATE.}
 }
 \value{
 Tx response data file
