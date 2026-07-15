@@ -87,25 +87,25 @@ tx_response <- function(data,
     # make all reports into factored levels
     pga <- reports$SPARC_SCORES$pga %>%
       mutate(OG_PGA = PGA) %>%
-      mutate(PGA = ifelse(PGA == "Quiescent", "Remission", "> Remission"))
+      mutate(PGA = ifelse(PGA == "Quiescent", "Remission", "Not Remission"))
 
     scdai <- reports$SPARC_SCORES$scdai %>%
       filter(!is.na(SCDAI_SCORE)) %>%
-      mutate(SCDAI_CATEGORY = ifelse(SCDAI_CATEGORY == "Remission", "Remission", "> Remission"))
+      mutate(SCDAI_CATEGORY = ifelse(SCDAI_CATEGORY == "Remission", "Remission", "Not Remission"))
 
     ucdai6 <- reports$SPARC_SCORES$ucdai %>%
       filter(!is.na(UCDAI_6_SCORE)) %>%
-      mutate(UCDAI6_CATGEORY2 = ifelse(UCDAI6_CATEGORY == "Remission", "Remission", "> Remission")) %>%
+      mutate(UCDAI6_CATGEORY2 = ifelse(UCDAI6_CATEGORY == "Remission", "Remission", "Not Remission")) %>%
       select(-UCDAI6_CATEGORY)
 
     ucdai6 <- ucdai6 %>%
       rename(UCDAI6_CATEGORY = UCDAI6_CATGEORY2)
 
-    ucdai6$UCDAI6_CATEGORY <- factor(ucdai6$UCDAI6_CATEGORY, levels = c('Remission', '> Remission'), ordered = TRUE)
+    ucdai6$UCDAI6_CATEGORY <- factor(ucdai6$UCDAI6_CATEGORY, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
-    scdai$SCDAI_CATEGORY <- factor(scdai$SCDAI_CATEGORY, levels = c('Remission', '> Remission'), ordered = TRUE)
+    scdai$SCDAI_CATEGORY <- factor(scdai$SCDAI_CATEGORY, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
-    pga$PGA <- factor(pga$PGA, levels = c('Remission', '> Remission'), ordered = TRUE)
+    pga$PGA <- factor(pga$PGA, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
   } else {
 
@@ -152,28 +152,28 @@ tx_response <- function(data,
     pga1 <- read_excel(matching_file, guess_max = 1048576, sheet = "pga")
     pga <- pga1 %>%
       mutate(OG_PGA = PGA) %>%
-      mutate(PGA = ifelse(PGA == "Quiescent", "Remission", "> Remission"))
+      mutate(PGA = ifelse(PGA == "Quiescent", "Remission", "Not Remission"))
 
     scdai1 <- read_excel(matching_file, guess_max = 1048576, sheet = "scdai")
     scdai <- scdai1 %>%
       filter(!is.na(SCDAI_SCORE)) %>%
-      mutate(SCDAI_CATEGORY = ifelse(SCDAI_CATEGORY == "Remission", "Remission", "> Remission"))
+      mutate(SCDAI_CATEGORY = ifelse(SCDAI_CATEGORY == "Remission", "Remission", "Not Remission"))
 
 
     ucdai <- read_excel(matching_file, guess_max = 1048576, sheet = "ucdai")
     ucdai6 <- ucdai %>%
       filter(!is.na(UCDAI_6_SCORE)) %>%
-      mutate(UCDAI6_CATGEORY2 = ifelse(UCDAI6_CATEGORY == "Remission", "Remission", "> Remission")) %>%
+      mutate(UCDAI6_CATGEORY2 = ifelse(UCDAI6_CATEGORY == "Remission", "Remission", "Not Remission")) %>%
       select(-UCDAI6_CATEGORY)
 
     ucdai6 <- ucdai6 %>%
       rename(UCDAI6_CATEGORY = UCDAI6_CATGEORY2)
 
-    ucdai6$UCDAI6_CATEGORY <- factor(ucdai6$UCDAI6_CATEGORY, levels = c('Remission', '> Remission'), ordered = TRUE)
+    ucdai6$UCDAI6_CATEGORY <- factor(ucdai6$UCDAI6_CATEGORY, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
-    scdai$SCDAI_CATEGORY <- factor(scdai$SCDAI_CATEGORY, levels = c('Remission', '> Remission'), ordered = TRUE)
+    scdai$SCDAI_CATEGORY <- factor(scdai$SCDAI_CATEGORY, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
-    pga$PGA <- factor(pga$PGA, levels = c('Remission', '> Remission'), ordered = TRUE)
+    pga$PGA <- factor(pga$PGA, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
   }
 
@@ -193,9 +193,9 @@ tx_response <- function(data,
   summary_endoscopy_filtered <- summary_endoscopy %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, INDEX_DATE, ENDO_DATE, ENDO_CATEGORY) %>%
     filter(!is.na(ENDO_CATEGORY)) %>%
-    mutate(ENDO_CATEGORY = ifelse(ENDO_CATEGORY == "Remission", "Remission", "> Remission"))
+    mutate(ENDO_CATEGORY = ifelse(ENDO_CATEGORY == "Remission", "Remission", "Not Remission"))
 
-  summary_endoscopy_filtered$ENDO_CATEGORY <- factor(summary_endoscopy_filtered$ENDO_CATEGORY, levels = c('Remission', '> Remission'), ordered = TRUE)
+  summary_endoscopy_filtered$ENDO_CATEGORY <- factor(summary_endoscopy_filtered$ENDO_CATEGORY, levels = c('Remission', 'Not Remission'), ordered = TRUE)
 
   #### filter for endoscopy Crohn's Disease template ----
   cd_ENDO <- med_journey  %>%
@@ -921,7 +921,7 @@ tx_response <- function(data,
     mutate(MED_START_RANGE = interval(MED_START_DATE - days(30), MED_START_DATE)) %>%
     rowwise() %>%
     mutate(
-      TISSUE_RNA_60_INDEX = {
+      TISSUE_RNA_60_DISEASE_ACTIVITY = {
         # Combine RNASeq dates into a list
         dates <- c_across(starts_with("RNASeq_"))
         # Remove NA dates
@@ -960,7 +960,7 @@ tx_response <- function(data,
     left_join(OLINK, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%
     rowwise() %>%
     mutate(
-      OLINK_60_INDEX = {
+      OLINK_60_DISEASE_ACTIVITY = {
         # Combine RNASeq dates into a list
         dates <- c_across(starts_with("Olink_"))
         # Remove NA dates
@@ -1001,7 +1001,7 @@ tx_response <- function(data,
     mutate(MED_START_RANGE = interval(MED_START_DATE - days(30), MED_START_DATE)) %>%
     rowwise() %>%
     mutate(
-      BLOOD_RNA_60_INDEX = {
+      BLOOD_RNA_60_DISEASE_ACTIVITY = {
         # Combine RNASeq dates into a list
         dates <- c_across(starts_with("Blood RNASeq_"))
         # Remove NA dates
@@ -1089,8 +1089,8 @@ tx_response <- function(data,
         "MED_END_DATE", "DISEASE_ACTIVITY_MEASURE", "TIME_BETWEEN",
         "ABS_OUTCOME_VALUE", "SCORE_CATEGORY", "DISEASE_ACTIVITY_MEASURE_DATE",
         "FAIL_INDUCTION_FLAG", "STEROID_FLAG", "SURG_ON_MED", "HOSP_ON_MED",
-        "TISSUE_RNA_60_INDEX", "TISSUE_RNA_30_MED", "OLINK_60_INDEX", "OLINK_30_MED",
-        "BLOOD_RNA_60_INDEX", "BLOOD_RNA_30_MED"
+        "TISSUE_RNA_60_DISEASE_ACTIVITY", "TISSUE_RNA_30_MED", "OLINK_60_DISEASE_ACTIVITY", "OLINK_30_MED",
+        "BLOOD_RNA_60_DISEASE_ACTIVITY", "BLOOD_RNA_30_MED"
 
       ),
       Definition = c(
@@ -1167,8 +1167,8 @@ tx_response <- function(data,
         "TIME_CATEGORY",
         "ABS_OUTCOME_VALUE", "SCORE_CATEGORY", "DISEASE_ACTIVITY_MEASURE_DATE", "INDEX_DATE",
         "FAIL_INDUCTION_FLAG", "STEROID_FLAG", "SURG_ON_MED", "HOSP_ON_MED",
-        "TISSUE_RNA_60_INDEX", "TISSUE_RNA_30_MED", "OLINK_60_INDEX", "OLINK_30_MED",
-        "BLOOD_RNA_60_INDEX", "BLOOD_RNA_30_MED"
+        "TISSUE_RNA_60_DISEASE_ACTIVITY", "TISSUE_RNA_30_MED", "OLINK_60_DISEASE_ACTIVITY", "OLINK_30_MED",
+        "BLOOD_RNA_60_DISEASE_ACTIVITY", "BLOOD_RNA_30_MED"
 
       ),
       Definition = c(
