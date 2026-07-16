@@ -545,20 +545,34 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
     cohort <- cohort
   }
   cohort <- ibdplexus:::fix_col_names(cohort)
-  if (export == T) {
-    style1 <- createStyle(bgFill = "#BDD7EE", textDecoration = "bold")
-    wb <- createWorkbook()
-    addWorksheet(wb, "scores_at_index")
-    writeData(wb, "scores_at_index", x = cohort, startCol = 1,
-              startRow = 1, colNames = TRUE, rowNames = FALSE)
-    rown <- dim(cohort)[1]
-    coln <- dim(cohort)[2]
-    conditionalFormatting(wb, "scores_at_index", cols = 1:coln,
-                          rows = 1, rule = "!=0", style = style1)
-    saveWorkbook(wb, file = paste0(filename), overwrite = TRUE)
-    return(cohort)
+
+  # ALL SCORES ----
+
+  sparc_scores <- list(diagnosis = dx, scdai = scdai, ucdai = ucdai, pga = pga, pro2 = pro2, pro3 = pro3)
+
+  # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
+
+  if (export == "TRUE") {
+    write.xlsx(sparc_scores, paste0("SPARC_scores_", Sys.Date(), ".xlsx"), colnames = T)
   }
-  else {
-    return(cohort)
-  }
+
+
+  return(sparc_scores)
+
+  # if (export == T) {
+  #   style1 <- createStyle(bgFill = "#BDD7EE", textDecoration = "bold")
+  #   wb <- createWorkbook()
+  #   addWorksheet(wb, "scores_at_index")
+  #   writeData(wb, "scores_at_index", x = cohort, startCol = 1,
+  #             startRow = 1, colNames = TRUE, rowNames = FALSE)
+  #   rown <- dim(cohort)[1]
+  #   coln <- dim(cohort)[2]
+  #   conditionalFormatting(wb, "scores_at_index", cols = 1:coln,
+  #                         rows = 1, rule = "!=0", style = style1)
+  #   saveWorkbook(wb, file = paste0(filename), overwrite = TRUE)
+  #   return(cohort)
+  # }
+  # else {
+  #   return(cohort)
+  # }
 }
