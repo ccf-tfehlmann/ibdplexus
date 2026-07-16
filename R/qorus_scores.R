@@ -174,8 +174,8 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
     ungroup() %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID,
                            index_date, OBS_TEST_CONCEPT_NAME, result) %>% pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                                                                   index_date), names_from = OBS_TEST_CONCEPT_NAME,
-                                                                                      values_from = result) %>% ungroup() %>%
-    ibdplexus:::fix_col_names()
+                                                                                      values_from = result) %>% ungroup() # %>%
+    # ibdplexus:::fix_col_names()
   cohort <- left_join(cohort, location)
   perianal <- data$observations %>% filter(DATA_SOURCE ==
                                              "ECRF_QORUS") %>%
