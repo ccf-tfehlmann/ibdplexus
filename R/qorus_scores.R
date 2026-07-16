@@ -544,7 +544,7 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
   else {
     cohort <- cohort
   }
-  cohort <- ibdplexus:::fix_col_names(cohort)
+  # cohort <- ibdplexus:::fix_col_names(cohort)
 
   # ALL SCORES ----
 
