@@ -553,7 +553,7 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 
   if (export == "TRUE") {
-    write.xlsx(sparc_scores, paste0("SPARC_scores_", Sys.Date(), ".xlsx"), colnames = T)
+    write.xlsx(sparc_scores, paste0("QORUS_scores_", Sys.Date(), ".xlsx"), colnames = T)
   }
 
 
