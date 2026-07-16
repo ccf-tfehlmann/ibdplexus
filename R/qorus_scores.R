@@ -548,16 +548,16 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
 
   # ALL SCORES ----
 
-  sparc_scores <- list(diagnosis = dx, scdai = scdai, ucdai = ucdai, pga = pga, pro2 = pro2, pro3 = pro3)
+  qorus_scores_all <- list(diagnosis = dx, scdai = scdai, ucdai = ucdai, pga = pga, pro2 = pro2, pro3 = pro3)
 
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 
   if (export == "TRUE") {
-    write.xlsx(sparc_scores, paste0("QORUS_scores_", Sys.Date(), ".xlsx"), colnames = T)
+    write.xlsx(qorus_scores_all, paste0("QORUS_scores_", Sys.Date(), ".xlsx"), colnames = T)
   }
 
 
-  return(sparc_scores)
+  return(qorus_scores_all)
 
   # if (export == T) {
   #   style1 <- createStyle(bgFill = "#BDD7EE", textDecoration = "bold")
