@@ -18,8 +18,7 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
 {
   if ("character" %in% class(index_info)) {
     index_info <- toupper(index_info)
-  }
-  else {
+  } else {
     index_info <- index_info
   }
   consent <- extract_consent(data$demographics, "QORUS")
@@ -44,16 +43,14 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
   t <- as.numeric(index_range)
   if ("ENROLLMENT" %in% index_info) {
     cohort <- table %>% mutate(index_date = DATE_OF_CONSENT)
-  }
-  else if ("ENDOSCOPY" %in% index_info) {
+  } else if ("ENDOSCOPY" %in% index_info) {
     endoscopy <- data$procedures %>% filter(DATA_SOURCE == "ECRF_QORUS") %>%
       filter(PROC_CONCEPT_NAME %in% c("Colonoscopy/Sigmoidoscopy",
                                       "Pouchoscopy")) %>% mutate(PROC_START_DATE = dmy(PROC_START_DATE)) %>%
       rename(index_date = PROC_START_DATE) %>% drop_na(index_date) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID, index_date)
     cohort <- endoscopy %>% left_join(table)
-  }
-  else if ("OMICS" %in% index_info) {
+  } else if ("OMICS" %in% index_info) {
     omics <- data$omics_patient_mapping %>% mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
       mutate(index_date = SAMPLE_COLLECTED_DATE) %>% drop_na(index_date) %>%
       select(-c(DATA_SOURCE, DEIDENTIFIED_PATIENT_ID,
@@ -61,8 +58,7 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
     omics_index <- omics %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID,
                                       index_date)
     cohort <- omics_index %>% left_join(table)
-  }
-  else if ("LATEST" %in% index_info) {
+  } else if ("LATEST" %in% index_info) {
 
 
     latest <- data$encounter %>% filter(DATA_SOURCE == "ECRF_QORUS") %>%
@@ -77,8 +73,7 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
                            VISIT_ENCOUNTER_START_DATE, TYPE_OF_ENCOUNTER) %>% rename(index_date = VISIT_ENCOUNTER_START_DATE,
                                                                                      MOST_RECENT_ENCOUNTER_TYPE = TYPE_OF_ENCOUNTER)
     cohort <- table %>% left_join(latest)
-  }
-  else {
+  } else {
     cohort <- index_info %>% left_join(table)
   }
   gc()
@@ -129,7 +124,8 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
                                                            grepl("Extensive", `Ulcerative Colitis Diagnosis Site`,  ignore.case = T) ~ "Extensive ulcerative colitis (extends proximal to the splenic flexure) (E3)",
                                                            grepl("Left-sided", `Ulcerative Colitis Diagnosis Site`,  ignore.case = T) ~ "Left-sided ulcerative colitis (distal to the splenic flexure only) (E2)",
                                                            grepl("Rectum only|proctitis", `Ulcerative Colitis Diagnosis Site`, ignore.case = T) ~ "Ulcerative proctitis (rectum only) (E1)",
-                                                           TRUE ~ `Ulcerative Colitis Diagnosis Site`))
+                                                           TRUE ~ `Ulcerative Colitis Diagnosis Site`)) %>%
+    rename(`Ulcerative Colitis Phenotype` = `Ulcerative Colitis Diagnosis Site`)
 
 
   cohort <- left_join(cohort, ucp)
@@ -174,8 +170,8 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
     ungroup() %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID,
                            index_date, OBS_TEST_CONCEPT_NAME, result) %>% pivot_wider(id_cols = c(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                                                                   index_date), names_from = OBS_TEST_CONCEPT_NAME,
-                                                                                      values_from = result) %>% ungroup() # %>%
-    # ibdplexus:::fix_col_names()
+                                                                                      values_from = result) %>% ungroup() %>%
+    ibdplexus:::fix_col_names()
   cohort <- left_join(cohort, location)
   perianal <- data$observations %>% filter(DATA_SOURCE ==
                                              "ECRF_QORUS") %>%
@@ -540,15 +536,18 @@ qorus_scores <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCOP
   if ("OMICS" %in% index_info) {
     cohort <- omics %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID",
                                                  "index_date"))
-  }
-  else {
+  } else {
     cohort <- cohort
   }
-  # cohort <- ibdplexus:::fix_col_names(cohort)
+  cohort <- ibdplexus:::fix_col_names(cohort)
 
   # ALL SCORES ----
 
-  qorus_scores_all <- list(diagnosis = dx, scdai = scdai, ucdai = ucdai, pga = pga, pro2 = pro2, pro3 = pro3)
+  qorus_scores_all <- list(diagnosis = dx, scdai = scdai %>% select(-index_date),
+                           ucdai = ucdai %>% select(-index_date),
+                           pga = pga %>% select(-index_date),
+                           pro2 = pro2 %>% select(-index_date),
+                           pro3 = pro3 %>% select(-index_date))
 
   # sparc_scores <- lapply(sparc_scores,function(x) {colnames(x) <- toupper(colnames(x));x})
 
