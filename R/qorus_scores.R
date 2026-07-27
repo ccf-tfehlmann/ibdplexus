@@ -293,7 +293,7 @@ qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
     distinct() %>% ungroup() %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID,  intersect(names(.),
                                                                  names(calculate_pga(data$observations)))) %>%
-    mutate(PGA = if_else(PGA == "Remission", "Quiescent", PGA))
+    mutate(PGA = if_else(PGA == "Normal", "Quiescent", PGA))
   # cohort <- cohort %>% left_join(pga)
 
 
