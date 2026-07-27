@@ -23,7 +23,7 @@ qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
 
   gc()
 
-  # cohort <- table
+  cohort <- table
 
   #### QORUS SCDAI ----
 
