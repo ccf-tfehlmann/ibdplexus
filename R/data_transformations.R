@@ -165,6 +165,33 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS_DATE)
 
     dx <- dx %>% left_join(dxy, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
+  } else if (study == "QORUS") {
+
+    dx <- data$diagnosis %>% filter(DATA_SOURCE %in% c("ECRF_QORUS",
+                                                       "ECRF")) %>% filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease",
+                                                                                                    "IBD Unclassified", "Ulcerative Colitis")) %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      mutate(DIAGNOSIS = DIAG_CONCEPT_NAME, DIAGNOSIS_DATE = dmy(DIAGNOSIS_DATE),
+             DISEASE_SITE = DIAG_SITE) %>%
+      arrange(DEIDENTIFIED_MASTER_PATIENT_ID,
+              desc(DIAGNOSIS_DATE)) %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      slice_max(order_by = DIAGNOSIS_DATE) %>%
+      select(DEIDENTIFIED_MASTER_PATIENT_ID,
+             DIAGNOSIS, DIAGNOSIS_DATE) %>%
+      mutate(DIAGNOSIS = if_else(DEIDENTIFIED_MASTER_PATIENT_ID == "16784344", "Ulcerative Colitis", DIAGNOSIS)) %>%
+      mutate(DIAGNOSIS = if_else(DEIDENTIFIED_MASTER_PATIENT_ID == "56600587" | DEIDENTIFIED_MASTER_PATIENT_ID == "59154989", "IBD Unclassified", DIAGNOSIS)) %>%
+      ungroup() %>%
+      distinct() %>%
+      left_join(data$encounter %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, VISIT_ENCOUNTER_ID, VISIT_ENCOUNTER_START_DATE)) %>%
+      mutate(ORIGINAL_DX = DIAGNOSIS_DATE) %>%
+      mutate(DIAGNOSIS_DATE = if_else(is.na(DIAGNOSIS_DATE), VISIT_ENCOUNTER_START_DATE, DIAGNOSIS_DATE)) %>%
+      mutate(VISIT_ENCOUNTER_DIAGNOSIS_DATE = if_else(is.na(ORIGINAL_DX) & DIAGNOSIS_DATE == VISIT_ENCOUNTER_START_DATE, 1, 0)) %>%
+      arrange(DEIDENTIFIED_MASTER_PATIENT_ID,
+              desc(DIAGNOSIS_DATE)) %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
+      slice_max(order_by = DIAGNOSIS_DATE) %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
+                                                      DIAGNOSIS, DIAGNOSIS_DATE, VISIT_ENCOUNTER_DIAGNOSIS_DATE) %>%
+      ungroup() %>%
+      distinct()
+
   } else {
     dx <- diagnosis %>%
       filter(DATA_SOURCE %in% c("ECRF_QORUS", "ECRF")) %>%
