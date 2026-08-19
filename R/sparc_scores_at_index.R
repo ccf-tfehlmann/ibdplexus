@@ -618,7 +618,14 @@ pdai <- data$procedures %>%
     slice(1) %>%
     distinct() %>%
     ungroup() %>%
-    mutate(ENDOSCOPY_60 = if_else((datediff >= t | is.na(datediff)), 0, ENDOSCOPY_60))
+    mutate(ENDOSCOPY_60 = if_else((datediff >= t | is.na(datediff)), 0, ENDOSCOPY_60))  %>%
+    mutate(
+      across(
+        -c(DEIDENTIFIED_MASTER_PATIENT_ID, index_date, datediff),
+        ~ replace(., datediff >= t, NA)
+      )
+    )
+
   # Ostomy ----
 
   ostomy_sf <- data$procedures %>%
