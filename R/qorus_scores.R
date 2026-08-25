@@ -167,6 +167,7 @@ qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
 
   pro2 <- PRO2 %>% left_join(cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID),
                              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%  drop_na(PRO2_SCORE) %>%
+    filter(DIAGNOSIS == "Crohn's Disease") %>%
     distinct() %>% ungroup() %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
                                          starts_with("PRO2"), ABDOMINAL_PAIN_SCORE, LIQUID_BM)
   # cohort <- cohort %>% left_join(pro2, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID))
@@ -224,6 +225,7 @@ qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
 
   pro3 <- PRO3 %>% left_join(cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID),
                              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>% drop_na(PRO3_SCORE) %>%
+    filter(DIAGNOSIS == "Crohn's Disease") %>%
     distinct() %>% ungroup() %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
                                          starts_with("PRO3"), ABDOMINAL_PAIN_SCORE, LIQUID_BM, GENERAL_WELL_BEING_SCORE)
   # cohort <- cohort %>% left_join(pro3, by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID))
@@ -293,7 +295,8 @@ qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
     filter(DIAGNOSIS == "Ulcerative Colitis") %>%
     drop_na(UCDAI_6_SCORE) %>%
     distinct() %>% ungroup() %>%
-    distinct() # %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
+    distinct() %>%
+    select(-DIAGNOSIS) # %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
                                          # intersect(names(.), names(calculate_ucdai(data$observations))))
   # cohort <- cohort %>% left_join(ucdai)
 
