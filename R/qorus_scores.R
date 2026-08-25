@@ -165,7 +165,7 @@ qorus_scores <- function (data = data, filename = "QORUS_SCORES.xlsx",
                                       everything()) %>% setNames(toupper(names(.))) %>% setNames(gsub("\\.",
                                                                                                       "_", names(.)))
 
-  pro2 <- PRO2 %>% left_join(cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID),
+  pro2 <- PRO2 %>% left_join(cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS),
                              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>%  drop_na(PRO2_SCORE) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     distinct() %>% ungroup() %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
@@ -223,7 +223,7 @@ qorus_scores <- function (data = data, filename = "QORUS_SCORES.xlsx",
                                       everything()) %>% setNames(toupper(names(.))) %>% setNames(gsub("\\.",
                                                                                                       "_", names(.)))
 
-  pro3 <- PRO3 %>% left_join(cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID),
+  pro3 <- PRO3 %>% left_join(cohort %>% distinct(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS),
                              by = join_by(DEIDENTIFIED_MASTER_PATIENT_ID)) %>% drop_na(PRO3_SCORE) %>%
     filter(DIAGNOSIS == "Crohn's Disease") %>%
     distinct() %>% ungroup() %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
