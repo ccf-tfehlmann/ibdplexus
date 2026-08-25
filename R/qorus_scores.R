@@ -10,7 +10,7 @@
 #' @return qorus scores table
 #' @export
 
-qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
+qorus_scores <- function (data = data, filename = "QORUS_SCORES.xlsx",
                               location_logic = "CCF", export = T)
 {
 
