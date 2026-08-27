@@ -10,13 +10,14 @@
 #' @return qorus scores table
 #' @export
 
-qorus_scores <- function (data = data, filename = "QORUS_SCORES.xlsx",
+qorus_scores <- function (data, filename = "QORUS_SCORES.xlsx",
                               location_logic = "CCF", export = T)
 {
 
   consent <- extract_consent(data$demographics, "QORUS")
   demo <- extract_demo(data$demographics, "QORUS")
-   dx <- extract_diagnosis(data$diagnosis, data$encounter, data$demographics, "QORUS")
+  dx <- extract_diagnosis(data$diagnosis, data$encounter, data$demographics, "QORUS")
+
 
   # dx <- data$diagnosis %>% filter(DATA_SOURCE %in% c("ECRF_QORUS",
   #                                               "ECRF")) %>% filter(DIAG_CONCEPT_NAME %in% c("Crohn's Disease",

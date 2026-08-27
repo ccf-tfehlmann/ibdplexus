@@ -5,7 +5,7 @@
 \title{Create QORUS Scores Table - all responses}
 \usage{
 qorus_scores(
-  data = data,
+  data,
   filename = "QORUS_SCORES.xlsx",
   location_logic = "CCF",
   export = T

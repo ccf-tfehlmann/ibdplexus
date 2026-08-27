@@ -25,8 +25,10 @@ qorus_summary <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCO
   demo <- extract_demo(data$demographics, "QORUS")
   dx <- extract_diagnosis(data$diagnosis, data$encounter, data$demographics, "QORUS") %>%
     select(DEIDENTIFIED_MASTER_PATIENT_ID, DIAGNOSIS, DIAGNOSIS_DATE)
-  table <- consent %>% left_join(demo, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
-    left_join(dx, by = "DEIDENTIFIED_MASTER_PATIENT_ID")
+  table <- consent %>% full_join(demo, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
+    left_join(dx, by = "DEIDENTIFIED_MASTER_PATIENT_ID") %>%
+    select(-c(DATE_OF_CONSENT_1, DATE_OF_CONSENT_2, DATE_OF_CONSENT_3, DATE_OF_CONSENT_4, DATE_OF_CONSENT_WITHDRAWN_1,
+    DATE_OF_CONSENT_WITHDRAWN_2, DATE_OF_CONSENT_WITHDRAWN_3, DATE_OF_CONSENT_WITHDRAWN_4))
   t <- as.numeric(index_range)
   if ("ENROLLMENT" %in% index_info) {
     cohort <- table %>% mutate(index_date = DATE_OF_CONSENT)
@@ -532,6 +534,7 @@ qorus_summary <- function (data, index_info = c("ENROLLMENT", "LATEST", "ENDOSCO
   cohort <- cohort %>% mutate(DISEASE_ACTIVITY = case_when(DIAGNOSIS ==
                                                              "Crohn's Disease" ~ SCDAI_CATEGORY, DIAGNOSIS == "Ulcerative Colitis" ~
                                                              UCDAI6_CATEGORY, TRUE ~ as.character(NA)))
+  cohort <- cohort %>% mutate(DISEASE_ACTIVITY = ifelse(is.na(DISEASE_ACTIVITY), PGA, DISEASE_ACTIVITY))
   cohort <- cohort %>% arrange(DEIDENTIFIED_MASTER_PATIENT_ID,
                                index_date) %>% setNames(gsub(" ", "_", names(.))) %>%
     select(-INDEX_DATE)
