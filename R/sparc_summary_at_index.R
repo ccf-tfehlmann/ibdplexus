@@ -167,7 +167,7 @@ sparc_summary <- function(data,
     cohort <- endoscopy %>% left_join(table)
   } else if ("OMICS" %in% index_info) {
     omics <- data$omics_patient_mapping %>%
-      mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
+      mutate(SAMPLE_COLLECTED_DATE = as.Date(parse_date_time(SAMPLE_COLLECTED_DATE, orders = c("mdy", "dmy")))) %>%
       mutate(index_date = SAMPLE_COLLECTED_DATE) %>%
       drop_na(index_date) %>%
       select(-c(DATA_SOURCE, DEIDENTIFIED_PATIENT_ID, VISIT_ENCOUNTER_ID)) %>%
@@ -1223,7 +1223,7 @@ sparc_summary <- function(data,
 
   # genotyping and wes can be at anytime
   omics_t <- data$omics_patient_mapping %>%
-    mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
+    mutate(SAMPLE_COLLECTED_DATE = as.Date(parse_date_time(SAMPLE_COLLECTED_DATE, orders = c("mdy", "dmy")))) %>%
     left_join(cohort_index_info) %>%
     mutate(diff = abs((SAMPLE_COLLECTED_DATE) - index_date)) %>%
     mutate(keep = case_when(
@@ -1355,7 +1355,7 @@ sparc_summary <- function(data,
 
   if ("OMICS" %in% index_info) {
     cohort <-  data$omics_patient_mapping %>%
-      mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
+      mutate(SAMPLE_COLLECTED_DATE = as.Date(parse_date_time(SAMPLE_COLLECTED_DATE, orders = c("mdy", "dmy")))) %>%
       mutate(index_date = SAMPLE_COLLECTED_DATE) %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE"))
   } else if ("BIOSAMPLE" %in% index_info) {
     cohort <- biosample %>% left_join(cohort, by = c("DEIDENTIFIED_MASTER_PATIENT_ID", "index_date" = "INDEX_DATE")) %>%
