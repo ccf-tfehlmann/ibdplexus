@@ -124,7 +124,7 @@ sparc_summary <- function(data,
   # omics anytime ----
   if (!("OMICS" %in% index_info)) {
     omics_anytime <- data$omics_patient_mapping %>%
-      mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
+      mutate(SAMPLE_COLLECTED_DATE = as.Date(parse_date_time(SAMPLE_COLLECTED_DATE, orders = c("mdy", "dmy")))) %>%
       distinct(DEIDENTIFIED_MASTER_PATIENT_ID, `ASSAY_NAME`, SAMPLE_COLLECTED_DATE) %>%
       reshape2::dcast(DEIDENTIFIED_MASTER_PATIENT_ID ~ `ASSAY_NAME`,
         value.var = "SAMPLE_COLLECTED_DATE",
@@ -139,7 +139,7 @@ sparc_summary <- function(data,
   # Omics Total Numbers ----
 
   omics_t <- data$omics_patient_mapping %>%
-    mutate(SAMPLE_COLLECTED_DATE = dmy(SAMPLE_COLLECTED_DATE)) %>%
+    mutate(SAMPLE_COLLECTED_DATE = as.Date(parse_date_time(SAMPLE_COLLECTED_DATE, orders = c("mdy", "dmy")))) %>%
     distinct(DEIDENTIFIED_MASTER_PATIENT_ID, SAMPLE_COLLECTED_DATE, ASSAY_NAME) %>%
     arrange(DEIDENTIFIED_MASTER_PATIENT_ID, SAMPLE_COLLECTED_DATE) %>%
     group_by(DEIDENTIFIED_MASTER_PATIENT_ID, ASSAY_NAME) %>%
