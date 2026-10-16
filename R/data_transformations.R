@@ -174,7 +174,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
              DISEASE_SITE = DIAG_SITE) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID,
               desc(DIAGNOSIS_DATE)) %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      slice_max(order_by = DIAGNOSIS_DATE) %>%
+      slice_min(order_by = DIAGNOSIS_DATE) %>%
       select(DEIDENTIFIED_MASTER_PATIENT_ID,
              DIAGNOSIS, DIAGNOSIS_DATE) %>%
       mutate(DIAGNOSIS = if_else(DEIDENTIFIED_MASTER_PATIENT_ID == "16784344", "Ulcerative Colitis", DIAGNOSIS)) %>%
@@ -187,7 +187,7 @@ extract_diagnosis <- function(diagnosis, encounter, demographics, study) {
       mutate(VISIT_ENCOUNTER_DIAGNOSIS_DATE = if_else(is.na(ORIGINAL_DX) & DIAGNOSIS_DATE == VISIT_ENCOUNTER_START_DATE, 1, 0)) %>%
       arrange(DEIDENTIFIED_MASTER_PATIENT_ID,
               desc(DIAGNOSIS_DATE)) %>% group_by(DEIDENTIFIED_MASTER_PATIENT_ID) %>%
-      slice_max(order_by = DIAGNOSIS_DATE) %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
+      slice_min(order_by = DIAGNOSIS_DATE) %>% select(DEIDENTIFIED_MASTER_PATIENT_ID,
                                                       DIAGNOSIS, DIAGNOSIS_DATE, VISIT_ENCOUNTER_DIAGNOSIS_DATE) %>%
       ungroup() %>%
       distinct()
